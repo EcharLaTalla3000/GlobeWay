@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<style>
+  :root {
+    --fondo: #05070d;
+    --panel: rgba(13, 18, 30, 0.82);
+    --borde: rgba(148, 163, 184, 0.18);
+    --texto: #e5e9f0;
+    --suave: #94a3b8;
+    --acento: #38bdf8;
+  }
+  html, body { margin: 0; height: 100%; background: var(--fondo); overflow: hidden;
+    font-family: "Inter", system-ui, -apple-system, Segoe UI, sans-serif; color: var(--texto); }
+  #globo { width: 100%; height: 100%; }
+
+  .panel { position: absolute; background: var(--panel); border: 1px solid var(--borde);
+    border-radius: 14px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 10px 40px rgba(0,0,0,.45); }
+
+  /* Leyenda */
+  #leyenda { left: 16px; bottom: 16px; padding: 12px 14px; font-size: 12px; max-width: 260px; }
+  #leyenda h4 { margin: 0 0 8px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--suave); font-weight: 600; }
+  .fila { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+  .punto { width: 10px; height: 10px; border-radius: 50%; flex: none; box-shadow: 0 0 8px currentColor; }
+
+  /* Ficha lateral */
+  #ficha { right: 16px; top: 16px; width: 320px; max-height: calc(100% - 140px); overflow: auto;
+    padding: 16px; transform: translateX(120%); transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+  #ficha.visible { transform: translateX(0); }
+  #ficha .cerrar { position: absolute; right: 10px; top: 8px; background: none; border: 0;
+    color: var(--suave); font-size: 20px; cursor: pointer; }
+  #ficha h2 { margin: 0 0 2px; font-size: 19px; font-weight: 650; }
+  #ficha .sub { color: var(--suave); font-size: 12px; margin-bottom: 12px; }
+  .destino { border: 1px solid var(--borde); border-radius: 10px; padding: 10px 12px; margin: 8px 0;
+    cursor: pointer; transition: background .2s, border-color .2s; }
+  .destino:hover { background: rgba(56,189,248,.07); border-color: rgba(56,189,248,.4); }
+  .destino .cab { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .destino .nom { font-weight: 600; font-size: 14px; }
+  .destino .tot { font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .destino .det { color: var(--suave); font-size: 12px; margin-top: 4px; line-height: 1.45; }
+  .chip { display: inline-block; font-size: 10.5px; padding: 2px 7px; border-radius: 999px;
+    border: 1px solid currentColor; margin-top: 6px; }
+  .desg { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 8px; }
+  .desg td { padding: 4px 0; border-bottom: 1px solid var(--borde); }
+  .desg td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+  .desg tr.total td { font-weight: 700; border-bottom: 0; padding-top: 8px; }
+  .nota { color: var(--suave); font-size: 11px; margin-top: 10px; line-height: 1.4; }
+  .atr { margin: 6px 0 0; padding-left: 16px; font-size: 12.5px; line-height: 1.6; }
+
+  /* Botón "Ver destinos" */
+  .boton { right: 16px; padding: 10px 16px; min-width: 168px; justify-content: flex-start; }
+  #verDestinos { bottom: 16px; }
+  #calorVivo { bottom: 62px; }
+  #verDestinos, #calorVivo { padding: 10px 16px; font: 600 13px "Inter", system-ui, sans-serif;
+    color: var(--texto); cursor: pointer; display: flex; align-items: center; gap: 8px;
+    transition: background .2s, border-color .2s, color .2s; }
+  #verDestinos:hover, #calorVivo:hover { border-color: rgba(56,189,248,.55); }
+  #verDestinos .ico, #calorVivo .ico { width: 9px; height: 9px; border-radius: 50%; background: var(--suave); transition: background .2s, box-shadow .2s; }
+  #verDestinos.activo { color: var(--acento); border-color: rgba(56,189,248,.6); background: rgba(56,189,248,.12); }
+  #verDestinos.activo .ico { background: var(--acento); box-shadow: 0 0 8px var(--acento); }
+  #calorVivo.activo { color: #fb923c; border-color: rgba(251,146,60,.6); background: rgba(251,146,60,.12); }
+  #calorVivo.activo .ico { background: #fb923c; animation: latido 1.6s ease-in-out infinite; }
+  @keyframes latido { 0%,100% { box-shadow: 0 0 4px #fb923c; } 50% { box-shadow: 0 0 12px #fbbf24; } }
+
+  #ayuda { left: 50%; top: 14px; transform: translateX(-50%); padding: 7px 14px; font-size: 12px;
+    color: var(--suave); white-space: nowrap; }
+  #demo { left: 16px; top: 14px; padding: 6px 11px; font-size: 11px; color: #fbbf24;
+    border-color: rgba(251,191,36,.35); letter-spacing: .03em; }
+
+  @media (max-width: 640px) {
+    #ficha { width: auto; left: 10px; right: 10px; top: auto; bottom: 10px; max-height: 55%;
+      transform: translateY(120%); }
+    #ficha.visible { transform: translateY(0); }
+    #calorVivo { top: 52px; bottom: auto; right: 10px; }
+    #verDestinos { top: 98px; bottom: auto; right: 10px; }
+    #leyenda { display: none; }
+    #ayuda { display: none; }
+  }
+</style>
+</head>
+<body>
+<div id="globo"></div>
+<div id="demo" class="panel">● PRECIOS ESTIMADOS · MODO DEMOSTRACIÓN</div>
+<div id="ayuda" class="panel">Arrastra para girar · rueda para acercar · clic en un país para ver sus destinos</div>
+<button id="calorVivo" class="panel boton" type="button" onclick="alternarCalor()" title="Efecto de cámara térmica: el brillo se mueve, el color de cada país no cambia"><span class="ico"></span><span id="calorTxt">Calor vivo</span></button>
+<button id="verDestinos" class="panel boton" type="button" onclick="alternarTodos()"><span class="ico"></span><span id="verTxt">Ver destinos</span></button>
+<div id="leyenda" class="panel"></div>
+<div id="ficha" class="panel"><button class="cerrar" onclick="cerrarFicha()">×</button><div id="contenido"></div></div>
+
+<script src="https://unpkg.com/globe.gl@2/dist/globe.gl.min.js"></script>
+<script>
+// Datos inyectados desde Python
+const DATOS = __DATOS__;
+const destinos = DATOS.destinos;
+const porPais = {};
+destinos.forEach(d => { (porPais[d.iso3] = porPais[d.iso3] || []).push(d); });
+const nPaises = Object.keys(porPais).length;
+
+// Natural Earth usa códigos propios en algunos países; se prueban varios campos.
+const ALIAS = { SSD: 'SDS', ESH: 'SAH', PSE: 'PSX', XKX: 'KOS' };
+function codigoPais(f) {
+  const p = f.properties;
+  for (const c of [p.ADM0_A3, p.ISO_A3, p.ISO_A3_EH, p.SOV_A3, p.GU_A3]) {
+    if (!c) continue;
+    if (porPais[c]) return c;
+    if (ALIAS[c] && porPais[ALIAS[c]]) return ALIAS[c];
+  }
+  return p.ADM0_A3;
+}
+
+// ---------- Leyenda ----------
+document.getElementById('leyenda').innerHTML =
+  `<h4>${DATOS.titulo_leyenda}</h4>` +
+  DATOS.leyenda.map(l => `<div class="fila"><span class="punto" style="background:${l.color};color:${l.color}"></span>${l.etiqueta}</div>`).join('') +
+  `<div class="fila" style="margin-top:8px;color:var(--suave)"><span class="punto" style="background:#334155;color:transparent"></span>Sin datos / filtrado</div>`;
+
+// ---------- Color de cada país ----------
+// Modo presupuesto: el país toma el color de su destino MÁS accesible.
+// Modo costo de vida: el color del promedio (se calcula en Python, viene en d.estado).
+const ORDEN = ['economico', 'intermedio', 'costoso', 'ligeramente_sobre', 'fuera'];
+const TURISMO = DATOS.modo === 'turismo';
+const fmtNum = n => Math.round(n).toLocaleString('es-CL');
+function estadoPais(iso) {
+  const lista = porPais[iso];
+  if (!lista) return null;
+  // Modo "Más turísticos": color según llegadas de turistas del país (calculado en Python)
+  if (TURISMO) return DATOS.paises[iso] || null;
+  return lista.map(d => d.estado).sort((a, b) => ORDEN.indexOf(a) - ORDEN.indexOf(b))[0];
+}
+const colorEstado = e => DATOS.colores[e] || '#334155';
+function hexA(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;
+}
+
+// ---------- Globo ----------
+const contenedor = document.getElementById('globo');
+let seleccionado = null;     // polígono (país) seleccionado
+let paisSel = null;          // código ISO3 del país seleccionado
+let paisesGeo = [];          // polígonos cargados
+const reducirMovimiento = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const DURACION_PALOS = 800;  // ms que tardan los palos en crecer o encogerse
+const encogiendo = new Set();   // destinos cuyos palos se están encogiendo
+let enPantalla = [];            // destinos que hoy están en el globo (incluye los que se encogen)
+let timerEncoger = null;
+let hexEncogiendo = false, timerHex = null;
+// "Ver destinos": se recuerda mientras dure la sesión del navegador (si se puede)
+let verTodos = false;
+try { verTodos = sessionStorage.getItem('gt_ver_todos') === '1'; } catch (e) {}
+
+// Destinos visibles: todos (botón activo) o solo los del país seleccionado
+function destinosVisibles() {
+  if (verTodos) return destinos;
+  return paisSel && porPais[paisSel] ? porPais[paisSel] : [];
+}
+const conAnillo = d => DATOS.modo === 'presupuesto' && ['economico', 'intermedio', 'costoso'].includes(d.estado);
+function actualizarPuntos() {
+  const vis = destinosVisibles();
+  const visSet = new Set(vis);
+  const salen = reducirMovimiento ? [] : enPantalla.filter(d => !visSet.has(d));
+  clearTimeout(timerEncoger);
+  vis.forEach(d => encogiendo.delete(d));
+  salen.forEach(d => encogiendo.add(d));
+  // Los que salen se quedan un momento con altura 0 (se encogen) y después se quitan
+  enPantalla = vis.concat(salen);
+  globo.pointsData(enPantalla).ringsData(vis.filter(conAnillo));
+  if (salen.length) {
+    timerEncoger = setTimeout(() => {
+      encogiendo.clear();
+      enPantalla = destinosVisibles();
+      globo.pointsData(enPantalla);
+    }, DURACION_PALOS + 60);
+  }
+  // "Más turísticos": las columnas del mapa de calor solo aparecen con "Ver destinos"
+  if (TURISMO) actualizarHex();
+  const b = document.getElementById('verDestinos');
+  b.classList.toggle('activo', verTodos);
+  document.getElementById('verTxt').textContent = verTodos ? 'Ocultar destinos' : 'Ver destinos';
+}
+function actualizarHex() {
+  clearTimeout(timerHex);
+  const hay = (globo.hexBinPointsData() || []).length > 0;
+  if (verTodos) {
+    hexEncogiendo = false;
+    if (hay) globo.hexAltitude(globo.hexAltitude());   // vuelven a crecer si se estaban encogiendo
+    else globo.hexBinPointsData(destinos);
+  } else if (hay && !reducirMovimiento) {
+    hexEncogiendo = true;                                // se encogen y luego se quitan
+    globo.hexAltitude(globo.hexAltitude());
+    timerHex = setTimeout(() => { hexEncogiendo = false; globo.hexBinPointsData([]); }, 660);
+  } else {
+    globo.hexBinPointsData([]);
+  }
+}
+window.alternarTodos = () => {
+  verTodos = !verTodos;
+  try { sessionStorage.setItem('gt_ver_todos', verTodos ? '1' : '0'); } catch (e) {}
+  actualizarPuntos();
+};
+function refrescarPaises() {
+  if (!paisesGeo.length) return;
+  globo.polygonAltitude(globo.polygonAltitude()).polygonCapColor(globo.polygonCapColor()).polygonCapMaterial(globo.polygonCapMaterial());
+}
+function seleccionarPais(iso, feature) {
+  paisSel = iso;
+  seleccionado = feature !== undefined ? feature : (paisesGeo.find(f => codigoPais(f) === iso) || null);
+  refrescarPaises();
+  actualizarPuntos();
+}
+
+const globo = Globe()(contenedor)
+  .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg')
+  .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+  .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
+  .atmosphereColor('#38bdf8')
+  .atmosphereAltitude(0.18)
+  // Destinos como puntos luminosos
+  .pointsData([])
+  .pointLat('lat').pointLng('lon')
+  .pointColor(d => colorEstado(d.estado))
+  .pointAltitude(d => encogiendo.has(d) ? 0 : 0.03 + (TURISMO ? 0.012 : 0.02 + Math.min(d.total_rel, 2) * 0.05))
+  .pointsTransitionDuration(DURACION_PALOS)
+  .pointRadius(TURISMO ? 0.2 : 0.3)
+  .pointsMerge(false)
+  .pointLabel(d => `<div style="background:rgba(10,14,24,.92);border:1px solid rgba(148,163,184,.25);padding:8px 10px;border-radius:8px;font:12px Inter,system-ui">
+      <b>${d.ciudad}</b><br><span style="color:#94a3b8">${d.pais}</span><br>
+      <span style="color:#e2e8f0">#${d.rank} más turístico del país</span>${d.visitas ? ` · ${fmtNum(d.visitas)} visitas/30 días` : ''}<br>
+      <span style="color:${colorEstado(d.estado)};font-weight:700">${d.total_fmt}</span> viaje total<br>
+      <span style="color:#94a3b8">${d.ruta_txt}</span>${d.riesgo ? '<br><span style="color:#fbbf24">⚠ Advertencias de seguridad</span>' : ''}</div>`)
+  .onPointClick(d => { mostrarDestino(d); volarA(d.lat, d.lon, 1.2); })
+  // Anillos pulsantes en destinos dentro del presupuesto
+  .ringsData([])
+  .ringLat('lat').ringLng('lon')
+  .ringColor(d => t => hexA(colorEstado(d.estado), 1 - t))
+  .ringMaxRadius(2.2).ringPropagationSpeed(1.4).ringRepeatPeriod(1800);
+actualizarPuntos();
+
+// ---------- Mapa de calor 3D ("Más turísticos") ----------
+// Columnas hexagonales: la altura y el color dependen de la suma de turistas
+// estimados en cada zona (llegadas del país × participación del destino).
+function colorCalor(t) {
+  // azul → verde → amarillo → naranjo → rojo
+  const paradas = [[56,189,248],[163,230,53],[250,204,21],[251,146,60],[239,68,68]];
+  const x = Math.max(0, Math.min(1, t)) * (paradas.length - 1);
+  const i = Math.min(Math.floor(x), paradas.length - 2), f = x - i;
+  const c = paradas[i].map((v, k) => Math.round(v + (paradas[i + 1][k] - v) * f));
+  return `rgba(${c[0]},${c[1]},${c[2]},0.92)`;
+}
+if (TURISMO) {
+  const maxPeso = Math.max(...destinos.map(d => d.peso), 0.001);
+  const escala = v => Math.sqrt(Math.min(v / maxPeso, 2.5) / 2.5);
+  globo
+    .hexBinPointsData(verTodos ? destinos : [])
+    .hexBinPointLat('lat').hexBinPointLng('lon').hexBinPointWeight('peso')
+    .hexBinResolution(3)
+    .hexMargin(0.12)
+    .hexAltitude(h => hexEncogiendo ? 0.001 : 0.01 + escala(h.sumWeight) * 0.32)
+    .hexTopColor(h => colorCalor(escala(h.sumWeight)))
+    .hexSideColor(h => colorCalor(escala(h.sumWeight)).replace('0.92', '0.55'))
+    .hexBinMerge(false)
+    .hexTransitionDuration(600)
+    .hexLabel(h => {
+      const top = [...h.points].sort((a, b) => b.peso - a.peso).slice(0, 3);
+      return `<div style="background:rgba(10,14,24,.92);border:1px solid rgba(148,163,184,.25);padding:8px 10px;border-radius:8px;font:12px Inter,system-ui">
+        <b>Zona turística</b><br><span style="color:#94a3b8">~${h.sumWeight >= 1 ? h.sumWeight.toFixed(1) : h.sumWeight.toFixed(2)} M turistas/año (estimación)</span><br>
+        ${top.map(d => `${d.ciudad} <span style="color:#94a3b8">(${d.pais})</span>`).join('<br>')}</div>`;
+    })
+    .onHexClick(h => {
+      const d = [...h.points].sort((a, b) => b.peso - a.peso)[0];
+      if (d) { mostrarDestino(d); volarA(d.lat, d.lon, 1.2); }
+    });
+}
+
+// Países (GeoJSON de Natural Earth)
+fetch('https://raw.githubusercontent.com/vasturiano/globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson')
+  .then(r => r.json())
+  .then(geo => {
+    const paises = separarTerritorios(geo.features.filter(f => f.properties.ISO_A2 !== 'AQ'));
+    paisesGeo = paises;
+    if (paisSel && !seleccionado) seleccionado = paises.find(f => codigoPais(f) === paisSel) || null;
+    globo
+      .polygonsData(paises)
+      .polygonAltitude(f => f === seleccionado ? 0.03 : 0.008)
+      .polygonCapColor(colorCap)
+      .polygonCapMaterial(f => calorVivo ? materialCalor(f) : null)
+      .polygonSideColor(() => 'rgba(15,23,42,0.4)')
+      .polygonStrokeColor(() => 'rgba(148,163,184,0.25)')
+      .polygonLabel(f => {
+        const iso = codigoPais(f), lista = porPais[iso];
+        const nombre = lista ? lista[0].pais : f.properties.NAME;
+        let extra = lista ? `${lista.length} destino${lista.length > 1 ? 's' : ''} · desde ${lista.map(d => d.total_fmt)[indiceMin(lista)]}` : 'Sin destinos turísticos en la base de datos';
+        if (lista && TURISMO && DATOS.llegadas[iso]) extra = `~${DATOS.llegadas[iso]} M turistas internacionales/año · ${lista.length} destinos`;
+        if (lista) extra += `<br>Más turístico: <b style="color:#e2e8f0">${[...lista].sort((a, b) => a.rank - b.rank)[0].ciudad}</b>`;
+        if (f.properties.SOBERANO) extra += `<br>Territorio de ultramar de ${f.properties.SOBERANO}`;
+        return `<div style="background:rgba(10,14,24,.92);border:1px solid rgba(148,163,184,.25);padding:7px 10px;border-radius:8px;font:12px Inter,system-ui"><b>${nombre}</b><br><span style="color:#94a3b8">${extra}</span></div>`;
+      })
+      .onPolygonClick(f => {
+        seleccionarPais(codigoPais(f), f);
+        const lista = porPais[paisSel];
+        mostrarPais(f.properties.NAME, lista);
+        if (lista) volarA(lista[0].lat, lista[0].lon, 1.6);
+      })
+      .polygonsTransitionDuration(400);
+    aplicarCalor();
+  })
+  .catch(() => { /* Sin conexión al GeoJSON: el globo sigue funcionando con los puntos */ });
+
+// El mapa de Natural Earth dibuja la Guayana Francesa como parte de Francia (un solo
+// país). Aquí se separa en un polígono propio, para que tenga color, destinos y ficha
+// propios, pero se sigue indicando que es un territorio de ultramar de Francia.
+const TERRITORIOS = [
+  { de: 'FRA', iso: 'GUF', nombre: 'Guayana Francesa (Francia)', soberano: 'Francia',
+    // lon/lat aproximados del territorio
+    dentro: (lon, lat) => lon > -55 && lon < -51 && lat > 1.5 && lat < 6.5 },
+];
+function separarTerritorios(features) {
+  const salida = [];
+  for (const f of features) {
+    const p = f.properties, g = f.geometry;
+    const t = TERRITORIOS.find(t => p.ADM0_A3 === t.de);
+    if (t && g && g.type === 'MultiPolygon') {
+      const esDelTerritorio = pol => t.dentro(pol[0][0][0], pol[0][0][1]);
+      const propios = g.coordinates.filter(esDelTerritorio);
+      if (propios.length) {
+        salida.push({ ...f, geometry: { type: 'MultiPolygon', coordinates: g.coordinates.filter(pol => !esDelTerritorio(pol)) } });
+        salida.push({ type: 'Feature',
+          properties: { ...p, ADM0_A3: t.iso, ISO_A3: t.iso, ISO_A3_EH: t.iso, GU_A3: t.iso, NAME: t.nombre, SOBERANO: t.soberano },
+          geometry: { type: 'MultiPolygon', coordinates: propios } });
+        continue;
+      }
+    }
+    salida.push(f);
+  }
+  return salida;
+}
+
+function colorCap(f) {
+  const e = estadoPais(codigoPais(f));
+  if (!e) return 'rgba(51,65,85,0.25)';
+  return hexA(colorEstado(e), f === seleccionado ? 0.85 : (TURISMO ? 0.28 : 0.55));
+}
+
+// ---------- "Calor vivo" (efecto de cámara térmica) ----------
+// Cada país conserva SIEMPRE su color (su tono). Lo único que cambia es el brillo:
+// manchas de calor que fluyen lentamente sobre la superficie, como en una cámara
+// térmica. Así la leyenda se sigue leyendo igual.
+let calorVivo = true;   // activado por defecto; se recuerda si la persona lo apaga
+try { const v = sessionStorage.getItem('gt_calor_vivo'); if (v !== null) calorVivo = v === '1'; } catch (e) {}
+const tiempoCalor = { value: 0 };
+const materialesCalor = {};
+
+const GLSL_RUIDO = `
+  uniform float gtTiempo;
+  varying vec3 gtPos;
+  // Ruido simplex 3D (Ashima Arts / Stefan Gustavson, licencia MIT)
+  vec3 gtM289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+  vec4 gtM289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+  vec4 gtPerm(vec4 x) { return gtM289(((x * 34.0) + 10.0) * x); }
+  vec4 gtInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+  float gtRuido(vec3 v) {
+    const vec2 C = vec2(1.0 / 6.0, 1.0 / 3.0);
+    const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+    vec3 i = floor(v + dot(v, C.yyy));
+    vec3 x0 = v - i + dot(i, C.xxx);
+    vec3 g = step(x0.yzx, x0.xyz);
+    vec3 l = 1.0 - g;
+    vec3 i1 = min(g.xyz, l.zxy);
+    vec3 i2 = max(g.xyz, l.zxy);
+    vec3 x1 = x0 - i1 + C.xxx;
+    vec3 x2 = x0 - i2 + C.yyy;
+    vec3 x3 = x0 - D.yyy;
+    i = gtM289(i);
+    vec4 p = gtPerm(gtPerm(gtPerm(i.z + vec4(0.0, i1.z, i2.z, 1.0)) + i.y + vec4(0.0, i1.y, i2.y, 1.0)) + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+    float n_ = 0.142857142857;
+    vec3 ns = n_ * D.wyz - D.xzx;
+    vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+    vec4 x_ = floor(j * ns.z);
+    vec4 y_ = floor(j - 7.0 * x_);
+    vec4 x = x_ * ns.x + ns.yyyy;
+    vec4 y = y_ * ns.x + ns.yyyy;
+    vec4 h = 1.0 - abs(x) - abs(y);
+    vec4 b0 = vec4(x.xy, y.xy);
+    vec4 b1 = vec4(x.zw, y.zw);
+    vec4 s0 = floor(b0) * 2.0 + 1.0;
+    vec4 s1 = floor(b1) * 2.0 + 1.0;
+    vec4 sh = -step(h, vec4(0.0));
+    vec4 a0 = b0.xzyw + s0.xzyw * sh.xxyy;
+    vec4 a1 = b1.xzyw + s1.xzyw * sh.zzww;
+    vec3 p0 = vec3(a0.xy, h.x);
+    vec3 p1 = vec3(a0.zw, h.y);
+    vec3 p2 = vec3(a1.xy, h.z);
+    vec3 p3 = vec3(a1.zw, h.w);
+    vec4 norm = gtInvSqrt(vec4(dot(p0, p0), dot(p1, p1), dot(p2, p2), dot(p3, p3)));
+    p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+    vec4 m = max(0.5 - vec4(dot(x0, x0), dot(x1, x1), dot(x2, x2), dot(x3, x3)), 0.0);
+    m = m * m;
+    return 105.0 * dot(m * m, vec4(dot(p0, x0), dot(p1, x1), dot(p2, x2), dot(p3, x3)));
+  }
+  // Mapa de calor que fluye: 0 = zona "fría", 1 = zona "caliente"
+  float gtCalor(vec3 p, float t) {
+    vec3 q = normalize(p) * 3.2;
+    float n = 0.65 * gtRuido(q + vec3(t * 0.10, t * 0.07, -t * 0.08))
+            + 0.35 * gtRuido(q * 2.2 + vec3(-t * 0.17, t * 0.13, t * 0.11));
+    return smoothstep(-0.55, 0.55, n);
+  }
+`;
+function preparaShader(shader) {
+  shader.uniforms.gtTiempo = tiempoCalor;
+  shader.vertexShader = shader.vertexShader
+    .replace('#include <common>', '#include <common>\nvarying vec3 gtPos;')
+    .replace('#include <begin_vertex>', '#include <begin_vertex>\ngtPos = position;');
+  shader.fragmentShader = shader.fragmentShader
+    .replace('#include <common>', '#include <common>\n' + GLSL_RUIDO)
+    .replace('#include <dithering_fragment>',
+      `float gtC = gtCalor(gtPos, gtTiempo);
+       // Brillo entre 80 % y 118 % del color original (zonas "frías" y "calientes"),
+       // más un leve resplandor en los núcleos calientes. Se multiplica el color
+       // completo y se limita para no saturar: el tono (verde, amarillo...) no cambia.
+       vec3 gtBase = gl_FragColor.rgb;
+       float gtF = mix(0.80, 1.18, gtC) + 0.22 * smoothstep(0.80, 1.0, gtC);
+       float gtMax = max(gtBase.r, max(gtBase.g, gtBase.b));
+       gtF = min(gtF, 1.0 / max(gtMax, 0.001));
+       gl_FragColor.rgb = gtBase * gtF;
+       gl_FragColor.a = min(1.0, gl_FragColor.a * mix(0.90, 1.12, gtC));
+       #include <dithering_fragment>`);
+}
+function materialCalor(f) {
+  try { return crearMaterialCalor(f); }
+  catch (err) { console.warn('Calor vivo no disponible:', err); return null; }   // si falla, el país queda normal
+}
+function crearMaterialCalor(f) {
+  const e = estadoPais(codigoPais(f));
+  if (!e) return null;                       // "sin datos" queda quieto y gris
+  const clave = colorCap(f);
+  if (materialesCalor[clave]) return materialesCalor[clave];
+  const m = clave.match(/rgba\((\d+),(\d+),(\d+),([\d.]+)\)/);
+  if (!m) return null;
+  const Material = globo.globeMaterial().constructor;   // misma versión de Three.js que usa el globo
+  const mat = new Material();
+  const hex = (+m[1] << 16) | (+m[2] << 8) | +m[3];
+  mat.color.set(0x000000);                    // sin luz ni sombras: el color sale "encendido"
+  mat.specular && mat.specular.set(0x000000);
+  mat.emissive.set(hex);
+  mat.shininess = 0;
+  mat.side = 2;                               // THREE.DoubleSide
+  mat.opacity = Math.min(1, +m[4] + 0.08);
+  mat.transparent = true;
+  mat.onBeforeCompile = preparaShader;
+  mat.customProgramCacheKey = () => 'gt-calor-vivo';
+  return (materialesCalor[clave] = mat);
+}
+let animando = false;
+function animarCalor() {
+  if (!calorVivo) { animando = false; return; }
+  animando = true;
+  tiempoCalor.value = reducirMovimiento ? 0 : performance.now() / 1000;
+  requestAnimationFrame(animarCalor);
+}
+function aplicarCalor() {
+  document.body.classList.toggle('calor', calorVivo);
+  const b = document.getElementById('calorVivo');
+  b.classList.toggle('activo', calorVivo);
+  document.getElementById('calorTxt').textContent = calorVivo ? 'Calor vivo: sí' : 'Calor vivo';
+  if (paisesGeo.length && globo.polygonCapMaterial) globo.polygonCapMaterial(globo.polygonCapMaterial());   // vuelve a pintar los países
+  if (calorVivo && !animando) animarCalor();
+}
+// Si esta versión del globo no permite materiales propios, se oculta el botón
+if (typeof globo.polygonCapMaterial !== 'function') document.getElementById('calorVivo').style.display = 'none';
+window.alternarCalor = () => {
+  calorVivo = !calorVivo;
+  try { sessionStorage.setItem('gt_calor_vivo', calorVivo ? '1' : '0'); } catch (e) {}
+  aplicarCalor();
+};
+
+function indiceMin(lista) {
+  let i = 0; lista.forEach((d, k) => { if (d.total_usd < lista[i].total_usd) i = k; }); return i;
+}
+
+// Rotación automática suave hasta que el usuario interactúa
+const ctl = globo.controls();
+ctl.autoRotate = true; ctl.autoRotateSpeed = 0.35; ctl.enableDamping = true;
+contenedor.addEventListener('pointerdown', () => { ctl.autoRotate = false; });
+globo.pointOfView({ lat: DATOS.origen.lat, lng: DATOS.origen.lon, altitude: 2.3 }, 0);
+
+function volarA(lat, lng, alt) { ctl.autoRotate = false; globo.pointOfView({ lat, lng, altitude: alt }, 1200); }
+
+// Arco desde el origen hacia el destino seleccionado
+function mostrarArco(d) {
+  // Un arco por cada tramo de la ruta (origen → escalas → destino)
+  const pts = d.ruta.length > 1 ? d.ruta : [{ lat: DATOS.origen.lat, lon: DATOS.origen.lon }];
+  const tramos = [];
+  for (let i = 0; i < pts.length - 1; i++)
+    tramos.push({ sLat: pts[i].lat, sLng: pts[i].lon, eLat: pts[i + 1].lat, eLng: pts[i + 1].lon, c: colorEstado(d.estado) });
+  // Tramo final del aeropuerto a la ciudad (si están separados)
+  const ult = pts[pts.length - 1];
+  if (Math.abs(ult.lat - d.lat) + Math.abs(ult.lon - d.lon) > 0.5)
+    tramos.push({ sLat: ult.lat, sLng: ult.lon, eLat: d.lat, eLng: d.lon, c: colorEstado(d.estado) });
+  // Escalas como etiquetas
+  globo.labelsData(d.ruta.length > 2 ? d.ruta.slice(1, -1) : [])
+    .labelLat('lat').labelLng('lon').labelText('c').labelSize(0.9).labelDotRadius(0.35)
+    .labelColor(() => 'rgba(226,232,240,0.95)').labelResolution(2).labelAltitude(0.01);
+  globo.arcsData(tramos)
+    .arcStartLat('sLat').arcStartLng('sLng').arcEndLat('eLat').arcEndLng('eLng')
+    .arcColor(a => ['rgba(56,189,248,0.9)', a.c])
+    .arcStroke(0.6).arcDashLength(0.45).arcDashGap(0.15).arcDashAnimateTime(1600)
+    .arcAltitudeAutoScale(0.45);
+}
+
+// ---------- Ficha lateral ----------
+const ficha = document.getElementById('ficha'), contenido = document.getElementById('contenido');
+function cerrarFicha() {
+  ficha.classList.remove('visible'); globo.arcsData([]); globo.labelsData([]);
+  seleccionarPais(null, null);   // al cerrar se ocultan los palos del país (salvo "Ver destinos")
+}
+window.cerrarFicha = cerrarFicha;
+
+function tarjeta(d) {
+  const c = colorEstado(d.estado);
+  return `<div class="destino" onclick="seleccionarPorId('${d.id}')">
+    <div class="cab"><span class="nom"><span style="color:var(--acento);font-variant-numeric:tabular-nums">#${d.rank}</span> ${d.ciudad}</span><span class="tot" style="color:${c}">${d.total_fmt}</span></div>
+    ${d.visitas ? `<div class="det">${fmtNum(d.visitas)} visitas en Wikipedia (30 días)</div>` : ''}
+    <div class="det">Vuelo ${d.vuelo_pp_fmt} p/p (${d.ruta_txt.toLowerCase()}) · ${d.diario_fmt}/día p/p en destino</div>
+    ${d.riesgo ? '<div class="det" style="color:#fbbf24">⚠ Advertencias de seguridad</div>' : ''}
+    <span class="chip" style="color:${c}">${d.estado_txt}</span></div>`;
+}
+window.seleccionarPorId = id => { const d = destinos.find(x => x.id === id); mostrarDestino(d); volarA(d.lat, d.lon, 1.2); };
+
+function mostrarPais(nombre, lista) {
+  if (!lista) {
+    contenido.innerHTML = `<h2>${nombre}</h2><div class="sub">Este territorio no tiene destinos en la base de datos (${destinos.length} destinos en ${nPaises} países; puede deberse a un filtro activo). Se pueden agregar en <code>datos/destinos.json</code>.</div>`;
+  } else {
+    const orden = [...lista].sort((a, b) => a.rank - b.rank);
+    const enVivo = lista.some(d => d.visitas);
+    contenido.innerHTML = `<h2>${lista[0].pais}</h2>
+      <div class="sub">Ranking de destinos más turísticos${enVivo ? ' · según visitas recientes en Wikipedia' : ' · ranking base'}<br>${DATOS.resumen}${DATOS.llegadas[lista[0].iso3] ? ` · ~${DATOS.llegadas[lista[0].iso3]} M turistas/año` : ''}</div>
+      ${orden.map(tarjeta).join('')}
+      <div class="nota">Toca un destino para ver el desglose. Más detalle, fotos y alojamientos en la pestaña “Explorar destino”, bajo el globo.</div>`;
+  }
+  globo.arcsData([]); globo.labelsData([]);
+  ficha.classList.add('visible');
+}
+
+function mostrarDestino(d) {
+  if (paisSel !== d.iso3) seleccionarPais(d.iso3);
+  const c = colorEstado(d.estado), f = d.fmt;
+  contenido.innerHTML = `<h2>${d.ciudad}</h2>
+    <div class="sub">${d.pais} · ${d.continente} · ${d.distancia_km ? Math.round(d.distancia_km).toLocaleString('es-CL') + ' km volados desde ' + DATOS.origen.codigo : 'cerca de ' + DATOS.origen.codigo}</div>
+    <span class="chip" style="color:${c}">${d.estado_txt}</span>
+    <div class="det" style="margin-top:8px;font-size:12.5px"><b>#${d.rank}</b> más turístico de ${d.pais}${d.visitas ? ` · ${fmtNum(d.visitas)} visitas en Wikipedia (30 días)` : ''}</div>
+    ${d.riesgo ? '<div class="nota" style="color:#fbbf24;margin-top:8px">⚠ País con advertencias de seguridad para viajeros. Revisa las recomendaciones de tu cancillería.</div>' : ''}
+    <div class="det" style="margin-top:10px;font-size:12.5px"><b>Ruta:</b> ${d.ruta.length > 1 ? d.ruta.map(r => r.c).join(' → ') : 'por tierra'} <span style="color:var(--suave)">· ${d.ruta_txt}</span></div>
+    <table class="desg">
+      <tr><td>Vuelos ida y vuelta (${DATOS.viajeros} pers.)</td><td>${f.vuelos}</td></tr>
+      <tr><td>Alojamiento (${DATOS.noches} noches)</td><td>${f.alojamiento}</td></tr>
+      <tr><td>Alimentación</td><td>${f.comida}</td></tr>
+      <tr><td>Transporte local</td><td>${f.transporte}</td></tr>
+      <tr><td>Actividades</td><td>${f.actividades}</td></tr>
+      <tr class="total"><td>Total estimado del viaje</td><td style="color:${c}">${d.total_fmt}</td></tr>
+    </table>
+    <div class="det" style="margin-top:10px;color:var(--suave);font-size:12px">Costo de vida en destino: <b style="color:var(--texto)">${d.diario_fmt}</b> por persona/día (sin vuelo)</div>
+    ${d.atractivos.length ? `<div style="margin-top:12px;font-size:12px;color:var(--suave);text-transform:uppercase;letter-spacing:.06em">Atractivos</div>
+    <ul class="atr">${d.atractivos.map(a => `<li>${a}</li>`).join('')}</ul>` : ''}
+    <div class="nota">Valores estimados de demostración, no tarifas reales.</div>`;
+  mostrarArco(d);
+  ficha.classList.add('visible');
+}
+
+// Ajuste de tamaño
+function ajustar() { globo.width(contenedor.clientWidth).height(contenedor.clientHeight); }
+window.addEventListener('resize', ajustar); ajustar();
+aplicarCalor();   // estado inicial del botón (el efecto se aplica cuando cargan los países)
+</script>
+</body>
+</html>

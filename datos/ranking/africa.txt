@@ -1,0 +1,381 @@
+# Destinos más turísticos por país — África
+# Formato: ISO3|Nombre|lat|lon|título en Wikipedia (opcional)
+
+EGY|El Cairo|30.04|31.24
+EGY|Pirámides de Giza|29.98|31.13|Necrópolis de Guiza
+EGY|Luxor|25.69|32.64
+EGY|Sharm el-Sheij|27.92|34.33
+EGY|Hurghada|27.26|33.81
+EGY|Asuán|24.09|32.90
+EGY|Alejandría|31.20|29.92
+EGY|Abu Simbel|22.34|31.63
+EGY|Dahab|28.50|34.51
+EGY|Oasis de Siwa|29.20|25.52
+
+MAR|Marrakech|31.63|-7.99
+MAR|Fez|34.03|-5.00
+MAR|Chefchaouen|35.17|-5.27
+MAR|Casablanca|33.57|-7.59
+MAR|Merzouga (Sahara)|31.10|-4.01|Merzouga
+MAR|Esauira|31.51|-9.77
+MAR|Tánger|35.76|-5.83
+MAR|Agadir|30.43|-9.60
+MAR|Aït Ben Haddou|31.05|-7.13
+MAR|Rabat|34.02|-6.83
+
+TUN|Túnez|36.81|10.18
+TUN|Sidi Bou Said|36.87|10.35
+TUN|Yerba|33.81|10.85
+TUN|Hammamet|36.40|10.62
+TUN|Susa|35.83|10.64|Susa (Túnez)
+TUN|Cartago|36.86|10.32
+TUN|El Djem|35.30|10.71
+TUN|Douz|33.46|9.02
+TUN|Kairuán|35.68|10.10
+TUN|Tozeur|33.92|8.13
+
+DZA|Argel|36.75|3.06
+DZA|Orán|35.70|-0.63
+DZA|Constantina|36.37|6.61|Constantina (Argelia)
+DZA|Tassili n'Ajjer|25.50|9.00
+DZA|Ghardaïa|32.49|3.67
+DZA|Timgad|35.48|6.47
+DZA|Tipasa|36.59|2.45
+DZA|Djémila|36.32|5.74
+DZA|Tamanrasset|22.79|5.52
+DZA|Tlemcen|34.88|-1.31
+
+LBY|Trípoli|32.89|13.19|Trípoli
+LBY|Leptis Magna|32.64|14.29
+LBY|Ghadamés|30.13|9.50
+LBY|Sabratha|32.80|12.48
+LBY|Cirene|32.82|21.86
+LBY|Bengasi|32.12|20.07
+LBY|Tadrart Acacus|24.80|10.50
+
+SDN|Jartum|15.50|32.56
+SDN|Pirámides de Meroe|16.94|33.75
+SDN|Jebel Barkal|18.53|31.83
+SDN|Port Sudan|19.62|37.22
+SDN|Suakin|19.11|37.33
+SDN|Kerma|19.60|30.41
+
+SDS|Yuba|4.85|31.58
+SDS|Parque Nacional Boma|6.50|33.50
+SDS|Nimule|3.60|32.06
+
+ETH|Adís Abeba|9.03|38.74
+ETH|Lalibela|12.03|39.04
+ETH|Montes Simien|13.18|38.07|Parque nacional de las Montañas Simien
+ETH|Gondar|12.60|37.47
+ETH|Axum|14.12|38.72
+ETH|Depresión de Danakil|14.24|40.30
+ETH|Bahir Dar|11.59|37.39
+ETH|Harar|9.31|42.12
+ETH|Valle del Omo|5.50|36.00|Valle inferior del Omo
+ETH|Montes Bale|6.70|39.70|Parque nacional de las Montañas Bale
+
+ERI|Asmara|15.32|38.93
+ERI|Massawa|15.61|39.45
+ERI|Archipiélago Dahlak|15.75|40.10
+ERI|Keren|15.78|38.45
+ERI|Qohaito|14.93|39.43
+
+DJI|Yibuti|11.59|43.15
+DJI|Lago Assal|11.66|42.42
+DJI|Lago Abbe|11.15|41.78
+DJI|Tadjoura|11.79|42.88
+DJI|Islas Moucha|11.72|43.20
+
+SOM|Mogadiscio|2.05|45.32
+SOM|Kismayo|-0.36|42.55
+SOM|Merca|1.71|44.77
+SOM|Bosaso|11.28|49.18
+
+SOL|Hargeisa|9.56|44.06
+SOL|Laas Geel|9.78|44.45
+SOL|Berbera|10.44|45.01
+
+KEN|Nairobi|-1.29|36.82
+KEN|Masái Mara|-1.49|35.14|Reserva nacional de Masái Mara
+KEN|Mombasa|-4.04|39.67
+KEN|Diani Beach|-4.32|39.57
+KEN|Amboseli|-2.65|37.26|Parque nacional de Amboseli
+KEN|Lamu|-2.27|40.90
+KEN|Lago Nakuru|-0.37|36.08|Parque nacional del Lago Nakuru
+KEN|Tsavo|-2.98|38.47
+KEN|Malindi|-3.22|40.12
+KEN|Monte Kenia|-0.15|37.31
+
+TZA|Zanzíbar|-6.16|39.19
+TZA|Serengeti|-2.33|34.83|Parque nacional del Serengeti
+TZA|Kilimanjaro|-3.07|37.36
+TZA|Cráter del Ngorongoro|-3.20|35.50|Área de conservación de Ngorongoro
+TZA|Arusha|-3.37|36.68
+TZA|Dar es-Salam|-6.79|39.21
+TZA|Tarangire|-3.83|36.00|Parque nacional de Tarangire
+TZA|Lago Manyara|-3.50|35.83|Parque nacional del Lago Manyara
+TZA|Isla de Mafia|-7.85|39.78
+TZA|Selous|-8.00|38.00|Reserva de caza de Selous
+
+UGA|Entebbe|0.05|32.44
+UGA|Bwindi|-1.05|29.70|Parque nacional impenetrable de Bwindi
+UGA|Cataratas Murchison|2.28|31.69|Parque nacional de las Cataratas Murchison
+UGA|Kampala|0.35|32.58
+UGA|Jinja|0.44|33.20
+UGA|Parque Nacional Reina Isabel|-0.20|30.00
+UGA|Kibale|0.50|30.40|Parque nacional de Kibale
+UGA|Lago Bunyonyi|-1.28|29.93
+UGA|Montes Rwenzori|0.38|29.87|Montes Ruwenzori
+
+RWA|Kigali|-1.95|30.06
+RWA|Parque Nacional de los Volcanes|-1.47|29.53
+RWA|Lago Kivu (Gisenyi)|-1.70|29.26|Gisenyi
+RWA|Nyungwe|-2.48|29.20|Parque nacional de Nyungwe
+RWA|Akagera|-1.88|30.72|Parque nacional de Akagera
+RWA|Huye|-2.60|29.74
+
+BDI|Buyumbura|-3.38|29.36
+BDI|Gitega|-3.43|29.92
+BDI|Parque Nacional Kibira|-2.90|29.50
+BDI|Lago Tanganica (Rumonge)|-3.97|29.44|Rumonge
+
+COD|Kinsasa|-4.32|15.31
+COD|Parque Nacional Virunga|-0.92|29.17
+COD|Goma|-1.68|29.22
+COD|Volcán Nyiragongo|-1.52|29.25
+COD|Kahuzi-Biega|-2.30|28.75|Parque nacional de Kahuzi-Biega
+COD|Lubumbashi|-11.66|27.48
+
+COG|Brazzaville|-4.27|15.28
+COG|Pointe-Noire|-4.78|11.86
+COG|Parque Nacional Odzala|-0.60|14.90|Parque nacional de Odzala
+COG|Nouabalé-Ndoki|2.50|16.50|Parque nacional de Nouabalé-Ndoki
+
+CAF|Bangui|4.39|18.56
+CAF|Dzanga-Sangha|2.90|16.20
+CAF|Cataratas de Boali|4.80|18.12
+
+CMR|Duala|4.05|9.70
+CMR|Yaundé|3.87|11.52
+CMR|Kribi|2.94|9.91
+CMR|Monte Camerún|4.20|9.17
+CMR|Limbe|4.02|9.21
+CMR|Foumban|5.73|10.90
+CMR|Parque Nacional Waza|11.25|14.75
+CMR|Parque Nacional Bénoué|8.30|13.90
+
+GAB|Libreville|0.42|9.47
+GAB|Loango|-2.30|9.60|Parque nacional de Loango
+GAB|Lopé|-0.50|11.50|Parque nacional de Lopé
+GAB|Port-Gentil|-0.72|8.78
+GAB|Lambaréné|-0.70|10.24
+
+GNQ|Malabo|3.75|8.78
+GNQ|Bata|1.86|9.77
+GNQ|Monte Alén|1.65|10.30|Parque nacional de Monte Alén
+GNQ|Annobón|-1.42|5.63
+
+NGA|Lagos|6.52|3.38
+NGA|Abuja|9.08|7.40
+NGA|Calabar|4.95|8.32
+NGA|Bosque sagrado de Osun-Osogbo|7.76|4.55
+NGA|Parque Nacional Yankari|9.75|10.50|Parque nacional de Yankari
+NGA|Roca Olumo|7.16|3.35
+NGA|Meseta de Obudu|6.40|9.37
+NGA|Kano|12.00|8.52
+NGA|Ibadan|7.38|3.95
+
+NER|Niamey|13.51|2.11
+NER|Agadez|16.97|7.99
+NER|Parque W|12.20|2.40|Parque nacional W
+NER|Montes Aïr|18.00|8.50
+NER|Zinder|13.81|8.99
+
+TCD|Yamena|12.13|15.06
+TCD|Parque Nacional Zakouma|10.85|19.65
+TCD|Macizo de Ennedi|17.00|22.00
+TCD|Lago Chad|13.00|14.00
+
+MLI|Bamako|12.64|-8.00
+MLI|Djenné|13.91|-4.55
+MLI|País Dogón|14.35|-3.60
+MLI|Tombuctú|16.77|-3.01
+MLI|Mopti|14.49|-4.19
+MLI|Ségou|13.43|-6.26
+
+BFA|Uagadugú|12.37|-1.52
+BFA|Bobo-Dioulasso|11.18|-4.30
+BFA|Picos de Sindou|10.66|-5.17
+BFA|Tiébélé|11.10|-0.96
+BFA|Banfora|10.63|-4.76
+
+MRT|Nuakchot|18.08|-15.98
+MRT|Chinguetti|20.46|-12.36
+MRT|Banc d'Arguin|20.00|-16.30|Parque nacional del Banc d'Arguin
+MRT|Estructura de Richat|21.12|-11.40
+MRT|Ouadane|20.93|-11.62
+MRT|Nuadibú|20.94|-17.04
+
+SEN|Dakar|14.72|-17.47
+SEN|Isla de Gorée|14.67|-17.40
+SEN|Lago Rosa|14.84|-17.23
+SEN|Saint-Louis|16.03|-16.49|San Luis (Senegal)
+SEN|Saly|14.45|-17.02
+SEN|Delta del Saloum|13.80|-16.60
+SEN|Cap Skirring|12.39|-16.75
+SEN|Parque Nacional Niokolo-Koba|13.00|-13.00|Parque nacional de Niokolo-Koba
+
+GMB|Banjul|13.45|-16.58
+GMB|Kololi|13.45|-16.72
+GMB|Isla Kunta Kinteh|13.32|-16.36
+GMB|Makasutu|13.20|-16.63
+GMB|Reserva de Abuko|13.40|-16.65|Reserva natural de Abuko
+
+GNB|Bisáu|11.86|-15.60
+GNB|Archipiélago de Bijagós|11.20|-16.10
+GNB|Varela|12.28|-16.59
+GNB|Cacheu|12.27|-16.16
+
+GIN|Conakri|9.64|-13.58
+GIN|Islas de Los|9.48|-13.80
+GIN|Fouta Djallon|11.30|-12.30
+GIN|Monte Nimba|7.60|-8.40
+
+SLE|Freetown|8.48|-13.23
+SLE|Playa River Number Two|8.35|-13.20
+SLE|Isla Bunce|8.57|-13.04
+SLE|Isla Tiwai|7.55|-11.35
+SLE|Islas Banana|8.12|-13.20
+
+LBR|Monrovia|6.30|-10.80
+LBR|Robertsport|6.75|-11.37
+LBR|Parque Nacional Sapo|5.40|-8.60
+LBR|Buchanan|5.88|-10.05
+
+CIV|Abiyán|5.36|-4.01
+CIV|Grand-Bassam|5.20|-3.74
+CIV|Yamusukro|6.82|-5.28
+CIV|Assinie|5.14|-3.30
+CIV|San-Pédro|4.75|-6.64
+CIV|Parque Nacional de Taï|5.80|-7.30
+
+GHA|Acra|5.60|-0.19
+GHA|Cape Coast|5.11|-1.25
+GHA|Parque Nacional Kakum|5.35|-1.38
+GHA|Kumasi|6.69|-1.62
+GHA|Elmina|5.08|-1.35
+GHA|Parque Nacional Mole|9.70|-1.80
+GHA|Cascadas Wli|7.12|0.59
+GHA|Lago Volta|7.50|0.00
+
+TGO|Lomé|6.13|1.22
+TGO|Kpalimé|6.90|0.63
+TGO|Koutammakou|10.20|1.15
+TGO|Lago Togo|6.25|1.42
+
+BEN|Cotonú|6.37|2.39
+BEN|Ouidah|6.36|2.09
+BEN|Ganvié|6.47|2.42
+BEN|Abomey|7.18|1.99
+BEN|Porto-Novo|6.50|2.60
+BEN|Parque Nacional Pendjari|11.20|1.50|Parque nacional de Pendjari
+
+AGO|Luanda|-8.84|13.23
+AGO|Cataratas de Kalandula|-9.07|16.00
+AGO|Miradouro da Lua|-9.21|13.06
+AGO|Lubango|-14.92|13.49
+AGO|Benguela|-12.58|13.41
+AGO|Namibe|-15.20|12.15
+
+ZMB|Livingstone|-17.85|25.86|Livingstone (Zambia)
+ZMB|South Luangwa|-13.08|31.80|Parque nacional de Luangwa del Sur
+ZMB|Lower Zambezi|-15.50|29.50|Parque nacional del Bajo Zambeze
+ZMB|Lusaka|-15.39|28.32
+ZMB|Parque Nacional Kafue|-15.00|26.00|Parque nacional de Kafue
+ZMB|Lago Kariba (Siavonga)|-16.54|28.71|Siavonga
+
+ZWE|Cataratas Victoria|-17.93|25.83
+ZWE|Parque Nacional Hwange|-18.73|26.95|Parque nacional de Hwange
+ZWE|Gran Zimbabue|-20.27|30.93
+ZWE|Harare|-17.83|31.05
+ZWE|Mana Pools|-15.75|29.35|Parque nacional de Mana Pools
+ZWE|Kariba|-16.52|28.80|Kariba (Zimbabue)
+ZWE|Parque Nacional Matobo|-20.55|28.50|Parque nacional de Matobo
+ZWE|Montes Nyanga|-18.20|32.75|Parque nacional de Nyanga
+
+MWI|Lilongüe|-13.96|33.79
+MWI|Cabo Maclear (Lago Malaui)|-14.02|34.84|Cabo Maclear
+MWI|Meseta de Zomba|-15.35|35.30
+MWI|Isla Likoma|-12.06|34.73
+MWI|Parque Nacional Liwonde|-15.00|35.30|Parque nacional de Liwonde
+MWI|Nkhata Bay|-11.60|34.30
+MWI|Blantyre|-15.79|35.01
+
+MOZ|Maputo|-25.97|32.57
+MOZ|Archipiélago de Bazaruto|-21.66|35.47
+MOZ|Tofo|-23.85|35.55
+MOZ|Vilankulo|-22.00|35.31
+MOZ|Isla de Mozambique|-15.03|40.73
+MOZ|Archipiélago de las Quirimbas|-12.40|40.60
+MOZ|Parque Nacional Gorongosa|-18.95|34.35|Parque nacional de Gorongosa
+MOZ|Ponta do Ouro|-26.84|32.89
+
+MDG|Antananarivo|-18.88|47.51
+MDG|Nosy Be|-13.33|48.27
+MDG|Avenida de los Baobabs|-20.25|44.42
+MDG|Tsingy de Bemaraha|-18.95|44.80|Reserva natural integral de Tsingy de Bemaraha
+MDG|Isla de Santa María|-16.95|49.88|Isla Sainte-Marie
+MDG|Parque Nacional Isalo|-22.55|45.37|Parque nacional de Isalo
+MDG|Andasibe|-18.93|48.42|Parque nacional Andasibe-Mantadia
+MDG|Ranomafana|-21.25|47.45|Parque nacional de Ranomafana
+MDG|Morondava|-20.28|44.28
+MDG|Diego Suárez|-12.27|49.29|Antsiranana
+
+NAM|Windhoek|-22.56|17.08
+NAM|Sossusvlei|-24.73|15.29
+NAM|Parque Nacional Etosha|-18.86|16.33|Parque nacional de Etosha
+NAM|Swakopmund|-22.68|14.53
+NAM|Costa de los Esqueletos|-20.00|13.20
+NAM|Cañón del río Fish|-27.60|17.60
+NAM|Kolmanskop|-26.70|15.23
+NAM|Twyfelfontein|-20.59|14.37
+NAM|Walvis Bay|-22.96|14.51
+NAM|Lüderitz|-26.65|15.15
+
+BWA|Maun|-19.98|23.42
+BWA|Delta del Okavango|-19.30|22.90
+BWA|Parque Nacional Chobe|-18.60|24.50|Parque nacional de Chobe
+BWA|Kasane|-17.80|25.15
+BWA|Salinas de Makgadikgadi|-20.70|25.40
+BWA|Kalahari Central|-22.00|23.50|Reserva de caza del Kalahari Central
+BWA|Gaborone|-24.65|25.91
+BWA|Colinas de Tsodilo|-18.75|21.73
+
+ZAF|Ciudad del Cabo|-33.92|18.42
+ZAF|Parque Nacional Kruger|-24.00|31.50
+ZAF|Johannesburgo|-26.20|28.05
+ZAF|Durban|-29.86|31.02
+ZAF|Stellenbosch|-33.93|18.86
+ZAF|Ruta Jardín (Knysna)|-34.04|23.05|Knysna
+ZAF|Hermanus|-34.42|19.24
+ZAF|Montes Drakensberg|-29.00|29.30
+ZAF|Gqeberha|-33.96|25.60
+ZAF|Cañón del río Blyde|-24.57|30.80
+
+LSO|Maseru|-29.31|27.48
+LSO|Paso de Sani|-29.59|29.29
+LSO|Cataratas de Maletsunyane|-29.87|28.05
+LSO|Thaba Bosiu|-29.35|27.68
+LSO|Malealea|-29.82|27.60
+LSO|Parque Nacional Sehlabathebe|-29.87|29.10
+
+SWZ|Mbabane|-26.31|31.14
+SWZ|Valle de Ezulwini|-26.42|31.18
+SWZ|Mlilwane|-26.48|31.20|Santuario de vida silvestre de Mlilwane
+SWZ|Parque Hlane|-26.25|31.88|Parque Real Nacional de Hlane
+SWZ|Reserva Malolotja|-26.13|31.12
+SWZ|Lobamba|-26.45|31.20
+
+SAH|Dajla|23.70|-15.94
+SAH|El Aaiún|27.15|-13.20

@@ -1,0 +1,500 @@
+# Destinos más turísticos por país — Asia, Medio Oriente y Oceanía
+# Formato: ISO3|Nombre|lat|lon|título en Wikipedia (opcional)
+
+CHN|Pekín|39.90|116.40
+CHN|Shanghái|31.23|121.47
+CHN|Gran Muralla (Mutianyu)|40.43|116.56|Mutianyu
+CHN|Xi'an|34.34|108.94
+CHN|Hong Kong|22.32|114.17
+CHN|Guilin|25.27|110.29
+CHN|Chengdú|30.57|104.07
+CHN|Zhangjiajie|29.12|110.48
+CHN|Hangzhou|30.27|120.16
+CHN|Macao|22.20|113.55
+CHN|Lhasa|29.65|91.17
+CHN|Yangshuo|24.78|110.49
+CHN|Suzhou|31.30|120.62
+CHN|Lijiang|26.87|100.23
+CHN|Montañas Amarillas|30.13|118.17
+CHN|Jiuzhaigou|33.26|103.92
+CHN|Chongqing|29.56|106.55
+CHN|Sanya (Hainan)|18.25|109.51|Sanya
+CHN|Harbin|45.80|126.53
+CHN|Dunhuang|40.14|94.66
+
+TWN|Taipéi|25.03|121.56
+TWN|Garganta de Taroko|24.16|121.62|Parque nacional Taroko
+TWN|Jiufen|25.11|121.84
+TWN|Lago Sol Luna|23.86|120.92
+TWN|Tainan|22.99|120.21
+TWN|Kaohsiung|22.63|120.30
+TWN|Alishan|23.51|120.80
+TWN|Kenting|21.95|120.80|Parque nacional Kenting
+TWN|Hualien|23.99|121.60
+TWN|Taichung|24.15|120.67
+
+JPN|Tokio|35.68|139.69
+JPN|Kioto|35.01|135.77
+JPN|Osaka|34.69|135.50
+JPN|Monte Fuji|35.36|138.73
+JPN|Hiroshima|34.39|132.46
+JPN|Nara|34.69|135.80
+JPN|Sapporo (Hokkaido)|43.06|141.35|Sapporo
+JPN|Okinawa|26.21|127.68|Okinawa (isla)
+JPN|Hakone|35.23|139.11
+JPN|Nikkō|36.75|139.60
+
+KOR|Seúl|37.57|126.98
+KOR|Busan|35.18|129.08
+KOR|Isla de Jeju|33.40|126.55
+KOR|Gyeongju|35.86|129.22
+KOR|Incheon|37.46|126.71
+KOR|Jeonju|35.82|127.15
+KOR|Seoraksan|38.12|128.47|Parque nacional Seoraksan
+KOR|Zona desmilitarizada|37.96|126.68|Zona desmilitarizada de Corea
+KOR|Aldea de Hahoe|36.54|128.52|Aldea folclórica de Hahoe
+KOR|Suwon|37.26|127.03
+
+PRK|Pionyang|39.03|125.75
+PRK|Kaesong|37.97|126.55
+PRK|Monte Kumgang|38.67|128.08
+PRK|Monte Paektu|42.00|128.06
+PRK|Monte Myohyang|40.00|126.20
+PRK|Wonsan|39.15|127.44
+
+MNG|Ulán Bator|47.89|106.91
+MNG|Desierto de Gobi|43.50|104.00
+MNG|Parque Nacional Terelj|47.98|107.45|Parque nacional Gorkhi-Terelj
+MNG|Lago Khövsgöl|51.00|100.50
+MNG|Karakórum|47.20|102.82
+MNG|Estatua ecuestre de Gengis Kan|47.81|107.53
+MNG|Valle del Orjón|47.50|102.50
+MNG|Bayanzag|44.14|103.73
+MNG|Parque Nacional Hustai|47.70|105.90
+MNG|Ölgii (Altái)|48.97|89.97|Ölgii
+
+VNM|Hanói|21.03|105.85
+VNM|Bahía de Ha Long|20.91|107.18|Bahía de Ha-Long
+VNM|Hoi An|15.88|108.33
+VNM|Ciudad Ho Chi Minh|10.82|106.63
+VNM|Da Nang|16.05|108.21
+VNM|Hue|16.46|107.59
+VNM|Sapa|22.34|103.84
+VNM|Ninh Binh|20.25|105.97
+VNM|Phu Quoc|10.23|103.96
+VNM|Nha Trang|12.24|109.19
+
+THA|Bangkok|13.76|100.50
+THA|Phuket|7.88|98.39
+THA|Chiang Mai|18.79|98.98
+THA|Pattaya|12.93|100.88
+THA|Krabi|8.09|98.91
+THA|Ko Samui|9.51|100.01
+THA|Islas Phi Phi|7.74|98.77
+THA|Ayutthaya|14.35|100.58
+THA|Chiang Rai|19.91|99.83
+THA|Ko Pha Ngan|9.73|100.03
+
+KHM|Siem Reap|13.36|103.86
+KHM|Angkor Wat|13.41|103.87
+KHM|Phnom Penh|11.56|104.93
+KHM|Sihanoukville|10.63|103.50
+KHM|Koh Rong|10.72|103.24
+KHM|Kampot|10.61|104.18
+KHM|Kep|10.48|104.32
+KHM|Battambang|13.10|103.20
+KHM|Kratie|12.49|106.02
+KHM|Mondulkiri|12.45|107.20|Provincia de Mondulkiri
+
+LAO|Luang Prabang|19.89|102.13
+LAO|Vang Vieng|18.92|102.45
+LAO|Vientiane|17.97|102.63
+LAO|Cascadas Kuang Si|19.75|101.99
+LAO|Cuatro Mil Islas|14.00|105.85|Si Phan Don
+LAO|Llanura de las Jarras|19.43|103.15
+LAO|Pakse|15.12|105.80
+LAO|Meseta de Bolaven|15.20|106.20
+LAO|Nong Khiaw|20.57|102.62
+LAO|Wat Phou|14.85|105.82
+
+MMR|Rangún|16.84|96.17
+MMR|Bagan|21.17|94.86
+MMR|Lago Inle|20.55|96.92
+MMR|Mandalay|21.96|96.08
+MMR|Roca Dorada|17.48|97.10|Pagoda Kyaiktiyo
+MMR|Ngapali|18.43|94.32
+MMR|Hpa-An|16.89|97.63
+MMR|Mrauk U|20.59|93.19
+MMR|Kalaw|20.63|96.56
+MMR|Pyin Oo Lwin|22.03|96.46
+
+MYS|Kuala Lumpur|3.14|101.69
+MYS|George Town (Penang)|5.41|100.33|George Town (Penang)
+MYS|Langkawi|6.35|99.80
+MYS|Malaca|2.19|102.25
+MYS|Kota Kinabalu|5.98|116.07
+MYS|Cameron Highlands|4.47|101.38
+MYS|Islas Perhentian|5.92|102.73
+MYS|Monte Kinabalu|6.08|116.56
+MYS|Taman Negara|4.65|102.40
+MYS|Isla Tioman|2.79|104.17
+
+IDN|Bali|-8.65|115.22
+IDN|Yakarta|-6.21|106.85
+IDN|Yogyakarta|-7.80|110.36
+IDN|Borobudur|-7.61|110.20
+IDN|Lombok|-8.65|116.32
+IDN|Islas Gili|-8.35|116.06
+IDN|Komodo|-8.55|119.49|Parque nacional de Komodo
+IDN|Monte Bromo|-7.94|112.95
+IDN|Raja Ampat|-0.23|130.52
+IDN|Lago Toba|2.60|98.83
+
+PHL|Cebú|10.32|123.89
+PHL|Boracay|11.97|121.92
+PHL|El Nido (Palawan)|11.20|119.41|El Nido
+PHL|Manila|14.60|120.98
+PHL|Bohol|9.85|124.14
+PHL|Siargao|9.85|126.05
+PHL|Coron|12.00|120.20
+PHL|Puerto Princesa|9.74|118.74
+PHL|Terrazas de arroz de Banaue|16.92|121.06
+PHL|Vigan|17.57|120.39
+
+BRN|Bandar Seri Begawan|4.90|114.94
+BRN|Kampong Ayer|4.88|114.94
+BRN|Parque Nacional Ulu Temburong|4.55|115.15
+BRN|Mezquita Jame' Asr Hassanil Bolkiah|4.93|114.92
+
+TLS|Dili|-8.56|125.57
+TLS|Isla de Atauro|-8.25|125.58
+TLS|Monte Ramelau|-8.91|125.50
+TLS|Baucau|-8.47|126.45
+TLS|Isla Jaco|-8.42|127.32
+TLS|Maubisse|-8.84|125.60
+
+PNG|Port Moresby|-9.44|147.18
+PNG|Sendero de Kokoda|-9.00|147.60
+PNG|Monte Hagen|-5.86|144.23
+PNG|Madang|-5.22|145.80
+PNG|Rabaul|-4.20|152.18
+PNG|Alotau (Bahía Milne)|-10.31|150.46|Alotau
+PNG|Valle de Tari|-5.85|142.95
+PNG|Río Sepik|-4.20|143.00
+PNG|Wewak|-3.55|143.63
+
+IND|Delhi|28.61|77.21|Delhi
+IND|Agra (Taj Mahal)|27.17|78.04|Taj Mahal
+IND|Jaipur|26.91|75.79
+IND|Goa|15.30|74.12
+IND|Bombay|19.08|72.88
+IND|Varanasi|25.32|83.01
+IND|Kerala (Alappuzha)|9.50|76.34|Alappuzha
+IND|Udaipur|24.59|73.71
+IND|Rishikesh|30.09|78.27
+IND|Amritsar|31.63|74.87
+
+NPL|Katmandú|27.72|85.32
+NPL|Pokhara|28.21|83.99
+NPL|Campo base del Everest|28.00|86.85
+NPL|Parque Nacional Chitwan|27.50|84.33
+NPL|Bhaktapur|27.67|85.43
+NPL|Patan|27.67|85.32|Lalitpur (Nepal)
+NPL|Circuito del Annapurna|28.60|83.82
+NPL|Lumbini|27.48|83.28
+NPL|Nagarkot|27.72|85.52
+NPL|Bandipur|27.94|84.41|Bandipur (Nepal)
+
+BTN|Paro|27.43|89.42
+BTN|Nido del Tigre|27.49|89.36|Monasterio de Taktsang
+BTN|Timbu|27.47|89.64
+BTN|Punakha|27.59|89.86
+BTN|Paso de Dochula|27.49|89.75
+BTN|Valle de Phobjikha|27.46|90.18
+BTN|Valle de Bumthang|27.55|90.75
+
+BGD|Daca|23.81|90.41
+BGD|Cox's Bazar|21.43|92.01
+BGD|Sundarbans|21.95|89.18
+BGD|Srimangal|24.31|91.73
+BGD|Isla de San Martín|20.63|92.32
+BGD|Sylhet|24.90|91.87
+BGD|Bandarban|22.20|92.22
+BGD|Rangamati|22.65|92.17
+BGD|Ciudad mezquita de Bagerhat|22.67|89.74
+BGD|Paharpur|25.03|88.98|Somapura Mahavihara
+
+LKA|Colombo|6.93|79.85
+LKA|Sigiriya|7.96|80.76
+LKA|Kandy|7.29|80.63
+LKA|Ella|6.87|81.05|Ella (Sri Lanka)
+LKA|Galle|6.03|80.22
+LKA|Parque Nacional Yala|6.37|81.52
+LKA|Mirissa|5.95|80.46
+LKA|Nuwara Eliya|6.95|80.79
+LKA|Dambulla|7.86|80.65
+LKA|Anuradhapura|8.31|80.40
+
+PAK|Lahore|31.55|74.34
+PAK|Valle de Hunza|36.32|74.65
+PAK|Islamabad|33.68|73.05
+PAK|Valle de Swat|35.22|72.43
+PAK|Skardu|35.30|75.63
+PAK|Fairy Meadows|35.39|74.58
+PAK|Karachi|24.86|67.01
+PAK|Lago Attabad|36.33|74.86
+PAK|Mohenjo-Daro|27.33|68.14
+PAK|Taxila|33.75|72.83
+
+AFG|Kabul|34.56|69.21
+AFG|Bamiyán|34.82|67.83
+AFG|Mazar-e-Sharif|36.71|67.11
+AFG|Herat|34.35|62.20
+AFG|Band-e Amir|34.84|67.23|Parque nacional Band-e Amir
+AFG|Valle del Panjshir|35.30|69.50
+AFG|Minarete de Jam|34.40|64.52
+
+IRN|Teherán|35.69|51.39
+IRN|Isfahán|32.65|51.67
+IRN|Shiraz|29.59|52.58
+IRN|Persépolis|29.94|52.89
+IRN|Yazd|31.90|54.37
+IRN|Kashan|33.98|51.44
+IRN|Tabriz|38.08|46.29
+IRN|Mashhad|36.30|59.60
+IRN|Isla de Qeshm|26.75|55.85
+IRN|Kandovan|37.79|46.25
+
+IRQ|Erbil|36.19|44.01
+IRQ|Bagdad|33.31|44.36
+IRQ|Babilonia|32.54|44.42
+IRQ|Kerbala|32.62|44.02
+IRQ|Nayaf|32.03|44.34
+IRQ|Sulaimaniya|35.56|45.44
+IRQ|Basora|30.51|47.78
+IRQ|Ur|30.96|46.10
+IRQ|Amedi|37.09|43.49
+IRQ|Samarra|34.20|43.87
+
+SYR|Damasco|33.51|36.29
+SYR|Palmira|34.55|38.27
+SYR|Alepo|36.20|37.13
+SYR|Krak de los Caballeros|34.76|36.29
+SYR|Bosra|32.52|36.48
+SYR|Maalula|33.84|36.55
+SYR|Latakia|35.52|35.78
+SYR|Hama|35.13|36.75
+
+JOR|Amán|31.95|35.93
+JOR|Petra|30.33|35.44
+JOR|Wadi Rum|29.58|35.42
+JOR|Mar Muerto|31.56|35.47
+JOR|Jerash|32.28|35.89
+JOR|Áqaba|29.53|35.01
+JOR|Madaba|31.72|35.79
+JOR|Monte Nebo|31.77|35.73
+JOR|Reserva de Dana|30.67|35.61|Reserva de la Biosfera de Dana
+JOR|Ajlun|32.33|35.75
+
+ISR|Jerusalén|31.78|35.22
+ISR|Tel Aviv|32.09|34.78
+ISR|Masada|31.32|35.35
+ISR|Mar Muerto (Ein Bokek)|31.20|35.36|Ein Bokek
+ISR|Haifa|32.79|34.99
+ISR|Nazaret|32.70|35.30
+ISR|Eilat|29.56|34.95
+ISR|Tiberíades (Galilea)|32.79|35.53|Tiberíades
+ISR|Acre|32.93|35.08|Acre (Israel)
+ISR|Cesarea|32.50|34.89|Cesarea Marítima
+
+PSX|Belén|31.70|35.20
+PSX|Jericó|31.86|35.46
+PSX|Hebrón|31.53|35.10
+PSX|Ramala|31.90|35.20
+PSX|Nablus|32.22|35.25
+
+LBN|Beirut|33.89|35.50
+LBN|Biblos|34.12|35.65
+LBN|Baalbek|34.01|36.21
+LBN|Gruta de Jeita|33.94|35.64
+LBN|Valle de Qadisha|34.25|35.98
+LBN|Cedros de Dios|34.24|36.05
+LBN|Sidón|33.56|35.37
+LBN|Tiro|33.27|35.20|Tiro (Líbano)
+LBN|Harissa|33.98|35.65
+LBN|Trípoli|34.43|35.84|Trípoli (Líbano)
+
+SAU|Riad|24.71|46.68
+SAU|AlUla|26.61|37.92
+SAU|Yeda|21.49|39.19
+SAU|La Meca|21.42|39.83
+SAU|Medina|24.47|39.61
+SAU|Diriyah|24.73|46.57
+SAU|Abha|18.22|42.50
+SAU|Taif|21.27|40.42
+SAU|Oasis de Al-Ahsa|25.38|49.59
+SAU|Dammam|26.43|50.10
+
+ARE|Dubái|25.20|55.27
+ARE|Abu Dabi|24.45|54.38
+ARE|Sharjah|25.35|55.42
+ARE|Ras al-Jaima|25.79|55.94
+ARE|Al Ain|24.21|55.74
+ARE|Fuyaira|25.13|56.33
+ARE|Jebel Jais|25.95|56.13
+ARE|Ajmán|25.41|55.45
+ARE|Oasis de Liwa|23.13|53.77
+
+QAT|Doha|25.29|51.53
+QAT|Khor Al Adaid|24.60|51.33
+QAT|The Pearl|25.37|51.55|The Pearl-Qatar
+QAT|Al Wakrah|25.17|51.60
+QAT|Al Khor|25.68|51.50
+QAT|Al Zubarah|25.98|51.03
+
+KWT|Kuwait|29.38|47.99|Kuwait (ciudad)
+KWT|Isla Failaka|29.44|48.33
+KWT|Al Jahra|29.34|47.66
+KWT|Al Ahmadi|29.08|48.08
+
+OMN|Mascate|23.59|58.41
+OMN|Nizwa|22.93|57.53
+OMN|Wadi Shab|22.84|59.24
+OMN|Desierto de Wahiba|22.00|58.80|Wahiba Sands
+OMN|Salalah|17.02|54.09
+OMN|Jasab (Musandam)|26.18|56.25|Jasab
+OMN|Jebel Akhdar|23.07|57.67
+OMN|Sur|22.57|59.53|Sur (Omán)
+OMN|Ras al Jinz|22.53|59.82
+OMN|Fuerte de Bahla|22.97|57.30
+
+YEM|Saná|15.37|44.19
+YEM|Socotra|12.46|53.82
+YEM|Shibam|15.93|48.63
+YEM|Adén|12.79|45.04
+YEM|Al Mukalla|14.54|49.12
+YEM|Taiz|13.58|44.02
+
+KAZ|Almaty|43.24|76.89
+KAZ|Astaná|51.17|71.43
+KAZ|Cañón Charyn|43.35|79.08
+KAZ|Lago Kolsai|42.93|78.33
+KAZ|Medeu|43.16|77.06
+KAZ|Lago Kaindy|42.98|78.47
+KAZ|Turkestán|43.30|68.27
+KAZ|Burabay|53.08|70.30
+KAZ|Shymkent|42.32|69.59
+KAZ|Baikonur|45.62|63.31
+
+UZB|Samarcanda|39.65|66.96
+UZB|Bujará|39.77|64.42
+UZB|Jiva|41.38|60.36
+UZB|Taskent|41.30|69.24
+UZB|Shahrisabz|39.06|66.83
+UZB|Valle de Fergana|40.40|71.78|Fergana
+UZB|Kokand|40.53|70.94
+UZB|Nukus|42.46|59.60
+UZB|Moynaq (Mar de Aral)|43.77|59.02|Moynaq
+UZB|Termez|37.22|67.28
+
+KGZ|Biskek|42.87|74.59
+KGZ|Lago Issyk-Kul|42.45|77.25
+KGZ|Karakol|42.49|78.39
+KGZ|Lago Song-Kul|41.83|75.12
+KGZ|Parque Nacional Ala Archa|42.56|74.48
+KGZ|Cañón Skazka|42.15|77.35
+KGZ|Osh|40.53|72.80
+KGZ|Jeti-Ögüz|42.33|78.23
+KGZ|Arslanbob|41.33|72.94
+KGZ|Tash Rabat|40.83|75.29
+
+TJK|Dusambé|38.56|68.79
+TJK|Carretera del Pamir|38.50|73.50
+TJK|Montes Fann|39.10|68.30
+TJK|Lago Iskanderkul|39.08|68.37
+TJK|Khujand|40.28|69.62
+TJK|Khorog|37.49|71.55
+TJK|Istaravshan|39.91|69.00
+TJK|Ishkashim|36.73|71.61
+
+TKM|Asjabad|37.96|58.33
+TKM|Cráter de Darvaza|40.25|58.44
+TKM|Merv|37.66|62.19
+TKM|Konye-Urgench|42.33|59.15
+TKM|Nisa|37.97|58.20|Nisa (Turkmenistán)
+TKM|Cañón Yangykala|39.80|54.60
+
+GEO|Tiflis|41.72|44.79
+GEO|Batumi|41.64|41.64
+GEO|Kazbegi|42.66|44.64|Stepantsminda
+GEO|Mtskheta|41.84|44.72
+GEO|Sighnaghi|41.62|45.92
+GEO|Kutaisi|42.27|42.70
+GEO|Mestia (Svaneti)|43.05|42.73|Mestia
+GEO|Vardzia|41.38|43.28
+GEO|Borjomi|41.84|43.38
+GEO|Uplistsikhe|41.97|44.21
+
+ARM|Ereván|40.18|44.51
+ARM|Lago Seván|40.56|45.00
+ARM|Templo de Garni|40.11|44.73
+ARM|Monasterio de Geghard|40.14|44.82
+ARM|Monasterio de Tatev|39.38|46.25
+ARM|Khor Virap|39.88|44.58
+ARM|Dilijan|40.74|44.86
+ARM|Echmiadzin|40.16|44.29|Vagharshapat
+ARM|Noravank|39.68|45.23
+ARM|Gyumri|40.79|43.85
+
+AZE|Bakú|40.41|49.87
+AZE|Gobustán|40.11|49.38
+AZE|Sheki|41.19|47.17
+AZE|Gabala|40.98|47.85
+AZE|Quba|41.36|48.51
+AZE|Yanar Dag|40.50|49.89
+AZE|Lahij|40.85|48.39
+AZE|Ganja|40.68|46.36
+
+AUS|Sídney|-33.87|151.21
+AUS|Melbourne|-37.81|144.96
+AUS|Gran Barrera de Coral (Cairns)|-16.92|145.77|Cairns
+AUS|Uluru|-25.34|131.04
+AUS|Gold Coast|-28.02|153.40
+AUS|Brisbane|-27.47|153.03
+AUS|Perth|-31.95|115.86
+AUS|Islas Whitsunday|-20.27|148.95
+AUS|Great Ocean Road|-38.66|143.10
+AUS|Hobart (Tasmania)|-42.88|147.33|Hobart
+
+NZL|Queenstown|-45.03|168.66|Queenstown (Nueva Zelanda)
+NZL|Auckland|-36.85|174.76
+NZL|Milford Sound|-44.67|167.92
+NZL|Rotorua|-38.14|176.25
+NZL|Hobbiton (Matamata)|-37.87|175.68|Matamata
+NZL|Wellington|-41.29|174.78
+NZL|Bahía de las Islas|-35.22|174.17
+NZL|Glaciar Franz Josef|-43.39|170.18
+NZL|Christchurch|-43.53|172.64
+NZL|Wanaka|-44.70|169.14
+
+FJI|Nadi|-17.80|177.42
+FJI|Islas Mamanuca|-17.65|177.15
+FJI|Islas Yasawa|-17.00|177.30
+FJI|Isla Denarau|-17.77|177.38
+FJI|Costa de Coral|-18.20|177.70
+FJI|Suva|-18.14|178.44
+FJI|Taveuni|-16.85|179.95
+
+VUT|Port Vila|-17.73|168.32
+VUT|Monte Yasur (Tanna)|-19.53|169.44|Monte Yasur
+VUT|Espíritu Santo|-15.37|166.95|Isla Espíritu Santo
+VUT|Isla Pentecostés|-15.75|168.18
+
+NCL|Numea|-22.27|166.45
+NCL|Isla de los Pinos|-22.62|167.48
+NCL|Lifou|-20.92|167.23
+NCL|Hienghène|-20.68|164.93
+
+SLB|Honiara|-9.43|159.95
+SLB|Laguna de Marovo|-8.50|158.00
+SLB|Gizo|-8.10|156.84

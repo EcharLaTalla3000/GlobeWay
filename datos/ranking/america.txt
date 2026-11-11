@@ -1,0 +1,362 @@
+# Destinos más turísticos por país — América
+# Formato: ISO3|Nombre|lat|lon|título en Wikipedia (opcional)
+# El orden es el ranking base (1 = más turístico). Lista compilada manualmente.
+# Con conexión, la app reordena según visitas recientes en Wikipedia.
+
+CHL|Santiago|-33.45|-70.67|Santiago de Chile
+CHL|San Pedro de Atacama|-22.91|-68.20
+CHL|Puerto Natales (Torres del Paine)|-51.73|-72.51|Parque nacional Torres del Paine
+CHL|Valparaíso|-33.05|-71.62
+CHL|Isla de Pascua|-27.12|-109.35
+CHL|Puerto Varas|-41.32|-72.98
+CHL|Pucón|-39.27|-71.98
+CHL|Viña del Mar|-33.02|-71.55
+CHL|Chiloé|-42.48|-73.76|Archipiélago de Chiloé
+CHL|Frutillar|-41.13|-73.06
+
+ARG|Buenos Aires|-34.60|-58.38
+ARG|San Carlos de Bariloche|-41.13|-71.31
+ARG|Cataratas del Iguazú|-25.69|-54.44
+ARG|Mendoza|-32.89|-68.83|Mendoza (Argentina)
+ARG|El Calafate|-50.34|-72.26
+ARG|Ushuaia|-54.80|-68.30
+ARG|Salta|-24.79|-65.41
+ARG|Córdoba|-31.42|-64.18|Córdoba (Argentina)
+ARG|Puerto Madryn|-42.77|-65.04
+ARG|El Chaltén|-49.33|-72.89
+
+PER|Cusco|-13.53|-71.97|Cuzco
+PER|Machu Picchu|-13.16|-72.55
+PER|Lima|-12.05|-77.04
+PER|Arequipa|-16.41|-71.54
+PER|Lago Titicaca (Puno)|-15.84|-70.02|Puno
+PER|Valle Sagrado|-13.33|-72.08|Valle Sagrado de los Incas
+PER|Huacachina|-14.09|-75.76
+PER|Paracas|-13.83|-76.25|Reserva nacional de Paracas
+PER|Montaña de Siete Colores|-13.87|-71.30|Vinicunca
+PER|Iquitos|-3.75|-73.25
+
+BOL|La Paz|-16.50|-68.15
+BOL|Salar de Uyuni|-20.13|-67.49
+BOL|Sucre|-19.05|-65.26
+BOL|Copacabana (Lago Titicaca)|-16.17|-69.09|Copacabana (Bolivia)
+BOL|Potosí|-19.58|-65.75
+BOL|Santa Cruz de la Sierra|-17.78|-63.18
+BOL|Isla del Sol|-16.02|-69.18
+BOL|Tiwanaku|-16.55|-68.67
+BOL|Rurrenabaque|-14.44|-67.53
+BOL|Valle de la Luna|-16.57|-68.10|Valle de la Luna (Bolivia)
+
+ECU|Quito|-0.18|-78.47
+ECU|Islas Galápagos|-0.74|-90.31
+ECU|Cuenca|-2.90|-79.00|Cuenca (Ecuador)
+ECU|Baños de Agua Santa|-1.40|-78.42
+ECU|Guayaquil|-2.19|-79.89
+ECU|Montañita|-1.83|-80.75
+ECU|Otavalo|0.23|-78.26
+ECU|Volcán Cotopaxi|-0.68|-78.44|Cotopaxi
+ECU|Mindo|0.05|-78.77
+ECU|Puerto López|-1.56|-80.81|Puerto López (Ecuador)
+
+URY|Montevideo|-34.90|-56.16
+URY|Punta del Este|-34.96|-54.95
+URY|Colonia del Sacramento|-34.47|-57.84
+URY|Cabo Polonio|-34.40|-53.78
+URY|José Ignacio|-34.84|-54.63|José Ignacio (Uruguay)
+URY|Piriápolis|-34.86|-55.27
+URY|Punta del Diablo|-34.04|-53.55
+URY|La Paloma|-34.66|-54.16|La Paloma (Rocha)
+URY|Salto|-31.39|-57.96|Salto (Uruguay)
+URY|Carmelo|-34.00|-58.28|Carmelo (Uruguay)
+
+PRY|Asunción|-25.28|-57.63
+PRY|Encarnación|-27.33|-55.87|Encarnación (Paraguay)
+PRY|Misiones jesuíticas de Trinidad|-27.13|-55.70|Misión jesuítica de la Santísima Trinidad de Paraná
+PRY|Ciudad del Este|-25.51|-54.61
+PRY|San Bernardino|-25.31|-57.30|San Bernardino (Paraguay)
+PRY|Areguá|-25.31|-57.38
+PRY|Saltos del Monday|-25.56|-54.66
+PRY|Caacupé|-25.39|-57.14
+PRY|Lago Ypacaraí|-25.30|-57.33
+PRY|Filadelfia (Chaco)|-22.35|-60.03|Filadelfia (Paraguay)
+
+COL|Cartagena de Indias|10.39|-75.48
+COL|Medellín|6.24|-75.58
+COL|Bogotá|4.71|-74.07
+COL|Santa Marta|11.24|-74.21|Santa Marta (Colombia)
+COL|San Andrés|12.58|-81.70|Isla de San Andrés (Colombia)
+COL|Parque Tayrona|11.31|-74.03|Parque nacional natural Tayrona
+COL|Salento (Eje Cafetero)|4.64|-75.57|Salento (Quindío)
+COL|Guatapé|6.23|-75.16
+COL|Cali|3.45|-76.53
+COL|Villa de Leyva|5.63|-73.52
+
+VEN|Caracas|10.48|-66.90
+VEN|Isla de Margarita|11.00|-63.92
+VEN|Salto Ángel|5.97|-62.54
+VEN|Los Roques|11.85|-66.75|Archipiélago Los Roques
+VEN|Mérida|8.59|-71.14|Mérida (Venezuela)
+VEN|Morrocoy|10.87|-68.27|Parque nacional Morrocoy
+VEN|Canaima|6.24|-62.85|Parque nacional Canaima
+VEN|Monte Roraima|5.14|-60.76
+VEN|Choroní|10.49|-67.61
+VEN|Médanos de Coro|11.55|-69.70|Parque nacional Médanos de Coro
+
+GUY|Georgetown|6.80|-58.16|Georgetown (Guyana)
+GUY|Cataratas Kaieteur|5.18|-59.48
+GUY|Bosque de Iwokrama|4.67|-58.68
+GUY|Sabana de Rupununi|3.00|-59.50
+GUY|Bartica|6.40|-58.62
+GUY|Lethem|3.38|-59.80
+GUY|Río Esequibo|6.50|-58.60
+
+SUR|Paramaribo|5.85|-55.20
+SUR|Parque natural Brownsberg|4.95|-55.18
+SUR|Reserva Natural Central de Surinam|4.00|-56.00
+SUR|Commewijne|5.85|-55.10|Distrito de Commewijne
+SUR|Galibi|5.75|-54.00
+SUR|Embalse de Brokopondo|4.80|-55.00
+GUF|Cayena|4.94|-52.33
+GUF|Islas de la Salvación|5.29|-52.58
+GUF|Kourou|5.16|-52.65
+GUF|Centro Espacial Guayanés|5.24|-52.77
+GUF|Saint-Laurent-du-Maroni|5.50|-54.03
+GUF|Rémire-Montjoly|4.92|-52.27
+GUF|Awala-Yalimapo|5.74|-53.93
+GUF|Marismas de Kaw|4.50|-52.05|Montaña de Kaw
+GUF|Parque Amazónico de Guayana|3.20|-53.20|Parque amazónico de Guayana
+
+FLK|Puerto Stanley|-51.70|-57.85|Puerto Argentino
+FLK|Volunteer Point|-51.52|-57.83
+FLK|Isla Sea Lion|-52.43|-59.08
+
+PAN|Ciudad de Panamá|8.98|-79.52
+PAN|Bocas del Toro|9.34|-82.24
+PAN|San Blas (Guna Yala)|9.55|-78.85|Guna Yala
+PAN|Boquete|8.78|-82.44
+PAN|Canal de Panamá|9.02|-79.59
+PAN|Isla Contadora|8.63|-79.03
+PAN|El Valle de Antón|8.60|-80.13
+PAN|Portobelo|9.55|-79.65
+PAN|Isla Coiba|7.45|-81.77|Parque nacional Coiba
+PAN|Santa Catalina|7.63|-81.25|Santa Catalina (Veraguas)
+
+CRI|San José|9.93|-84.08|San José (Costa Rica)
+CRI|Volcán Arenal|10.46|-84.70
+CRI|Monteverde|10.30|-84.82
+CRI|Manuel Antonio|9.39|-84.14|Parque nacional Manuel Antonio
+CRI|Tamarindo|10.30|-85.84
+CRI|Puerto Viejo de Talamanca|9.66|-82.75
+CRI|Tortuguero|10.54|-83.50|Parque nacional Tortuguero
+CRI|Santa Teresa|9.64|-85.17|Santa Teresa (Costa Rica)
+CRI|Volcán Poás|10.20|-84.23
+CRI|Río Celeste|10.71|-84.99|Parque nacional Volcán Tenorio
+
+NIC|Granada|11.93|-85.96|Granada (Nicaragua)
+NIC|Isla de Ometepe|11.50|-85.58
+NIC|San Juan del Sur|11.25|-85.87
+NIC|León|12.43|-86.88|León (Nicaragua)
+NIC|Volcán Masaya|11.98|-86.16|Parque nacional Volcán Masaya
+NIC|Islas del Maíz|12.17|-83.04
+NIC|Laguna de Apoyo|11.92|-86.04
+NIC|Managua|12.13|-86.25
+NIC|Matagalpa|12.93|-85.92
+NIC|Cañón de Somoto|13.48|-86.58
+
+HND|Roatán|16.32|-86.54
+HND|Copán Ruinas|14.84|-89.15|Copán
+HND|Utila|16.10|-86.93
+HND|La Ceiba|15.76|-86.79
+HND|Tegucigalpa|14.07|-87.19
+HND|Lago de Yojoa|14.87|-87.98
+HND|Tela|15.78|-87.46
+HND|Cayos Cochinos|15.95|-86.49
+HND|Gracias|14.59|-88.58|Gracias (Honduras)
+HND|Pico Bonito|15.68|-86.87|Parque nacional Pico Bonito
+
+SLV|San Salvador|13.69|-89.22
+SLV|El Tunco|13.49|-89.38
+SLV|Ruta de las Flores (Juayúa)|13.84|-89.75|Juayúa
+SLV|Suchitoto|13.94|-89.03
+SLV|Volcán de Santa Ana|13.85|-89.63
+SLV|Lago de Coatepeque|13.87|-89.55
+SLV|Joya de Cerén|13.83|-89.36
+SLV|El Zonte|13.49|-89.44
+SLV|Concepción de Ataco|13.87|-89.85
+SLV|Playa El Cuco|13.17|-88.11
+
+GTM|Antigua Guatemala|14.56|-90.73
+GTM|Lago de Atitlán|14.69|-91.20
+GTM|Tikal|17.22|-89.62
+GTM|Flores|16.93|-89.89|Flores (Guatemala)
+GTM|Semuc Champey|15.53|-89.96
+GTM|Chichicastenango|14.94|-91.11
+GTM|Ciudad de Guatemala|14.63|-90.51
+GTM|Volcán de Acatenango|14.50|-90.88
+GTM|Quetzaltenango|14.84|-91.52
+GTM|Río Dulce|15.66|-89.00|Río Dulce (Guatemala)
+
+BLZ|Cayo Ambergris|17.92|-87.96
+BLZ|Gran Agujero Azul|17.32|-87.53
+BLZ|Cayo Caulker|17.75|-88.03
+BLZ|Placencia|16.51|-88.37
+BLZ|San Ignacio|17.16|-89.07|San Ignacio (Belice)
+BLZ|Xunantunich|17.09|-89.14
+BLZ|Actun Tunichil Muknal|17.21|-88.84
+BLZ|Hopkins|16.86|-88.28|Hopkins (Belice)
+BLZ|Caracol|16.76|-89.12|Caracol (yacimiento arqueológico)
+BLZ|Ciudad de Belice|17.50|-88.20
+
+MEX|Ciudad de México|19.43|-99.13
+MEX|Cancún|21.16|-86.85
+MEX|Tulum|20.21|-87.46
+MEX|Playa del Carmen|20.63|-87.07
+MEX|Chichén Itzá|20.68|-88.57
+MEX|Oaxaca|17.07|-96.73|Oaxaca de Juárez
+MEX|Los Cabos|22.89|-109.91|Cabo San Lucas
+MEX|Puerto Vallarta|20.65|-105.23
+MEX|Guanajuato|21.02|-101.26
+MEX|San Miguel de Allende|20.91|-100.74
+
+CUB|La Habana|23.11|-82.37
+CUB|Varadero|23.15|-81.25
+CUB|Trinidad|21.80|-79.98|Trinidad (Cuba)
+CUB|Viñales|22.62|-83.71
+CUB|Cayo Coco|22.51|-78.40
+CUB|Santiago de Cuba|20.02|-75.83
+CUB|Cienfuegos|22.15|-80.44
+CUB|Cayo Santa María|22.66|-79.03
+CUB|Baracoa|20.35|-74.50
+CUB|Camagüey|21.38|-77.92
+
+DOM|Punta Cana|18.58|-68.40
+DOM|Santo Domingo|18.47|-69.89
+DOM|Península de Samaná|19.25|-69.45
+DOM|Puerto Plata|19.79|-70.69
+DOM|Isla Saona|18.16|-68.70
+DOM|Bayahíbe|18.37|-68.84
+DOM|Cabarete|19.75|-70.41
+DOM|La Romana|18.43|-68.97
+DOM|Jarabacoa|19.12|-70.64
+DOM|Bahía de las Águilas|17.84|-71.65
+
+HTI|Puerto Príncipe|18.54|-72.34
+HTI|Cabo Haitiano|19.76|-72.20
+HTI|Ciudadela Laferrière|19.57|-72.24
+HTI|Labadee|19.78|-72.25
+HTI|Jacmel|18.23|-72.54
+HTI|Bassin Bleu|18.27|-72.56
+HTI|Isla Vaca|18.08|-73.65
+
+BHS|Nasáu|25.05|-77.35
+BHS|Paradise Island|25.08|-77.32
+BHS|Exuma|23.62|-75.97
+BHS|Eleuthera|25.15|-76.15
+BHS|Gran Bahama (Freeport)|26.53|-78.70|Freeport (Bahamas)
+BHS|Harbour Island|25.50|-76.64
+BHS|Bimini|25.73|-79.25
+BHS|Isla Andros|24.70|-78.00
+BHS|Islas Ábaco|26.50|-77.10
+BHS|Long Island|23.20|-75.10|Long Island (Bahamas)
+
+PRI|San Juan|18.47|-66.11|San Juan (Puerto Rico)
+PRI|El Yunque|18.30|-65.79|Bosque nacional El Yunque
+PRI|Culebra|18.31|-65.30|Isla de Culebra
+PRI|Vieques|18.12|-65.44
+PRI|Rincón|18.34|-67.25|Rincón (Puerto Rico)
+PRI|Fajardo|18.33|-65.65|Fajardo (Puerto Rico)
+PRI|Ponce|18.01|-66.61|Ponce (Puerto Rico)
+PRI|Arecibo|18.34|-66.75|Arecibo (Puerto Rico)
+PRI|Cueva Ventana|18.37|-66.69
+PRI|Bahía Mosquito|18.10|-65.44
+
+JAM|Montego Bay|18.47|-77.92
+JAM|Negril|18.27|-78.35
+JAM|Ocho Ríos|18.41|-77.10
+JAM|Kingston|17.97|-76.79|Kingston (Jamaica)
+JAM|Port Antonio|18.18|-76.45
+JAM|Cascadas del río Dunn|18.41|-77.13
+JAM|Treasure Beach|17.89|-77.76
+JAM|Montañas Azules|18.05|-76.58|Montañas Azules (Jamaica)
+JAM|Runaway Bay|18.46|-77.33
+JAM|Falmouth|18.49|-77.66|Falmouth (Jamaica)
+
+TTO|Puerto España|10.65|-61.51
+TTO|Tobago|11.15|-60.84
+TTO|Maracas Bay|10.76|-61.43
+TTO|Pigeon Point|11.16|-60.85
+TTO|Pantano Caroni|10.58|-61.43
+TTO|Asa Wright|10.72|-61.30
+TTO|Speyside|11.30|-60.53
+
+GRL|Nuuk|64.18|-51.72
+GRL|Ilulissat|69.22|-51.10
+GRL|Kangerlussuaq|67.01|-50.69
+GRL|Isla de Disko|69.25|-53.54
+GRL|Tasiilaq|65.61|-37.64
+GRL|Narsarsuaq|61.16|-45.42
+GRL|Sisimiut|66.94|-53.67
+GRL|Qaqortoq|60.72|-46.04
+
+USA|Nueva York|40.71|-74.01
+USA|Las Vegas|36.17|-115.14
+USA|Orlando|28.54|-81.38
+USA|Miami|25.76|-80.19
+USA|Los Ángeles|34.05|-118.24
+USA|San Francisco|37.77|-122.42
+USA|Gran Cañón|36.06|-112.14
+USA|Washington D. C.|38.90|-77.04
+USA|Honolulu (Hawái)|21.31|-157.86|Honolulu
+USA|Chicago|41.88|-87.63
+USA|Nueva Orleans|29.95|-90.07
+USA|Parque Nacional Yellowstone|44.43|-110.59
+USA|Boston|42.36|-71.06
+USA|San Diego|32.72|-117.16
+USA|Parque Nacional Yosemite|37.87|-119.54
+USA|Seattle|47.61|-122.33
+USA|Cataratas del Niágara (EE. UU.)|43.08|-79.07|Cataratas del Niágara
+USA|Maui|20.80|-156.33
+USA|Nashville|36.16|-86.78
+USA|Anchorage (Alaska)|61.22|-149.90|Anchorage
+
+CAN|Vancouver|49.28|-123.12
+CAN|Toronto|43.65|-79.38
+CAN|Montreal|45.50|-73.57
+CAN|Niagara Falls (Ontario)|43.09|-79.08
+CAN|Quebec|46.81|-71.21|Quebec (ciudad)
+CAN|Parque Nacional Banff|51.18|-115.57
+CAN|Lago Louise|51.42|-116.18
+CAN|Whistler|50.12|-122.95|Whistler (Columbia Británica)
+CAN|Jasper|52.87|-118.08|Parque nacional Jasper
+CAN|Victoria|48.43|-123.37|Victoria (Columbia Británica)
+CAN|Ottawa|45.42|-75.70
+CAN|Calgary|51.05|-114.07
+CAN|Halifax|44.65|-63.57|Halifax (Nueva Escocia)
+CAN|Isla del Príncipe Eduardo|46.25|-63.13
+CAN|Mont-Tremblant|46.12|-74.60
+CAN|Tofino|49.15|-125.90
+CAN|Isla del Cabo Bretón|46.75|-60.65
+CAN|Churchill|58.77|-94.17|Churchill (Manitoba)
+CAN|Yellowknife|62.45|-114.37
+CAN|Parque Nacional Gros Morne|49.60|-57.80
+
+BRA|Río de Janeiro|-22.91|-43.17
+BRA|São Paulo|-23.55|-46.63
+BRA|Foz do Iguaçu|-25.55|-54.59
+BRA|Salvador de Bahía|-12.97|-38.50
+BRA|Florianópolis|-27.60|-48.55
+BRA|Fernando de Noronha|-3.85|-32.42
+BRA|Búzios|-22.75|-41.88|Armação dos Búzios
+BRA|Manaos (Amazonas)|-3.12|-60.02|Manaos
+BRA|Recife|-8.05|-34.88
+BRA|Fortaleza|-3.73|-38.53
+BRA|Lençóis Maranhenses|-2.53|-43.12|Parque nacional de los Lençóis Maranhenses
+BRA|Gramado|-29.38|-50.87
+BRA|Paraty|-23.22|-44.71
+BRA|Bonito|-21.13|-56.48|Bonito (Mato Grosso del Sur)
+BRA|Porto de Galinhas|-8.50|-35.00
+BRA|Jericoacoara|-2.79|-40.51
+BRA|Ilha Grande|-23.15|-44.23|Ilha Grande (Río de Janeiro)
+BRA|Chapada Diamantina|-12.60|-41.40|Parque nacional de Chapada Diamantina
+BRA|Pantanal|-18.00|-56.70
+BRA|Brasilia|-15.79|-47.88

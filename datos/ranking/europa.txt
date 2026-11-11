@@ -1,0 +1,454 @@
+# Destinos más turísticos por país — Europa
+# Formato: ISO3|Nombre|lat|lon|título en Wikipedia (opcional)
+
+ESP|Madrid|40.42|-3.70
+ESP|Barcelona|41.39|2.17
+ESP|Sevilla|37.39|-5.98
+ESP|Palma de Mallorca|39.57|2.65|Mallorca
+ESP|Granada|37.18|-3.60
+ESP|Valencia|39.47|-0.38
+ESP|Tenerife|28.29|-16.63
+ESP|Málaga|36.72|-4.42
+ESP|Ibiza|38.91|1.43
+ESP|San Sebastián|43.32|-1.98
+
+PRT|Lisboa|38.72|-9.14
+PRT|Oporto|41.15|-8.61
+PRT|Algarve (Lagos)|37.10|-8.67|Lagos (Portugal)
+PRT|Sintra|38.80|-9.39
+PRT|Madeira|32.65|-16.91
+PRT|Azores|37.74|-25.67
+PRT|Albufeira|37.09|-8.25
+PRT|Coímbra|40.21|-8.43
+PRT|Évora|38.57|-7.91
+PRT|Óbidos|39.36|-9.16|Óbidos (Portugal)
+
+FRA|París|48.86|2.35
+FRA|Niza|43.70|7.27
+FRA|Versalles|48.80|2.13
+FRA|Mont Saint-Michel|48.64|-1.51
+FRA|Marsella|43.30|5.37
+FRA|Lyon|45.76|4.84
+FRA|Burdeos|44.84|-0.58
+FRA|Chamonix|45.92|6.87|Chamonix-Mont-Blanc
+FRA|Estrasburgo|48.57|7.75
+FRA|Valle del Loira (Amboise)|47.41|0.98|Amboise
+
+ITA|Roma|41.90|12.50
+ITA|Florencia|43.77|11.26
+ITA|Venecia|45.44|12.33
+ITA|Milán|45.46|9.19
+ITA|Costa Amalfitana|40.63|14.60
+ITA|Cinque Terre|44.13|9.71
+ITA|Nápoles|40.85|14.27
+ITA|Lago de Como|46.00|9.27
+ITA|Taormina (Sicilia)|37.85|15.29|Taormina
+ITA|Pisa|43.72|10.40
+
+GBR|Londres|51.51|-0.13
+GBR|Edimburgo|55.95|-3.19
+GBR|Stonehenge|51.18|-1.83
+GBR|Oxford|51.75|-1.26
+GBR|Bath|51.38|-2.36
+GBR|Liverpool|53.41|-2.98
+GBR|Tierras Altas (Inverness)|57.48|-4.22|Inverness
+GBR|Cambridge|52.21|0.12
+GBR|Distrito de los Lagos|54.46|-3.09
+GBR|Manchester|53.48|-2.24
+
+IRL|Dublín|53.35|-6.26
+IRL|Acantilados de Moher|52.97|-9.43
+IRL|Galway|53.27|-9.05
+IRL|Killarney (Anillo de Kerry)|52.06|-9.50|Killarney
+IRL|Cork|51.90|-8.47
+IRL|Dingle|52.14|-10.27
+IRL|Kilkenny|52.65|-7.25
+IRL|Islas Aran|53.12|-9.72
+IRL|Connemara|53.45|-9.80
+IRL|Glendalough|53.01|-6.33
+
+DEU|Berlín|52.52|13.40
+DEU|Múnich|48.14|11.58
+DEU|Castillo de Neuschwanstein|47.56|10.75
+DEU|Hamburgo|53.55|9.99
+DEU|Colonia|50.94|6.96
+DEU|Fráncfort|50.11|8.68|Fráncfort del Meno
+DEU|Heidelberg|49.40|8.69
+DEU|Dresde|51.05|13.74
+DEU|Selva Negra|48.00|8.20
+DEU|Rothenburg ob der Tauber|49.38|10.18
+
+NLD|Ámsterdam|52.37|4.90
+NLD|Róterdam|51.92|4.48
+NLD|Keukenhof|52.27|4.55
+NLD|La Haya|52.08|4.30
+NLD|Utrecht|52.09|5.12
+NLD|Zaanse Schans|52.47|4.82
+NLD|Kinderdijk|51.88|4.64
+NLD|Giethoorn|52.74|6.08
+NLD|Delft|52.01|4.36
+NLD|Maastricht|50.85|5.69
+
+BEL|Brujas|51.21|3.22
+BEL|Bruselas|50.85|4.35
+BEL|Gante|51.05|3.73
+BEL|Amberes|51.22|4.40
+BEL|Dinant|50.26|4.91
+BEL|Lieja|50.63|5.57
+BEL|Lovaina|50.88|4.70
+BEL|Malinas|51.03|4.48
+BEL|Waterloo|50.72|4.40
+BEL|Durbuy|50.35|5.46
+
+LUX|Luxemburgo|49.61|6.13|Luxemburgo (ciudad)
+LUX|Vianden|49.93|6.21
+LUX|Mullerthal|49.80|6.33
+LUX|Echternach|49.81|6.42
+LUX|Clervaux|50.05|6.03
+LUX|Castillo de Beaufort|49.84|6.29
+LUX|Remich|49.55|6.37
+
+CHE|Zúrich|47.37|8.54
+CHE|Lucerna|47.05|8.31
+CHE|Interlaken|46.69|7.86
+CHE|Zermatt|46.02|7.75
+CHE|Ginebra|46.20|6.14
+CHE|Jungfraujoch|46.55|7.98
+CHE|Lauterbrunnen|46.59|7.91
+CHE|Berna|46.95|7.45
+CHE|Montreux|46.43|6.91
+CHE|St. Moritz|46.50|9.84|Sankt Moritz
+
+AUT|Viena|48.21|16.37
+AUT|Salzburgo|47.81|13.04
+AUT|Hallstatt|47.56|13.65
+AUT|Innsbruck|47.27|11.40
+AUT|Valle de Wachau|48.36|15.43|Wachau
+AUT|Graz|47.07|15.44
+AUT|Zell am See|47.32|12.80
+AUT|Kitzbühel|47.45|12.39
+AUT|Abadía de Melk|48.23|15.33
+AUT|St. Anton am Arlberg|47.13|10.27|Sankt Anton am Arlberg
+
+GRC|Atenas|37.98|23.73
+GRC|Santorini|36.39|25.46
+GRC|Mykonos|37.45|25.33|Miconos
+GRC|Creta|35.34|25.13
+GRC|Rodas|36.43|28.22
+GRC|Corfú|39.62|19.92
+GRC|Meteora|39.72|21.63
+GRC|Tesalónica|40.64|22.94
+GRC|Delfos|38.48|22.50
+GRC|Zante|37.79|20.90
+
+HRV|Dubrovnik|42.65|18.09
+HRV|Split|43.51|16.44
+HRV|Lagos de Plitvice|44.88|15.62|Parque nacional de los Lagos de Plitvice
+HRV|Hvar|43.17|16.44
+HRV|Zagreb|45.81|15.98
+HRV|Zadar|44.12|15.23
+HRV|Rovinj|45.08|13.64
+HRV|Pula|44.87|13.85
+HRV|Parque Nacional Krka|43.80|15.97
+HRV|Korčula|42.96|17.13
+
+SVN|Liubliana|46.06|14.51
+SVN|Lago Bled|46.36|14.09
+SVN|Cuevas de Postojna|45.78|14.20
+SVN|Piran|45.53|13.57
+SVN|Lago Bohinj|46.28|13.88
+SVN|Cuevas de Škocjan|45.66|13.99
+SVN|Castillo de Predjama|45.82|14.13
+SVN|Bovec (Valle del Soča)|46.34|13.55|Bovec
+SVN|Maribor|46.55|15.65
+SVN|Kranjska Gora|46.48|13.78
+
+CZE|Praga|50.08|14.44
+CZE|Český Krumlov|48.81|14.32
+CZE|Karlovy Vary|50.23|12.87
+CZE|Kutná Hora|49.95|15.27
+CZE|Brno|49.20|16.61
+CZE|Suiza Bohemia|50.88|14.27|Parque nacional Suiza Bohemia
+CZE|Castillo de Karlštejn|49.94|14.19
+CZE|Olomouc|49.59|17.25
+CZE|Telč|49.18|15.45
+CZE|Lednice-Valtice|48.80|16.80|Paisaje cultural de Lednice-Valtice
+
+SVK|Bratislava|48.15|17.11
+SVK|Altos Tatras|49.15|20.13
+SVK|Castillo de Spiš|49.00|20.77
+SVK|Banská Štiavnica|48.46|18.90
+SVK|Paraíso Eslovaco|48.93|20.38|Parque nacional Paraíso Eslovaco
+SVK|Košice|48.72|21.26
+SVK|Castillo de Bojnice|48.78|18.58
+SVK|Levoča|49.02|20.59
+SVK|Čičmany|49.00|18.52
+SVK|Cueva de hielo de Dobšiná|48.87|20.30
+
+POL|Cracovia|50.06|19.94
+POL|Varsovia|52.23|21.01
+POL|Gdańsk|54.35|18.65
+POL|Auschwitz-Birkenau|50.03|19.18|Campo de concentración de Auschwitz
+POL|Mina de sal de Wieliczka|49.98|20.06
+POL|Zakopane|49.30|19.95
+POL|Breslavia|51.11|17.04
+POL|Castillo de Malbork|54.04|19.03
+POL|Poznań|52.41|16.93
+POL|Toruń|53.01|18.60
+
+HUN|Budapest|47.50|19.04
+HUN|Lago Balatón|46.83|17.73
+HUN|Eger|47.90|20.38
+HUN|Szentendre|47.67|19.08
+HUN|Pécs|46.07|18.23
+HUN|Hévíz|46.79|17.19
+HUN|Esztergom|47.79|18.74
+HUN|Tokaj|48.12|21.41
+HUN|Debrecen|47.53|21.63
+HUN|Sopron|47.68|16.58
+
+ROU|Bucarest|44.43|26.10
+ROU|Castillo de Bran|45.52|25.37
+ROU|Brașov|45.66|25.61
+ROU|Sibiu|45.79|24.15
+ROU|Sighișoara|46.22|24.79
+ROU|Castillo de Peleș|45.36|25.54
+ROU|Cluj-Napoca|46.77|23.59
+ROU|Delta del Danubio|45.10|29.30
+ROU|Transfăgărășan|45.60|24.62|Carretera Transfăgărășan
+ROU|Maramureș|47.70|24.00
+
+BGR|Sofía|42.70|23.32
+BGR|Plovdiv|42.14|24.75
+BGR|Monasterio de Rila|42.13|23.34
+BGR|Varna|43.21|27.92
+BGR|Nesebar|42.66|27.71
+BGR|Veliko Tarnovo|43.08|25.63
+BGR|Bansko|41.84|23.49
+BGR|Burgas|42.50|27.47
+BGR|Siete Lagos de Rila|42.20|23.32
+BGR|Koprivshtitsa|42.64|24.36
+
+SRB|Belgrado|44.79|20.45
+SRB|Novi Sad|45.27|19.83
+SRB|Niš|43.32|21.90
+SRB|Zlatibor|43.73|19.70
+SRB|Subotica|46.10|19.67
+SRB|Garganta de Đerdap|44.60|22.20|Parque nacional Đerdap
+SRB|Monasterio de Studenica|43.49|20.53
+SRB|Kopaonik|43.29|20.81
+SRB|Drvengrad|43.78|19.52
+SRB|Sremski Karlovci|45.20|19.93
+
+BIH|Sarajevo|43.86|18.41
+BIH|Mostar|43.34|17.81
+BIH|Cascadas de Kravica|43.16|17.61
+BIH|Blagaj|43.26|17.88
+BIH|Medjugorje|43.19|17.68
+BIH|Jajce|44.34|17.27
+BIH|Počitelj|43.13|17.73
+BIH|Trebinje|42.71|18.34
+BIH|Višegrad|43.78|19.29
+BIH|Konjic|43.65|17.96
+
+MNE|Kotor|42.42|18.77
+MNE|Budva|42.29|18.84
+MNE|Perast|42.49|18.70
+MNE|Sveti Stefan|42.26|18.89
+MNE|Parque Nacional Durmitor|43.15|19.08
+MNE|Lago Skadar|42.17|19.30
+MNE|Monasterio de Ostrog|42.68|19.03
+MNE|Ulcinj|41.93|19.21
+MNE|Herceg Novi|42.45|18.53
+MNE|Cetinje|42.39|18.92
+
+ALB|Tirana|41.33|19.82
+ALB|Ksamil|39.77|20.00
+ALB|Berat|40.71|19.95
+ALB|Gjirokastra|40.08|20.14
+ALB|Sarandë|39.87|20.01
+ALB|Butrinto|39.75|20.02
+ALB|Shkodra|42.07|19.51
+ALB|Valle de Valbona|42.45|19.89
+ALB|Himara|40.10|19.75
+ALB|Durrës|41.32|19.45
+
+MKD|Ohrid|41.12|20.80
+MKD|Skopie|42.00|21.43
+MKD|Cañón Matka|41.95|21.30
+MKD|Bitola|41.03|21.33
+MKD|Monasterio de San Naum|40.91|20.74
+MKD|Struga|41.18|20.68
+MKD|Parque Nacional Mavrovo|41.65|20.73
+MKD|Kratovo|42.08|22.18
+MKD|Kruševo|41.37|21.25
+MKD|Tetovo|42.01|20.97
+
+KOS|Pristina|42.66|21.17
+KOS|Prizren|42.21|20.74
+KOS|Peć|42.66|20.29
+KOS|Monasterio de Dečani|42.55|20.27
+KOS|Garganta de Rugova|42.68|20.20
+KOS|Gjakova|42.38|20.43
+KOS|Monasterio de Gračanica|42.60|21.19
+KOS|Brezovica|42.20|21.00
+
+CYP|Pafos|34.77|32.42
+CYP|Ayia Napa|34.99|34.00
+CYP|Limassol|34.68|33.04
+CYP|Larnaca|34.92|33.63
+CYP|Nicosia|35.17|33.36
+CYP|Montes Troodos|34.92|32.86
+CYP|Protaras|35.01|34.05
+CYP|Petra tou Romiou|34.66|32.63
+CYP|Kourion|34.66|32.89
+CYP|Península de Akamas|35.05|32.33
+
+CYN|Kyrenia|35.34|33.32
+CYN|Famagusta|35.12|33.94
+CYN|Castillo de San Hilarión|35.31|33.28
+CYN|Abadía de Bellapais|35.31|33.35
+CYN|Salamina|35.18|33.90|Salamina (Chipre)
+CYN|Península de Karpas|35.60|34.35
+
+TUR|Estambul|41.01|28.98
+TUR|Capadocia|38.64|34.83
+TUR|Antalya|36.90|30.70
+TUR|Pamukkale|37.92|29.12
+TUR|Éfeso|37.94|27.34
+TUR|Bodrum|37.03|27.43
+TUR|Fethiye|36.62|29.12
+TUR|Esmirna|38.42|27.14
+TUR|Ankara|39.93|32.86
+TUR|Trebisonda|41.00|39.72
+
+ISL|Reikiavik|64.15|-21.94
+ISL|Círculo Dorado (Geysir)|64.31|-20.30|Geysir
+ISL|Laguna Azul|63.88|-22.45
+ISL|Jökulsárlón|64.05|-16.18
+ISL|Vík|63.42|-19.01|Vík í Mýrdal
+ISL|Skógafoss|63.53|-19.51
+ISL|Akureyri|65.68|-18.09
+ISL|Lago Mývatn|65.60|-17.00
+ISL|Península de Snæfellsnes|64.87|-23.00
+ISL|Húsavík|66.04|-17.34
+
+NOR|Oslo|59.91|10.75
+NOR|Bergen|60.39|5.32
+NOR|Fiordo de Geiranger|62.10|7.09
+NOR|Tromsø|69.65|18.96
+NOR|Islas Lofoten|68.20|13.90
+NOR|Preikestolen|58.99|6.19
+NOR|Flåm|60.86|7.12
+NOR|Trolltunga|60.12|6.74
+NOR|Ålesund|62.47|6.15
+NOR|Cabo Norte|71.17|25.78
+
+SWE|Estocolmo|59.33|18.07
+SWE|Gotemburgo|57.71|11.97
+SWE|Kiruna (Laponia)|67.86|20.23|Kiruna
+SWE|Malmö|55.60|13.00
+SWE|Visby|57.64|18.29
+SWE|Abisko|68.35|18.83|Parque nacional de Abisko
+SWE|Archipiélago de Estocolmo|59.40|18.70
+SWE|Uppsala|59.86|17.64
+SWE|Icehotel (Jukkasjärvi)|67.85|20.59|Icehotel
+SWE|Lago Siljan|60.90|14.75
+
+FIN|Helsinki|60.17|24.94
+FIN|Rovaniemi|66.50|25.73
+FIN|Turku|60.45|22.27
+FIN|Levi|67.80|24.81|Levi (Finlandia)
+FIN|Saariselkä|68.42|27.41
+FIN|Tampere|61.50|23.76
+FIN|Porvoo|60.39|25.66
+FIN|Islas Åland|60.10|20.00
+FIN|Savonlinna|61.87|28.89
+FIN|Parque Nacional Nuuksio|60.30|24.50
+
+DNK|Copenhague|55.68|12.57
+DNK|Aarhus|56.16|10.21
+DNK|Legoland Billund|55.73|9.13
+DNK|Castillo de Kronborg|56.04|12.62
+DNK|Odense|55.40|10.39
+DNK|Skagen|57.72|10.58
+DNK|Roskilde|55.64|12.08
+DNK|Bornholm|55.13|14.92
+DNK|Ribe|55.33|8.76
+DNK|Aalborg|57.05|9.92
+
+EST|Tallin|59.44|24.75
+EST|Tartu|58.38|26.72
+EST|Pärnu|58.39|24.50
+EST|Isla de Saaremaa|58.42|22.50
+EST|Parque Nacional Lahemaa|59.57|25.83
+EST|Haapsalu|58.94|23.54
+EST|Parque Nacional Soomaa|58.43|25.03
+EST|Narva|59.38|28.19
+
+LVA|Riga|56.95|24.11
+LVA|Jūrmala|56.97|23.77
+LVA|Sigulda|57.15|24.86
+LVA|Palacio de Rundāle|56.41|24.03
+LVA|Cēsis|57.31|25.27
+LVA|Kuldīga|56.97|21.96
+LVA|Liepāja|56.51|21.01
+LVA|Daugavpils|55.88|26.54
+
+LTU|Vilna|54.69|25.28
+LTU|Castillo de Trakai|54.65|24.93
+LTU|Kaunas|54.90|23.90
+LTU|Istmo de Curlandia|55.30|21.00
+LTU|Colina de las Cruces|56.02|23.42
+LTU|Klaipėda|55.70|21.14
+LTU|Palanga|55.92|21.07
+LTU|Druskininkai|54.02|23.97
+
+BLR|Minsk|53.90|27.56
+BLR|Castillo de Mir|53.45|26.47
+BLR|Castillo de Nesvizh|53.22|26.69
+BLR|Brest|52.10|23.69|Brest (Bielorrusia)
+BLR|Bosque de Białowieża|52.70|23.85
+BLR|Grodno|53.68|23.83
+BLR|Polatsk|55.49|28.79
+BLR|Vitebsk|55.19|30.20
+
+UKR|Kiev|50.45|30.52
+UKR|Leópolis|49.84|24.03
+UKR|Odesa|46.48|30.72
+UKR|Kamianets-Podilskyi|48.68|26.58
+UKR|Yaremche (Cárpatos)|48.45|24.55|Yaremche
+UKR|Chernivtsi|48.29|25.94
+UKR|Parque Sofiyivka (Uman)|48.76|30.22|Parque Sofiyivka
+UKR|Járkov|49.99|36.23
+UKR|Túnel del Amor (Klevan)|50.75|26.04|Túnel del amor
+UKR|Chernóbil|51.27|30.22
+
+MDA|Chisináu|47.01|28.86
+MDA|Mileștii Mici|46.90|28.71
+MDA|Cricova|47.14|28.86
+MDA|Orheiul Vechi|47.30|28.97
+MDA|Monasterio de Saharna|47.70|28.97
+MDA|Soroca|48.16|28.30
+MDA|Tiraspol|46.84|29.63
+
+RUS|Moscú|55.76|37.62
+RUS|San Petersburgo|59.94|30.31
+RUS|Sochi|43.60|39.73
+RUS|Kazán|55.79|49.12
+RUS|Lago Baikal|52.29|104.30
+RUS|Kaliningrado|54.71|20.51
+RUS|Palacio de Peterhof|59.88|29.91
+RUS|Nizhni Nóvgorod|56.33|44.00
+RUS|Ekaterimburgo|56.84|60.61
+RUS|Vladivostok|43.12|131.89
+RUS|Kamchatka|53.02|158.65|Península de Kamchatka
+RUS|Súzdal|56.42|40.45
+RUS|Vladímir|56.13|40.40
+RUS|Múrmansk|68.97|33.08
+RUS|República de Altái|51.96|85.96
+RUS|Veliki Nóvgorod|58.52|31.27
+RUS|Volgogrado|48.71|44.51
+RUS|Kizhi|62.07|35.22
+RUS|Monte Elbrús|43.35|42.44
+RUS|Yakutsk|62.03|129.73
