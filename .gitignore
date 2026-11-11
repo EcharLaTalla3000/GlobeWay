@@ -1,0 +1,4 @@
+.env
+.streamlit/secrets.toml
+datos/cache.db
+__pycache__/
