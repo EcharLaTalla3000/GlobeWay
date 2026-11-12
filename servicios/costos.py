@@ -88,12 +88,21 @@ class Desglose:
     diario_pp: float          # costo de vida por persona por día (sin vuelo)
     distancia_km: float
     ruta: Ruta
+    vuelo_real: object | None = None   # PrecioReal de Travelpayouts, o None si el vuelo es estimado
 
 
-def calcular(destino: dict, origen: str, dias: int, viajeros: int, tipo_aloj: str) -> Desglose:
+def calcular(destino: dict, origen: str, dias: int, viajeros: int, tipo_aloj: str,
+             precios_reales=None) -> Desglose:
+    """`precios_reales`: TablaPrecios de servicios/travelpayouts.py (opcional).
+    Si trae precio para este destino, se usa en vez de la fórmula estimada."""
     noches = max(dias - 1, 1) if dias > 1 else 1
     ruta = red().ruta(origen, destino)
     vuelo_pp, km = ruta.precio_ida_vuelta_pp, ruta.km
+    real = None
+    if precios_reales is not None and not ruta.por_tierra:
+        real = precios_reales.buscar([destino.get("iata"), ruta.aeropuerto_final])
+        if real is not None:
+            vuelo_pp = real.precio_pp
     aloj_noche = destino[tipo_aloj] * unidades_alojamiento(tipo_aloj, viajeros)
     alojamiento = aloj_noche * noches
     comida = destino["comida"] * viajeros * dias
@@ -104,7 +113,7 @@ def calcular(destino: dict, origen: str, dias: int, viajeros: int, tipo_aloj: st
     diario_pp = (destino["comida"] + destino["transporte"] + destino["actividades"]
                  + aloj_noche / viajeros)
     return Desglose(vuelo_pp, vuelos, alojamiento, comida, transporte, actividades,
-                    total, diario_pp, km, ruta)
+                    total, diario_pp, km, ruta, real)
 
 
 def estado_presupuesto(total_usd: float, presupuesto_usd: float) -> str:

@@ -1,5 +1,5 @@
 """
-GLOBE TRAVEL — Etapa 1 (versión local en Streamlit)
+GLOBEWAY — app principal (Streamlit)
 
 ¿Con cuánto dinero cuento, desde dónde quiero viajar y a qué lugares del mundo
 puedo ir con ese presupuesto?
@@ -13,10 +13,12 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 
 from componentes.globo import mostrar_globo
 from componentes.portada import logo_mini, mostrar_portada
-from servicios import alojamientos, info_destino, secretos, tipos_cambio, turismo, vuelos
+from servicios import (alojamientos, info_destino, secretos, tipos_cambio, travelpayouts,
+                       turismo, vuelos)
 from servicios.costos import (ESTADOS, ESTADOS_GENERALES, TIPOS_ALOJAMIENTO, calcular,
                               cargar_destinos, estado_presupuesto, estados_cuartiles)
 
@@ -49,6 +51,32 @@ st.markdown("""
   div[data-testid="stTabs"] button p { font-size: .95rem; }
 </style>
 """, unsafe_allow_html=True)
+
+# --------------------------------------------------------------------------
+# Script "Drive" de Travelpayouts (lo exige su registro para verificar el sitio).
+# Streamlit no deja editar el <head>, así que se agrega desde un iframe invisible
+# a la página principal. Va antes de la portada para que esté en todas las vistas.
+# --------------------------------------------------------------------------
+TP_DRIVE_SRC = "https://emrldtp.com/NTk5NTYy.js?t=599562"
+components.html(f"""<script>
+(function () {{
+  function poner(doc) {{
+    if (!doc || doc.getElementById('tp-drive')) return true;
+    var s = doc.createElement('script');
+    s.id = 'tp-drive'; s.async = 1; s.setAttribute('data-cmp-ab', '2');
+    s.src = '{TP_DRIVE_SRC}';
+    doc.head.appendChild(s);
+    return true;
+  }}
+  try {{ poner(window.top.document); }} catch (e) {{
+    try {{ poner(window.parent.document); }} catch (e2) {{}}
+  }}
+}})();
+</script>""", height=0)
+st.markdown("<style>iframe[height='0']{display:block;margin:0}"
+            "div[data-testid='stElementContainer']:has(iframe[height='0'])"
+            "{height:0;min-height:0;overflow:hidden;margin:0;padding:0}</style>",
+            unsafe_allow_html=True)
 
 # --------------------------------------------------------------------------
 # Portada animada: se muestra hasta que la persona aprieta "Iniciar"
@@ -171,6 +199,13 @@ def fmt(usd: float) -> str:
 presupuesto_usd = tipos_cambio.a_usd(presupuesto, moneda, tasas)
 noches = max(dias - 1, 1)
 
+# Precios reales de vuelos (Travelpayouts / Aviasales), si hay token configurado.
+# Una sola consulta por origen y fechas; se guarda 6 horas en caché.
+precios_tp = None
+if travelpayouts.configurado():
+    with st.spinner("Buscando precios reales de vuelos…"):
+        precios_tp = travelpayouts.obtener_precios(origen, llegada, salida, noches)
+
 # Ranking turístico: visitas en Wikipedia (en vivo) o ranking base (sin conexión)
 with st.spinner("Actualizando ranking turístico…"):
     popularidad = turismo.obtener_popularidad(DESTINOS)
@@ -182,7 +217,7 @@ for d in DESTINOS:
         continue
     if ocultar_riesgo and d.get("riesgo"):
         continue
-    c = calcular(d, origen, dias, viajeros, tipo_aloj)
+    c = calcular(d, origen, dias, viajeros, tipo_aloj, precios_tp)
     filas.append({**d, "calc": c, "estado": estado_presupuesto(c.total, presupuesto_usd)})
 
 
@@ -271,6 +306,10 @@ datos_globo = {
         "rank": f["rank"], "visitas": f["visitas"], "peso": round(f["peso"], 4),
         "total_fmt": fmt(f["calc"].total),
         "vuelo_pp_fmt": fmt(f["calc"].vuelo_pp),
+        "vuelo_real": bool(f["calc"].vuelo_real),
+        "vuelo_real_txt": (f"{f['calc'].vuelo_real.fechas_txt()} · {f['calc'].vuelo_real.escalas_txt()}"
+                           f" · {f['calc'].vuelo_real.aerolinea}") if f["calc"].vuelo_real else "",
+        "vuelo_link": f["calc"].vuelo_real.enlace(int(viajeros)) if f["calc"].vuelo_real else "",
         "diario_fmt": fmt(f["calc"].diario_pp),
         "distancia_km": f["calc"].distancia_km,
         "ruta_txt": f["calc"].ruta.texto(),
@@ -303,9 +342,19 @@ else:
                 f'<b>{vuelos.ORIGENES[origen]["nombre"]}</b>, {viajeros} viajero'
                 f'{"s" if viajeros > 1 else ""} y {dias} días: ¿a dónde puedes ir?</p>',
                 unsafe_allow_html=True)
-st.markdown('<div class="aviso-demo">⚠ <b>Modo demostración.</b> Los costos de vida, vuelos y '
-            'alojamientos son <b>estimaciones de ejemplo</b>, no tarifas reales. '
-            'El tipo de cambio sí es real cuando hay conexión.</div>', unsafe_allow_html=True)
+n_reales = sum(1 for f in filas if f["calc"].vuelo_real)
+if precios_tp is not None and n_reales:
+    st.markdown('<div class="aviso-demo">⚠ <b>Modo demostración parcial.</b> '
+                f'<b>{n_reales} de {len(filas)} destinos</b> usan el <b>precio real de búsquedas '
+                'recientes</b> del vuelo (Aviasales, ✈). El resto de los vuelos, el costo de vida y '
+                'los alojamientos son <b>estimaciones de ejemplo</b>. El tipo de cambio sí es real.</div>',
+                unsafe_allow_html=True)
+else:
+    st.markdown('<div class="aviso-demo">⚠ <b>Modo demostración.</b> Los costos de vida, vuelos y '
+                'alojamientos son <b>estimaciones de ejemplo</b>, no tarifas reales. '
+                'El tipo de cambio sí es real cuando hay conexión.</div>', unsafe_allow_html=True)
+    if precios_tp is not None and precios_tp.error:
+        st.caption(f"No se pudieron obtener precios reales de vuelos: {precios_tp.error}.")
 
 conteo = pd.Series([f["estado"] for f in filas]).value_counts() if filas else pd.Series(dtype=int)
 cols = st.columns(4)
@@ -374,8 +423,11 @@ with tab_lista:
             "Estado": textos[f["estado"]],
             f"Total viaje ({moneda})": round(tipos_cambio.convertir(f["calc"].total, moneda, tasas)),
             f"Vuelo p/p ({moneda})": round(tipos_cambio.convertir(f["calc"].vuelo_pp, moneda, tasas)),
-            "Ruta": f["calc"].ruta.recorrido(),
-            "Escalas": f["calc"].ruta.escalas,
+            "Precio del vuelo": "✈ Real (búsquedas recientes)" if f["calc"].vuelo_real else "Estimado",
+            "Ruta": (f"{f['calc'].vuelo_real.aeropuerto_origen} → {f['calc'].vuelo_real.aeropuerto_destino}"
+                     f" · {f['calc'].vuelo_real.fechas_txt()}") if f["calc"].vuelo_real
+                    else f["calc"].ruta.recorrido(),
+            "Escalas": f["calc"].vuelo_real.escalas_ida if f["calc"].vuelo_real else f["calc"].ruta.escalas,
             f"Costo de vida p/p/día ({moneda})": round(tipos_cambio.convertir(f["calc"].diario_pp, moneda, tasas)),
             "% del presupuesto": (f["calc"].total / presupuesto_usd * 100) if presupuesto_usd else None,
             "Alerta": "⚠️" if f.get("riesgo") else "",
@@ -384,6 +436,8 @@ with tab_lista:
             tabla = tabla.drop(columns=["% del presupuesto"])
         if not popularidad.en_vivo:
             tabla = tabla.drop(columns=["Visitas Wikipedia (30 días)"])
+        if precios_tp is None:
+            tabla = tabla.drop(columns=["Precio del vuelo"])
         st.dataframe(
             tabla, hide_index=True, width="stretch", height=420,
             column_config={
@@ -391,8 +445,11 @@ with tab_lista:
                     format="%.0f%%", min_value=0, max_value=200),
             },
         )
-        st.caption("Todos los valores son estimados. El total incluye vuelos ida y vuelta, "
-                   "alojamiento, alimentación, transporte local y actividades para todo el grupo.")
+        st.caption(("Los vuelos marcados ✈ son precios reales de búsquedas recientes en Aviasales "
+                    "(pueden cambiar); todo lo demás es estimado. " if n_reales else
+                    "Todos los valores son estimados. ")
+                   + "El total incluye vuelos ida y vuelta, alojamiento, alimentación, transporte "
+                     "local y actividades para todo el grupo.")
 
 # ---- Detalle de un destino ----
 with tab_explorar:
@@ -441,7 +498,8 @@ with tab_explorar:
                              "Alimentación", "Transporte local", "Actividades"],
                 "Monto": [fmt(c.vuelos), fmt(c.alojamiento), fmt(c.comida),
                           fmt(c.transporte), fmt(c.actividades)],
-                "Tipo": ["Estimado"] * 5,
+                "Tipo": ["✈ Real (búsquedas recientes)" if c.vuelo_real else "Estimado"]
+                        + ["Estimado"] * 4,
             }), hide_index=True, width="stretch")
 
             st.markdown("#### Costo de vida en destino")
@@ -451,6 +509,19 @@ with tab_explorar:
             st.markdown("#### Vuelo")
             if c.ruta.por_tierra:
                 st.write("El destino está muy cerca de tu origen: se asume viaje por tierra (sin vuelo).")
+            elif c.vuelo_real:
+                r = c.vuelo_real
+                st.write(f"✈ **Precio real de búsquedas recientes:** **{fmt(r.precio_pp)}** ida y vuelta "
+                         f"por persona")
+                st.write(f"**{r.aeropuerto_origen} → {r.aeropuerto_destino}** · {r.fechas_txt()} · "
+                         f"{r.escalas_txt()} · aerolínea {r.aerolinea}")
+                st.caption("Es el pasaje más barato que personas usuarias de Aviasales encontraron en "
+                           "sus búsquedas de los últimos días"
+                           + ("" if usar_fechas else " para un viaje de duración parecida")
+                           + ". Puede haber cambiado o agotarse: confírmalo antes de comprar."
+                           + (f" Consultado {precios_tp.consultado.astimezone().strftime('%d/%m/%Y %H:%M')}."
+                              if precios_tp.consultado else ""))
+                st.link_button("Ver este vuelo en Aviasales ↗", r.enlace(int(viajeros)), width="stretch")
             else:
                 st.write(f"Estimado: **{fmt(c.vuelo_pp)}** ida y vuelta por persona · "
                          f"{c.distancia_km:,.0f} km volados".replace(",", "."))
@@ -458,11 +529,21 @@ with tab_explorar:
                 if c.ruta.escalas:
                     st.caption("No hay vuelo directo estimado desde tu origen: el precio suma "
                                "cada tramo de la ruta más barata (máximo 4 escalas).")
+                if precios_tp is not None:
+                    st.caption("No hay precio real reciente para este destino"
+                               + (f" ({precios_tp.periodo})" if precios_tp.periodo else "")
+                               + ": se muestra el estimado.")
+                    if usar_fechas and c.ruta.aeropuerto_final:
+                        st.link_button("Buscar este vuelo en Aviasales ↗",
+                                       travelpayouts.enlace_busqueda(origen, c.ruta.aeropuerto_final,
+                                                                     llegada, salida, int(viajeros)),
+                                       width="stretch")
 
             # Verificación en tiempo real (solo si hay credenciales reales)
             if not vuelos.duffel_configurado():
-                st.caption("Para verificar precios reales de vuelos, configura DUFFEL_ACCESS_TOKEN "
-                           "en el archivo .env (ver README).")
+                if precios_tp is None:
+                    st.caption("Para ver precios reales de vuelos, configura TRAVELPAYOUTS_TOKEN "
+                               "en los Secrets de la app (ver README).")
             elif not usar_fechas:
                 st.caption("Activa “Tengo fechas definidas” para verificar el precio real del vuelo.")
             elif not c.ruta.aeropuerto_final or c.ruta.por_tierra:
@@ -551,11 +632,18 @@ with tab_aloj:
 
 # ---- Transparencia de datos ----
 with tab_fuentes:
+    fuente_vuelos = (f"Travelpayouts (Aviasales): {n_reales} destinos con precio real; el resto, "
+                     "fórmula por distancia" if n_reales else "Fórmula por distancia")
+    if vuelos.duffel_configurado():
+        fuente_vuelos += " + Duffel bajo demanda"
+    estado_vuelos = ("✅ Real de búsquedas recientes (✈) + 🟡 estimado" if n_reales
+                     else "✅ Verificación real disponible" if vuelos.duffel_configurado()
+                     else "🟡 Estimado (demostración)")
     st.markdown(f"""
 | Dato | Fuente actual | Estado |
 |---|---|---|
 | Tipo de cambio | {tasas.fuente} | {"⚠️ Respaldo fijo" if tasas.es_respaldo else "✅ Real, actualizado cada ~24 h"} |
-| Vuelos | Fórmula por distancia{" + Duffel bajo demanda" if vuelos.duffel_configurado() else ""} | {"✅ Verificación real disponible" if vuelos.duffel_configurado() else "🟡 Estimado (demostración)"} |
+| Vuelos | {fuente_vuelos} | {estado_vuelos} |
 | Alojamientos | {proveedor.nombre if filas else "—"} | 🟡 Ejemplos ficticios + enlace a búsqueda real |
 | Costo de vida (comida, transporte, actividades) | `datos/destinos.json` | 🟡 Estimado manual (demostración) |
 | Fotos e información general | Wikipedia en español | ✅ Real |
@@ -567,5 +655,16 @@ with tab_fuentes:
     elif popularidad.actualizado:
         st.caption(f"Ranking turístico actualizado: {popularidad.actualizado.astimezone().strftime('%d/%m/%Y %H:%M')} "
                    f"· {popularidad.cobertura:.0%} de los destinos con datos de visitas.")
+    if precios_tp is not None:
+        if precios_tp.error:
+            st.caption(f"Precios reales de vuelos no disponibles: {precios_tp.error}.")
+        elif precios_tp.consultado:
+            st.caption(f"Precios reales de vuelos ({precios_tp.periodo}): consultados "
+                       f"{precios_tp.consultado.astimezone().strftime('%d/%m/%Y %H:%M')}"
+                       + (" (desde caché)" if precios_tp.desde_cache else "")
+                       + f" · {precios_tp.cantidad} ciudad{'es' if precios_tp.cantidad != 1 else ''} con precio desde {origen} · "
+                         f"consultas a Travelpayouts hoy: {vuelos.cache.llamadas_hoy('travelpayouts')}"
+                       + ("" if travelpayouts.marker() else
+                          " · falta TRAVELPAYOUTS_MARKER: los enlaces no son de afiliado") + ".")
     st.caption(f"Consultas a Duffel hoy: {vuelos.cache.llamadas_hoy('duffel')}. "
                "Las respuestas de APIs se guardan en `datos/cache.db` con su fecha y hora.")

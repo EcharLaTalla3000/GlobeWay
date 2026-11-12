@@ -228,6 +228,7 @@ const globo = Globe()(contenedor)
       <b>${d.ciudad}</b><br><span style="color:#94a3b8">${d.pais}</span><br>
       <span style="color:#e2e8f0">#${d.rank} más turístico del país</span>${d.visitas ? ` · ${fmtNum(d.visitas)} visitas/30 días` : ''}<br>
       <span style="color:${colorEstado(d.estado)};font-weight:700">${d.total_fmt}</span> viaje total<br>
+      ${d.vuelo_real ? `<span style="color:#F5A524">✈ Vuelo ${d.vuelo_pp_fmt} p/p · precio real de búsquedas recientes</span><br>` : `<span style="color:#94a3b8">Vuelo ${d.vuelo_pp_fmt} p/p (estimado)</span><br>`}
       <span style="color:#94a3b8">${d.ruta_txt}</span>${d.riesgo ? '<br><span style="color:#fbbf24">⚠ Advertencias de seguridad</span>' : ''}</div>`)
   .onPointClick(d => { mostrarDestino(d); volarA(d.lat, d.lon, 1.2); })
   // Anillos pulsantes en destinos dentro del presupuesto
@@ -521,7 +522,7 @@ function tarjeta(d) {
   return `<div class="destino" onclick="seleccionarPorId('${d.id}')">
     <div class="cab"><span class="nom"><span style="color:var(--acento);font-variant-numeric:tabular-nums">#${d.rank}</span> ${d.ciudad}</span><span class="tot" style="color:${c}">${d.total_fmt}</span></div>
     ${d.visitas ? `<div class="det">${fmtNum(d.visitas)} visitas en Wikipedia (30 días)</div>` : ''}
-    <div class="det">Vuelo ${d.vuelo_pp_fmt} p/p (${d.ruta_txt.toLowerCase()}) · ${d.diario_fmt}/día p/p en destino</div>
+    <div class="det">${d.vuelo_real ? `<span style="color:#F5A524">✈ Vuelo ${d.vuelo_pp_fmt} p/p real</span>` : `Vuelo ${d.vuelo_pp_fmt} p/p estimado (${d.ruta_txt.toLowerCase()})`} · ${d.diario_fmt}/día p/p en destino</div>
     ${d.riesgo ? '<div class="det" style="color:#fbbf24">⚠ Advertencias de seguridad</div>' : ''}
     <span class="chip" style="color:${c}">${d.estado_txt}</span></div>`;
 }
@@ -550,19 +551,20 @@ function mostrarDestino(d) {
     <span class="chip" style="color:${c}">${d.estado_txt}</span>
     <div class="det" style="margin-top:8px;font-size:12.5px"><b>#${d.rank}</b> más turístico de ${d.pais}${d.visitas ? ` · ${fmtNum(d.visitas)} visitas en Wikipedia (30 días)` : ''}</div>
     ${d.riesgo ? '<div class="nota" style="color:#fbbf24;margin-top:8px">⚠ País con advertencias de seguridad para viajeros. Revisa las recomendaciones de tu cancillería.</div>' : ''}
-    <div class="det" style="margin-top:10px;font-size:12.5px"><b>Ruta:</b> ${d.ruta.length > 1 ? d.ruta.map(r => r.c).join(' → ') : 'por tierra'} <span style="color:var(--suave)">· ${d.ruta_txt}</span></div>
+    <div class="det" style="margin-top:10px;font-size:12.5px"><b>${d.vuelo_real ? 'Ruta aproximada (dibujo del mapa)' : 'Ruta'}:</b> ${d.ruta.length > 1 ? d.ruta.map(r => r.c).join(' → ') : 'por tierra'} <span style="color:var(--suave)">· ${d.ruta_txt}</span></div>
+    ${d.vuelo_real ? `<div class="det" style="margin-top:8px;font-size:12.5px;color:#F5A524">✈ <b>Precio real de búsquedas recientes</b> (Aviasales): ${d.vuelo_pp_fmt} p/p · ${d.vuelo_real_txt}<br><a href="${d.vuelo_link}" target="_blank" rel="noopener" style="color:#F5A524">Ver este vuelo en Aviasales ↗</a></div>` : ''}
     <table class="desg">
-      <tr><td>Vuelos ida y vuelta (${DATOS.viajeros} pers.)</td><td>${f.vuelos}</td></tr>
+      <tr><td>Vuelos ida y vuelta (${DATOS.viajeros} pers.)${d.vuelo_real ? ' ✈ real' : ''}</td><td>${f.vuelos}</td></tr>
       <tr><td>Alojamiento (${DATOS.noches} noches)</td><td>${f.alojamiento}</td></tr>
       <tr><td>Alimentación</td><td>${f.comida}</td></tr>
       <tr><td>Transporte local</td><td>${f.transporte}</td></tr>
       <tr><td>Actividades</td><td>${f.actividades}</td></tr>
-      <tr class="total"><td>Total estimado del viaje</td><td style="color:${c}">${d.total_fmt}</td></tr>
+      <tr class="total"><td>${d.vuelo_real ? 'Total del viaje (vuelo real + estimados)' : 'Total estimado del viaje'}</td><td style="color:${c}">${d.total_fmt}</td></tr>
     </table>
     <div class="det" style="margin-top:10px;color:var(--suave);font-size:12px">Costo de vida en destino: <b style="color:var(--texto)">${d.diario_fmt}</b> por persona/día (sin vuelo)</div>
     ${d.atractivos.length ? `<div style="margin-top:12px;font-size:12px;color:var(--suave);text-transform:uppercase;letter-spacing:.06em">Atractivos</div>
     <ul class="atr">${d.atractivos.map(a => `<li>${a}</li>`).join('')}</ul>` : ''}
-    <div class="nota">Valores estimados de demostración, no tarifas reales.</div>`;
+    <div class="nota">${d.vuelo_real ? 'El vuelo es un precio real de búsquedas recientes y puede cambiar; alojamiento, comida, transporte y actividades son estimados de demostración.' : 'Valores estimados de demostración, no tarifas reales.'}</div>`;
   mostrarArco(d);
   ficha.classList.add('visible');
 }

@@ -7,7 +7,7 @@ Globo terráqueo 3D interactivo para descubrir a qué destinos del mundo puedes 
 Necesitas Python 3.10 o superior y conexión a internet (el globo carga sus texturas y mapas desde CDN).
 
 ```bash
-cd globe_travel
+cd globeway
 python -m venv .venv
 # Windows:      .venv\Scripts\activate
 # macOS/Linux:  source .venv/bin/activate
@@ -44,7 +44,7 @@ Se abre solo en el navegador, en `http://localhost:8501`.
 | Fotos e información general | Real (Wikipedia en español) |
 | Ranking de destinos por país | Real con conexión (visitas a Wikipedia, 30 días); sin conexión, lista base compilada manualmente |
 | Llegadas de turistas por país | Cifras aproximadas 2023–2024 (referencia para el mapa de calor) |
-| Vuelos | **Estimados** por distancia y ruta con escalas (`servicios/rutas.py`). Si configuras Duffel, puedes verificar el precio real por destino |
+| Vuelos | Con `TRAVELPAYOUTS_TOKEN`: **precio real de búsquedas recientes** en Aviasales (marcado ✈) para los destinos que tengan dato; el resto, **estimado** por distancia y ruta con escalas (`servicios/rutas.py`). Con Duffel se puede verificar un vuelo puntual |
 | Costo de vida | **Estimado manual** en `datos/destinos.json` |
 | Alojamientos | **Ejemplos ficticios**, marcados como tales. El botón abre una búsqueda real en Booking.com |
 
@@ -73,14 +73,20 @@ Las claves se leen con `servicios/secretos.py`, que busca en este orden: variabl
    - Con fechas activadas, en *Explorar destino* aparece el botón **Verificar precio real del vuelo**.
    - Las respuestas quedan en caché 6 horas (`datos/cache.db`), y hay un límite diario configurable en `DUFFEL_MAX_DIARIO`.
    - Un token de prueba (`duffel_test_…`) devuelve ofertas de prueba; la app lo advierte.
-3. **Booking.com:** la Demand API exige ser afiliado aprobado. El punto de conexión está preparado en `servicios/alojamientos.py` (`ProveedorBooking`), pero no está implementado, para no simular una API sin credenciales.
+3. **Travelpayouts (precios reales de vuelos, datos de Aviasales):**
+   - Regístrate en https://www.travelpayouts.com indicando la URL de la app (`https://globeway.streamlit.app`) y únete al programa **Aviasales**.
+   - Copia tu **API token** (Perfil → *API token*) en `TRAVELPAYOUTS_TOKEN` y tu **ID de socio** (marker) en `TRAVELPAYOUTS_MARKER`.
+   - La app hace **una consulta por origen y fechas** (hasta 3 páginas si no hay fechas), la guarda 6 horas en caché y respeta `TRAVELPAYOUTS_MAX_DIARIO` (300 por defecto).
+   - Con fechas: busca exactamente esas fechas. Sin fechas: el mes que viene, aceptando solo viajes de duración parecida (±3 noches).
+   - Los destinos con dato muestran **✈ precio real de búsquedas recientes** y un botón a Aviasales con tu marker (enlace de afiliado). Los demás siguen estimados.
+4. **Booking.com:** la Demand API exige ser afiliado aprobado. El punto de conexión está preparado en `servicios/alojamientos.py` (`ProveedorBooking`), pero no está implementado, para no simular una API sin credenciales.
 
 Nunca subas `.env` a un repositorio.
 
 ## Estructura
 
 ```
-globe_travel/
+globeway/
 ├── app.py                    # Interfaz Streamlit (panel lateral, indicadores, pestañas)
 ├── componentes/
 │   ├── globo.html            # Globo 3D (Globe.gl): países, puntos, arcos, ficha lateral
@@ -90,11 +96,12 @@ globe_travel/
 │   ├── rutas.py              # Red de hubs y ruta más barata con escalas
 │   ├── turismo.py            # Ranking turístico (Wikipedia) y llegadas por país
 │   ├── vuelos.py             # Orígenes + verificación Duffel
+│   ├── travelpayouts.py      # Precios reales de búsquedas recientes (Aviasales) y enlaces de afiliado
 │   ├── alojamientos.py       # Proveedores de alojamiento (demo / Booking)
 │   ├── tipos_cambio.py       # Conversión CLP/USD/EUR con caché y respaldo
 │   ├── info_destino.py       # Fotos y resumen desde Wikipedia
 │   └── cache.py              # Caché SQLite con fecha/hora y límite de llamadas
-├── datos/destinos.json       # 1.503 destinos (se genera con scripts/generar_destinos.py)
+├── datos/destinos.json       # 1.512 destinos (se genera con scripts/generar_destinos.py)
 ├── datos/ranking/*.txt       # Listas de destinos más turísticos por país (editables)
 ├── scripts/generar_destinos.py  # Regenera destinos.json a partir de las listas
 ├── .streamlit/config.toml    # Tema oscuro
