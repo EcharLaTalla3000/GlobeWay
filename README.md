@@ -46,6 +46,7 @@ Se abre solo en el navegador, en `http://localhost:8501`.
 | Llegadas de turistas por país | Cifras aproximadas 2023–2024 (referencia para el mapa de calor) |
 | Vuelos | Con `TRAVELPAYOUTS_TOKEN`: **precio real de búsquedas recientes** en Aviasales (marcado ✈) para los destinos que tengan dato; el resto, **estimado** por distancia y ruta con escalas (`servicios/rutas.py`). Con Duffel se puede verificar un vuelo puntual |
 | Costo de vida | **Estimado manual** en `datos/destinos.json` |
+| Ciudades y pueblos del buscador | Nombre, ubicación y población **reales** (GeoNames, CC BY 4.0, más de 1.000 habitantes); costo de vida **estimado** con la mediana de su país o región |
 | Alojamientos | **Ejemplos ficticios**, marcados como tales. El botón abre una búsqueda real en Booking.com |
 
 ## Publicar en Streamlit Community Cloud (URL fija y gratis)
@@ -76,8 +77,8 @@ Las claves se leen con `servicios/secretos.py`, que busca en este orden: variabl
 3. **Travelpayouts (precios reales de vuelos, datos de Aviasales):**
    - Regístrate en https://www.travelpayouts.com indicando la URL de la app (`https://globeway.streamlit.app`) y únete al programa **Aviasales**.
    - Copia tu **API token** (Perfil → *API token*) en `TRAVELPAYOUTS_TOKEN` y tu **ID de socio** (marker) en `TRAVELPAYOUTS_MARKER`.
-   - La app hace **una consulta por origen y fechas** (hasta 3 páginas si no hay fechas), la guarda 6 horas en caché y respeta `TRAVELPAYOUTS_MAX_DIARIO` (300 por defecto).
-   - Con fechas: busca exactamente esas fechas. Sin fechas: el mes que viene, aceptando solo viajes de duración parecida (±3 noches).
+   - Para cubrir la mayor cantidad de destinos, combina varias consultas por origen y fechas (unas 4 a 8: `prices_for_dates` por mes y `prices/latest`), las guarda 6 horas en caché y respeta `TRAVELPAYOUTS_MAX_DIARIO` (500 por defecto).
+   - Con fechas: prefiere exactamente esas fechas y, si no hay, fechas cercanas (±7 días al salir), marcadas como tales. Sin fechas: salidas en los próximos ~2 meses. En ambos casos solo acepta viajes de duración parecida (±3 noches, o ±50 % en viajes largos).
    - Los destinos con dato muestran **✈ precio real de búsquedas recientes** y un botón a Aviasales con tu marker (enlace de afiliado). Los demás siguen estimados.
 4. **Booking.com:** la Demand API exige ser afiliado aprobado. El punto de conexión está preparado en `servicios/alojamientos.py` (`ProveedorBooking`), pero no está implementado, para no simular una API sin credenciales.
 
@@ -97,6 +98,7 @@ globeway/
 │   ├── turismo.py            # Ranking turístico (Wikipedia) y llegadas por país
 │   ├── vuelos.py             # Orígenes + verificación Duffel
 │   ├── travelpayouts.py      # Precios reales de búsquedas recientes (Aviasales) y enlaces de afiliado
+│   ├── lugares.py            # Buscador mundial de ciudades y pueblos (GeoNames)
 │   ├── alojamientos.py       # Proveedores de alojamiento (demo / Booking)
 │   ├── tipos_cambio.py       # Conversión CLP/USD/EUR con caché y respaldo
 │   ├── info_destino.py       # Fotos y resumen desde Wikipedia

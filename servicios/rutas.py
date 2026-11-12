@@ -274,6 +274,20 @@ class Red:
             if x in self.nodos and y in self.nodos:
                 unir(x, y)
 
+    @lru_cache(maxsize=4096)
+    def nodo_para(self, lat: float, lon: float, iso3: str) -> str:
+        """Aeropuerto para un lugar que no está en la red (buscador de ciudades):
+        el más cercano del mismo país a ≤250 km, o de cualquier país a ≤120 km;
+        si no hay, el más cercano del país (o del mundo) y el resto por tierra."""
+        reales = [(distancia_km(lat, lon, v[0], v[1]), c, v[2]) for c, v in self.nodos.items()
+                  if not c.startswith("@")]
+        cerca = [(km, c) for km, c, p in reales if (p == iso3 and km <= 250) or km <= 120]
+        if cerca:
+            return min(cerca)[1]
+        todos = [(distancia_km(lat, lon, v[0], v[1]), c) for c, v in self.nodos.items()
+                 if v[2] == iso3] or [(km, c) for km, c, _ in reales]
+        return min(todos)[1]
+
     def _km(self, a: str, b: str) -> float:
         la, lo, _ = self.nodos[a]
         lb, lob, _ = self.nodos[b]
@@ -310,7 +324,8 @@ class Red:
         if distancia_km(la_, lo_, destino["lat"], destino["lon"]) < 250:
             return Ruta(0.0, 0.0, [origen], [(la_, lo_)], por_tierra=True)
         tabla = self.desde(origen)
-        codigo = self.nodo_de[destino["id"]]
+        codigo = self.nodo_de.get(destino["id"]) or self.nodo_para(destino["lat"], destino["lon"],
+                                                                   destino.get("iso3", ""))
         la, lo = self.nodos[codigo][0], self.nodos[codigo][1]
         traslado = distancia_km(la, lo, destino["lat"], destino["lon"])
         if codigo == origen:

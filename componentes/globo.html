@@ -201,7 +201,9 @@ window.alternarTodos = () => {
 };
 function refrescarPaises() {
   if (!paisesGeo.length) return;
-  globo.polygonAltitude(globo.polygonAltitude()).polygonCapColor(globo.polygonCapColor()).polygonCapMaterial(globo.polygonCapMaterial());
+  globo.polygonAltitude(globo.polygonAltitude()).polygonCapColor(globo.polygonCapColor())
+    .polygonSideColor(globo.polygonSideColor()).polygonStrokeColor(globo.polygonStrokeColor())
+    .polygonCapMaterial(globo.polygonCapMaterial());
 }
 function seleccionarPais(iso, feature) {
   paisSel = iso;
@@ -286,8 +288,8 @@ fetch('https://raw.githubusercontent.com/vasturiano/globe.gl/master/example/data
       .polygonAltitude(f => f === seleccionado ? 0.03 : 0.008)
       .polygonCapColor(colorCap)
       .polygonCapMaterial(f => calorVivo ? materialCalor(f) : null)
-      .polygonSideColor(() => 'rgba(15,23,42,0.4)')
-      .polygonStrokeColor(() => 'rgba(148,163,184,0.25)')
+      .polygonSideColor(colorCostado)
+      .polygonStrokeColor(colorBorde)
       .polygonLabel(f => {
         const iso = codigoPais(f), lista = porPais[iso];
         const nombre = lista ? lista[0].pais : f.properties.NAME;
@@ -340,7 +342,18 @@ function separarTerritorios(features) {
 function colorCap(f) {
   const e = estadoPais(codigoPais(f));
   if (!e) return 'rgba(51,65,85,0.25)';
-  return hexA(colorEstado(e), f === seleccionado ? 0.85 : (TURISMO ? 0.28 : 0.55));
+  // País seleccionado: terreno azul noche, para que los palos de colores resalten encima.
+  // Su color de estado se mantiene en el borde y en los costados.
+  if (f === seleccionado) return 'rgba(11,30,63,0.94)';
+  return hexA(colorEstado(e), TURISMO ? 0.28 : 0.55);
+}
+function colorBorde(f) {
+  const e = estadoPais(codigoPais(f));
+  return f === seleccionado && e ? colorEstado(e) : 'rgba(148,163,184,0.25)';
+}
+function colorCostado(f) {
+  const e = estadoPais(codigoPais(f));
+  return f === seleccionado && e ? hexA(colorEstado(e), 0.75) : 'rgba(15,23,42,0.4)';
 }
 
 // ---------- "Calor vivo" (efecto de cámara térmica) ----------
@@ -434,6 +447,7 @@ function materialCalor(f) {
 function crearMaterialCalor(f) {
   const e = estadoPais(codigoPais(f));
   if (!e) return null;                       // "sin datos" queda quieto y gris
+  if (f === seleccionado) return null;       // el país seleccionado queda oscuro y quieto
   const clave = colorCap(f);
   if (materialesCalor[clave]) return materialesCalor[clave];
   const m = clave.match(/rgba\((\d+),(\d+),(\d+),([\d.]+)\)/);

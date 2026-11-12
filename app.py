@@ -17,7 +17,7 @@ import streamlit.components.v1 as components
 
 from componentes.globo import mostrar_globo
 from componentes.portada import logo_mini, mostrar_portada
-from servicios import (alojamientos, info_destino, secretos, tipos_cambio, travelpayouts,
+from servicios import (alojamientos, info_destino, lugares, secretos, tipos_cambio, travelpayouts,
                        turismo, vuelos)
 from servicios.costos import (ESTADOS, ESTADOS_GENERALES, TIPOS_ALOJAMIENTO, calcular,
                               cargar_destinos, estado_presupuesto, estados_cuartiles)
@@ -282,6 +282,18 @@ else:
     leyenda = [{"etiqueta": v["etiqueta"], "color": v["color"]} for v in ESTADOS.values()]
     titulo_leyenda = f"Viaje total vs. {fmt(presupuesto_usd)}"
 
+def texto_vuelo_real(r) -> str:
+    """Fechas, escalas y aerolínea de un precio real (para el globo y las tablas)."""
+    partes = [r.fechas_txt() + (" (fechas cercanas a las tuyas)" if r.fechas_cercanas else ""),
+              r.escalas_txt()]
+    if r.aerolinea:
+        partes.append(f"aerolínea {r.aerolinea}")
+    return " · ".join(partes)
+
+
+colores.setdefault("sin_datos", "#64748b")
+textos.setdefault("sin_datos", "Sin datos turísticos")
+
 max_metrica = max((metrica(f) for f in filas), default=1) or 1
 datos_globo = {
     "modo": "turismo" if turisticos else ("general" if generales else "presupuesto"),
@@ -307,8 +319,7 @@ datos_globo = {
         "total_fmt": fmt(f["calc"].total),
         "vuelo_pp_fmt": fmt(f["calc"].vuelo_pp),
         "vuelo_real": bool(f["calc"].vuelo_real),
-        "vuelo_real_txt": (f"{f['calc'].vuelo_real.fechas_txt()} · {f['calc'].vuelo_real.escalas_txt()}"
-                           f" · {f['calc'].vuelo_real.aerolinea}") if f["calc"].vuelo_real else "",
+        "vuelo_real_txt": texto_vuelo_real(f["calc"].vuelo_real) if f["calc"].vuelo_real else "",
         "vuelo_link": f["calc"].vuelo_real.enlace(int(viajeros)) if f["calc"].vuelo_real else "",
         "diario_fmt": fmt(f["calc"].diario_pp),
         "distancia_km": f["calc"].distancia_km,
@@ -411,49 +422,126 @@ opciones_ids = [f["id"] for f in filas]
 por_id = {f["id"]: f for f in filas}
 etiqueta_dest = lambda i: f"{por_id[i]['ciudad']} · {por_id[i]['pais']} — {fmt(por_id[i]['calc'].total)}"
 
-# ---- Ranking ----
-with tab_lista:
-    if not filas:
-        st.info("No hay destinos con los filtros actuales.")
+# ---- Ranking y buscador ----
+def fila_tabla(f: dict) -> dict:
+    c, r = f["calc"], f["calc"].vuelo_real
+    return {
+        "Destino": f["ciudad"], "País": f["pais"],
+        "En el globo": "No (buscador)" if f.get("extra") else "Sí",
+        "Población": f.get("poblacion"),
+        "Ranking en su país": f.get("rank"),
+        "Visitas Wikipedia (30 días)": f.get("visitas"),
+        "Estado": textos[f["estado"]],
+        f"Total viaje ({moneda})": round(tipos_cambio.convertir(c.total, moneda, tasas)),
+        f"Vuelo p/p ({moneda})": round(tipos_cambio.convertir(c.vuelo_pp, moneda, tasas)),
+        "Precio del vuelo": "✈ Real (búsquedas recientes)" if r else "Estimado",
+        "Ruta": (f"{r.aeropuerto_origen} → {r.aeropuerto_destino} · {r.fechas_txt()}"
+                 + (" (fechas cercanas)" if r.fechas_cercanas else "")) if r
+                else c.ruta.recorrido() + (f" + {round(c.ruta.traslado_km)} km de traslado"
+                                           if f.get("extra") and c.ruta.traslado_km >= 30 else ""),
+        "Escalas": r.escalas_ida if r else c.ruta.escalas,
+        f"Costo de vida p/p/día ({moneda})": round(tipos_cambio.convertir(c.diario_pp, moneda, tasas)),
+        "% del presupuesto": (c.total / presupuesto_usd * 100) if presupuesto_usd else None,
+        "Alerta": "⚠️" if f.get("riesgo") else "",
+    }
+
+
+def destino_extra(d: dict) -> dict:
+    """Calcula costos y estado de un lugar del buscador (no está en el globo)."""
+    c = calcular(d, origen, dias, viajeros, tipo_aloj, precios_tp)
+    f = {**d, "calc": c, "rank": None, "visitas": None}
+    if turisticos:
+        f["estado"] = "sin_datos"
+    elif generales:
+        f["estado"] = ESTADOS_GENERALES[sum(metrica(f) > x for x in cortes)][0] if cortes else "intermedio"
     else:
-        tabla = pd.DataFrame([{
-            "Destino": f["ciudad"], "País": f["pais"],
-            "Ranking en su país": f["rank"],
-            "Visitas Wikipedia (30 días)": f["visitas"],
-            "Estado": textos[f["estado"]],
-            f"Total viaje ({moneda})": round(tipos_cambio.convertir(f["calc"].total, moneda, tasas)),
-            f"Vuelo p/p ({moneda})": round(tipos_cambio.convertir(f["calc"].vuelo_pp, moneda, tasas)),
-            "Precio del vuelo": "✈ Real (búsquedas recientes)" if f["calc"].vuelo_real else "Estimado",
-            "Ruta": (f"{f['calc'].vuelo_real.aeropuerto_origen} → {f['calc'].vuelo_real.aeropuerto_destino}"
-                     f" · {f['calc'].vuelo_real.fechas_txt()}") if f["calc"].vuelo_real
-                    else f["calc"].ruta.recorrido(),
-            "Escalas": f["calc"].vuelo_real.escalas_ida if f["calc"].vuelo_real else f["calc"].ruta.escalas,
-            f"Costo de vida p/p/día ({moneda})": round(tipos_cambio.convertir(f["calc"].diario_pp, moneda, tasas)),
-            "% del presupuesto": (f["calc"].total / presupuesto_usd * 100) if presupuesto_usd else None,
-            "Alerta": "⚠️" if f.get("riesgo") else "",
-        } for f in filas])
+        f["estado"] = estado_presupuesto(c.total, presupuesto_usd)
+    return f
+
+
+with tab_lista:
+    busqueda = st.text_input(
+        "🔎 Buscar ciudad o pueblo", key="busqueda",
+        placeholder="Ej.: Pucón, Cusco, Hallstatt, Chiloé…",
+        help="Busca en los destinos del globo y en todas las ciudades y pueblos del mundo con "
+             "más de 1.000 habitantes (base abierta GeoNames). Para los lugares que no están en "
+             "el globo, los costos se estiman con el promedio de su país.")
+    q = lugares.normalizar(busqueda)
+    if len(q) >= 2:
+        del_globo = [f for f in filas
+                     if q in lugares.normalizar(f["ciudad"]) or q in lugares.normalizar(f["pais"])]
+        extras = []
+        if lugares.cantidad() == 0:
+            with st.spinner("Descargando la lista mundial de ciudades y pueblos (solo la primera vez, "
+                            "puede tardar unos 30 segundos)…"):
+                lugares.cargar()
+        if lugares.cantidad():
+            ya = {(lugares.normalizar(f["ciudad"].split(" (")[0]), f["iso3"]) for f in DESTINOS}
+            for fila in lugares.buscar(busqueda).itertuples(index=False):
+                if (lugares.normalizar(fila.nombre), fila.iso3) in ya:
+                    continue   # ya está en el globo
+                d = lugares.como_destino(fila, DESTINOS)
+                if ocultar_riesgo and d["riesgo"]:
+                    continue
+                f = destino_extra(d)
+                if ocultar_fuera and f["estado"] == "fuera":
+                    continue
+                extras.append(f)
+        else:
+            st.warning("No se pudo descargar la lista mundial de ciudades (GeoNames); por ahora "
+                       "solo se buscan los destinos del globo."
+                       + (f" Detalle: {lugares.error_carga}" if lugares.error_carga else ""))
+        resultado = del_globo + extras
+        for f in extras:   # así también se pueden abrir en "Explorar destino" y "Alojamientos"
+            por_id[f["id"]] = f
+            opciones_ids.append(f["id"])
+        st.caption(f"**{len(del_globo)}** destino{'s' if len(del_globo) != 1 else ''} del globo y "
+                   f"**{len(extras)}** ciudad{'es' if len(extras) != 1 else ''} o pueblo"
+                   f"{'s' if len(extras) != 1 else ''} más"
+                   + (f" (se muestran los primeros {lugares.MAX_RESULTADOS}: escribe más letras para afinar)"
+                      if len(extras) >= lugares.MAX_RESULTADOS - 5 else "")
+                   + ". Los que no están en el globo también se pueden ver en «Explorar destino».")
+    else:
+        resultado = filas
+        if lugares.cantidad():
+            st.caption(f"¿No encuentras tu destino? Búscalo arriba entre "
+                       f"{lugares.cantidad():,} ciudades y pueblos del mundo.".replace(",", "."))
+        else:
+            st.caption("¿No encuentras tu destino? Búscalo arriba: además de los destinos del globo, "
+                       "el buscador incluye todas las ciudades y pueblos del mundo con más de 1.000 habitantes.")
+
+    if not resultado:
+        st.info("No hay destinos con esa búsqueda o con los filtros actuales.")
+    else:
+        tabla = pd.DataFrame([fila_tabla(f) for f in resultado])
         if generales or turisticos:
             tabla = tabla.drop(columns=["% del presupuesto"])
         if not popularidad.en_vivo:
             tabla = tabla.drop(columns=["Visitas Wikipedia (30 días)"])
         if precios_tp is None:
             tabla = tabla.drop(columns=["Precio del vuelo"])
+        if not any(f.get("extra") for f in resultado):
+            tabla = tabla.drop(columns=["En el globo", "Población"])
         st.dataframe(
             tabla, hide_index=True, width="stretch", height=420,
             column_config={
                 "% del presupuesto": st.column_config.ProgressColumn(
                     format="%.0f%%", min_value=0, max_value=200),
+                "Población": st.column_config.NumberColumn(format="localized"),
             },
         )
         st.caption(("Los vuelos marcados ✈ son precios reales de búsquedas recientes en Aviasales "
                     "(pueden cambiar); todo lo demás es estimado. " if n_reales else
                     "Todos los valores son estimados. ")
                    + "El total incluye vuelos ida y vuelta, alojamiento, alimentación, transporte "
-                     "local y actividades para todo el grupo.")
+                     "local y actividades para todo el grupo."
+                   + (" En los lugares que no están en el globo, el costo de vida es el promedio de "
+                      "su país (o de su región, si el país no tiene destinos en el globo)."
+                      if any(f.get("extra") for f in resultado) else ""))
 
 # ---- Detalle de un destino ----
 with tab_explorar:
-    if not filas:
+    if not opciones_ids:
         st.info("No hay destinos con los filtros actuales.")
     else:
         dest_id = st.selectbox("Destino", opciones_ids, format_func=etiqueta_dest, key="dest_explorar")
@@ -466,9 +554,14 @@ with tab_explorar:
             if wiki and wiki.get("imagen"):
                 st.image(wiki["imagen"], width="stretch")
             st.markdown(f"## {f['ciudad']}")
-            st.caption(f"Puesto **#{f['rank']}** entre los destinos más turísticos de {f['pais']}"
-                       + (f" · {f['visitas']:,} visitas en Wikipedia (30 días)".replace(",", ".")
-                          if f.get("visitas") else ""))
+            if f.get("extra"):
+                st.caption(f"Ciudad o pueblo de {f['pais']} · {f['poblacion']:,} habitantes".replace(",", ".")
+                           + " (GeoNames). No está en el globo: el costo de vida es el promedio de "
+                           + ("su país." if f["base_costos"] == "país" else "su región."))
+            else:
+                st.caption(f"Puesto **#{f['rank']}** entre los destinos más turísticos de {f['pais']}"
+                           + (f" · {f['visitas']:,} visitas en Wikipedia (30 días)".replace(",", ".")
+                              if f.get("visitas") else ""))
             if f.get("riesgo"):
                 st.warning("Este país tiene advertencias de seguridad relevantes para viajeros "
                            "(dato referencial). Revisa las recomendaciones de viaje de la "
@@ -483,8 +576,9 @@ with tab_explorar:
                 motivo = wiki.get("error") if wiki else None
                 st.caption("No se pudo cargar la información de Wikipedia"
                            + (f": {motivo}." if motivo else "."))
-            st.markdown("**Atractivos y actividades**")
-            st.markdown("\n".join(f"- {a}" for a in f["atractivos"]))
+            if f["atractivos"]:
+                st.markdown("**Atractivos y actividades**")
+                st.markdown("\n".join(f"- {a}" for a in f["atractivos"]))
 
         with der:
             st.markdown("#### Costo total estimado del viaje")
@@ -513,8 +607,7 @@ with tab_explorar:
                 r = c.vuelo_real
                 st.write(f"✈ **Precio real de búsquedas recientes:** **{fmt(r.precio_pp)}** ida y vuelta "
                          f"por persona")
-                st.write(f"**{r.aeropuerto_origen} → {r.aeropuerto_destino}** · {r.fechas_txt()} · "
-                         f"{r.escalas_txt()} · aerolínea {r.aerolinea}")
+                st.write(f"**{r.aeropuerto_origen} → {r.aeropuerto_destino}** · {texto_vuelo_real(r)}")
                 st.caption("Es el pasaje más barato que personas usuarias de Aviasales encontraron en "
                            "sus búsquedas de los últimos días"
                            + ("" if usar_fechas else " para un viaje de duración parecida")
@@ -575,7 +668,7 @@ with tab_explorar:
 
 # ---- Alojamientos ----
 with tab_aloj:
-    if not filas:
+    if not opciones_ids:
         st.info("No hay destinos con los filtros actuales.")
     else:
         proveedor = alojamientos.proveedor_activo()
@@ -648,6 +741,7 @@ with tab_fuentes:
 | Costo de vida (comida, transporte, actividades) | `datos/destinos.json` | 🟡 Estimado manual (demostración) |
 | Fotos e información general | Wikipedia en español | ✅ Real |
 | Ranking de destinos por país | {"Visitas a Wikipedia en los últimos 30 días" if popularidad.en_vivo else "Lista base compilada manualmente"} | {"✅ Real, actualizado cada 3 días" if popularidad.en_vivo else "🟡 Base (sin conexión)"} |
+| Ciudades y pueblos del buscador | GeoNames (CC BY 4.0): ciudades y pueblos con más de 1.000 habitantes | ✅ Real (nombre, ubicación y población) · 🟡 costos estimados con el promedio del país |
 | Llegadas de turistas por país | Cifras aproximadas 2023–2024 (ONU Turismo y fuentes nacionales) | 🟡 Referencial, fijo |
 """)
     if popularidad.error and not popularidad.en_vivo:

@@ -4,7 +4,8 @@ Precios REALES de vuelos desde Travelpayouts (datos de Aviasales).
 Qué entrega:
 - El pasaje ida y vuelta más barato que personas usuarias de Aviasales
   encontraron en sus búsquedas de las últimas ~48 horas, desde tu origen
-  hacia cientos de destinos, con UNA sola consulta por origen y fechas.
+  hacia cientos de destinos. Se combinan varias consultas (unas 5 a 8 por
+  origen y fechas, guardadas 6 horas) para cubrir la mayor cantidad de destinos.
 - Es un precio real pero "de búsquedas recientes": puede haber cambiado o
   agotarse. La app siempre lo muestra con esa etiqueta.
 - Los destinos sin dato siguen usando la fórmula estimada (servicios/rutas.py).
@@ -12,7 +13,7 @@ Qué entrega:
 Claves (en Settings → Secrets de Streamlit Cloud, Secretos de Colab o .env):
   TRAVELPAYOUTS_TOKEN   token de la API (obligatorio para precios reales)
   TRAVELPAYOUTS_MARKER  tu ID de socio, para que los enlaces a Aviasales sean de afiliado
-  TRAVELPAYOUTS_MAX_DIARIO  (opcional) máximo de consultas por día, por defecto 300
+  TRAVELPAYOUTS_MAX_DIARIO  (opcional) máximo de consultas por día, por defecto 500
 
 Documentación: https://support.travelpayouts.com/hc/en-us/articles/203956163
 """
@@ -28,13 +29,12 @@ import requests
 from servicios import cache
 
 URL_PRECIOS = "https://api.travelpayouts.com/aviasales/v3/prices_for_dates"
+URL_ULTIMOS = "https://api.travelpayouts.com/v2/prices/latest"
 URL_AEROPUERTOS = "https://api.travelpayouts.com/data/en/airports.json"
 URL_AVIASALES = "https://www.aviasales.com"
 
 TTL_PRECIOS = 6 * 3600              # los precios se vuelven a pedir cada 6 horas
 TTL_AEROPUERTOS = 30 * 24 * 3600    # la lista de aeropuertos cambia muy poco
-PAGINAS_SIN_FECHAS = 3              # hasta 3.000 ofertas cuando no hay fechas fijas
-TOLERANCIA_NOCHES = 3               # sin fechas: se aceptan viajes de ±3 noches
 
 MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto",
          "septiembre", "octubre", "noviembre", "diciembre"]
@@ -62,6 +62,7 @@ class PrecioReal:
     aeropuerto_origen: str
     aeropuerto_destino: str
     ruta_link: str            # enlace relativo que entrega Aviasales
+    fechas_cercanas: bool = False   # True si no hubo precio para tus fechas exactas
 
     def enlace(self, viajeros: int = 1) -> str:
         """Enlace a la búsqueda en Aviasales (con tu marker de afiliado si existe)."""
@@ -162,28 +163,9 @@ def _ciudades() -> dict[str, str]:
     return mapa
 
 
-def _periodo(llegada: date | None, salida: date | None) -> tuple[str, str, bool, str]:
-    """Devuelve (departure_at, return_at, fechas_exactas, texto para mostrar)."""
-    if llegada and salida:
-        return (llegada.isoformat(), salida.isoformat(), True,
-                f"{_fecha_corta(llegada.isoformat())} – {_fecha_corta(salida.isoformat())}")
-    base = date.today() + timedelta(days=30)
-    return (base.strftime("%Y-%m"), base.strftime("%Y-%m"), False,
-            f"viajes de duración similar en {_mes_txt(base)}")
-
-
-def _noches(oferta: dict) -> int | None:
+def _pedir(url: str, params: dict, token: str) -> list[dict]:
     try:
-        ida = date.fromisoformat(oferta["departure_at"][:10])
-        vuelta = date.fromisoformat(oferta["return_at"][:10])
-        return (vuelta - ida).days
-    except (KeyError, TypeError, ValueError):
-        return None
-
-
-def _pedir(params: dict, token: str) -> list[dict]:
-    try:
-        r = requests.get(URL_PRECIOS, params=params,
+        r = requests.get(url, params=params,
                          headers={"X-Access-Token": token, "Accept-Encoding": "gzip"},
                          timeout=30)
     except requests.RequestException as e:
@@ -204,12 +186,65 @@ def _pedir(params: dict, token: str) -> list[dict]:
 # --------------------------------------------------------------------------
 # Consulta principal
 # --------------------------------------------------------------------------
+def _mes(d: date, n: int = 0) -> str:
+    """'AAAA-MM' del mes de `d` más `n` meses."""
+    m = d.month - 1 + n
+    return f"{d.year + m // 12}-{m % 12 + 1:02d}"
+
+
+def _consultas(llegada: date | None, salida: date | None) -> list[tuple[str, dict, int]]:
+    """Lista de (fuente, parámetros, páginas) que se piden a Travelpayouts."""
+    v3 = {"one_way": "false", "direct": "false", "sorting": "price", "currency": "usd", "limit": 1000}
+    v2 = {"period_type": "year", "one_way": "false", "show_to_affiliates": "false",
+          "sorting": "price", "currency": "usd", "limit": 1000}
+    if llegada and salida:
+        return [
+            ("v3", {**v3, "departure_at": llegada.isoformat(), "return_at": salida.isoformat(),
+                    "unique": "true"}, 1),
+            ("v3", {**v3, "departure_at": _mes(llegada), "return_at": _mes(salida),
+                    "unique": "false"}, 2),
+            ("v2", v2, 2),
+        ]
+    base = date.today() + timedelta(days=30)
+    return [
+        ("v3", {**v3, "departure_at": _mes(base), "return_at": _mes(base), "unique": "false"}, 2),
+        ("v3", {**v3, "departure_at": _mes(base), "return_at": _mes(base, 1), "unique": "false"}, 1),
+        ("v3", {**v3, "departure_at": _mes(base, 1), "return_at": _mes(base, 1), "unique": "false"}, 2),
+        ("v3", {**v3, "departure_at": _mes(base), "return_at": _mes(base, 1), "unique": "true"}, 1),
+        ("v2", v2, 2),
+    ]
+
+
+def _normalizar(fuente: str, o: dict) -> dict | None:
+    """Deja las ofertas de las dos fuentes (v3 y v2) con los mismos campos."""
+    if fuente == "v2":
+        if not o.get("value") or not o.get("return_date"):
+            return None
+        return {"destination": o.get("destination"), "destination_airport": None,
+                "origin_airport": o.get("origin"), "price": o["value"], "airline": None,
+                "departure_at": o.get("depart_date"), "return_at": o.get("return_date"),
+                "transfers": o.get("number_of_changes"), "return_transfers": o.get("number_of_changes"),
+                "link": ""}
+    if not o.get("price") or not o.get("return_at"):
+        return None
+    campos = ("destination", "destination_airport", "origin_airport", "price", "airline",
+              "departure_at", "return_at", "transfers", "return_transfers", "link")
+    return {k: o.get(k) for k in campos}
+
+
+def tolerancia(noches: int) -> int:
+    """Diferencia de noches aceptada: ±3 en viajes cortos, ±la mitad en viajes largos."""
+    return max(3, round(noches * 0.5))
+
+
 def obtener_precios(origen: str, llegada: date | None, salida: date | None,
                     noches: int) -> TablaPrecios:
     """
-    Pide a Travelpayouts los pasajes más baratos desde `origen` a todos los destinos.
-    Con fechas: exactamente esas fechas. Sin fechas: el mes que viene, aceptando
-    solo viajes de duración parecida (±3 noches) para no comparar peras con manzanas.
+    Pide a Travelpayouts los pasajes más baratos desde `origen` a todos los destinos,
+    combinando varias consultas para cubrir la mayor cantidad posible de destinos:
+    - Con fechas: exactamente esas fechas y, si no hay, fechas cercanas (±7 días al salir)
+      con una duración parecida. Se prefieren siempre las fechas exactas.
+    - Sin fechas: salidas en los próximos ~2 meses con duración parecida a la elegida.
     Nunca lanza errores: si algo falla, devuelve una tabla vacía con `error`.
     """
     tabla = TablaPrecios()
@@ -219,60 +254,83 @@ def obtener_precios(origen: str, llegada: date | None, salida: date | None,
         return tabla
 
     tabla.ciudad_de = _ciudades()
-    ida, vuelta, exactas, tabla.periodo = _periodo(llegada, salida)
     origen_tp = tabla.ciudad_de.get(origen, origen)   # SCL→SCL, JFK→NYC, EZE→BUE
-    clave = f"tp:precios:{origen_tp}:{ida}:{vuelta}"
+    hoy = date.today()
+    exactas = bool(llegada and salida)
+    if exactas:
+        tabla.periodo = (f"{_fecha_corta(llegada.isoformat())} – {_fecha_corta(salida.isoformat())}"
+                         " o fechas cercanas")
+        clave = f"tp2:{origen_tp}:{llegada}:{salida}"
+    else:
+        tabla.periodo = (f"viajes de duración parecida con salida entre {_mes_txt(hoy + timedelta(days=30))}"
+                         f" y {_mes_txt(hoy + timedelta(days=75))}")
+        clave = f"tp2:{origen_tp}:{_mes(hoy + timedelta(days=30))}"
 
     en_cache = cache.obtener(clave, TTL_PRECIOS)
     if en_cache:
         ofertas, tabla.consultado = en_cache
         tabla.desde_cache = True
     else:
-        limite = int(os.getenv("TRAVELPAYOUTS_MAX_DIARIO", "300"))
-        base = {"origin": origen_tp, "departure_at": ida, "return_at": vuelta,
-                "one_way": "false", "direct": "false", "sorting": "price",
-                "currency": "usd", "limit": 1000}
-        ofertas = []
-        try:
-            paginas = 1 if exactas else PAGINAS_SIN_FECHAS
-            for pagina in range(1, paginas + 1):
-                if not cache.registrar_llamada("travelpayouts", limite):
-                    if not ofertas:
+        limite = int(os.getenv("TRAVELPAYOUTS_MAX_DIARIO", "500"))
+        ofertas, errores = [], []
+        for fuente, params, paginas in _consultas(llegada, salida):
+            url = URL_PRECIOS if fuente == "v3" else URL_ULTIMOS
+            try:
+                for pagina in range(1, paginas + 1):
+                    if not cache.registrar_llamada("travelpayouts", limite):
                         raise RuntimeError(f"se alcanzó el límite diario de {limite} consultas")
+                    lote = _pedir(url, {**params, "origin": origen_tp, "page": pagina}, token)
+                    ofertas += [n for o in lote if (n := _normalizar(fuente, o))]
+                    if len(lote) < params["limit"]:
+                        break
+            except RuntimeError as e:
+                errores.append(str(e))
+                if "token" in str(e) or "límite" in str(e):
                     break
-                lote = _pedir({**base, "page": pagina,
-                               "unique": "true" if exactas else "false"}, token)
-                ofertas += lote
-                if len(lote) < 1000:
-                    break
-        except RuntimeError as e:
-            if not ofertas:
-                tabla.error = str(e)
-                return tabla
-        # Se guarda solo lo necesario (y solo si la consulta salió bien)
-        campos = ("destination", "destination_airport", "origin_airport", "price", "airline",
-                  "departure_at", "return_at", "transfers", "return_transfers", "link")
-        ofertas = [{k: o.get(k) for k in campos} for o in ofertas]
-        tabla.consultado = cache.guardar(clave, ofertas)
+        if not ofertas:
+            tabla.error = errores[0] if errores else "Travelpayouts no tiene precios recientes desde este origen"
+            return tabla
+        tabla.consultado = cache.guardar(clave, ofertas)   # solo se guarda si la consulta salió bien
 
+    tol = tolerancia(noches)
+    mejor_aero: dict[str, tuple] = {}
+    mejor_ciudad: dict[str, tuple] = {}
     for o in ofertas:
-        if not o.get("price") or not o.get("return_at") or not o.get("destination"):
+        try:
+            ida = date.fromisoformat((o.get("departure_at") or "")[:10])
+            vuelta = date.fromisoformat((o.get("return_at") or "")[:10])
+        except ValueError:
             continue
-        if not exactas:
-            n = _noches(o)
-            if n is None or abs(n - noches) > TOLERANCIA_NOCHES:
+        n = (vuelta - ida).days
+        if n < 1 or abs(n - noches) > tol:
+            continue
+        if exactas:
+            if ida == llegada and vuelta == salida:
+                nivel = 0
+            elif abs((ida - llegada).days) <= 7:
+                nivel = 1
+            else:
                 continue
+        else:
+            if not (hoy + timedelta(days=3) <= ida <= hoy + timedelta(days=120)):
+                continue
+            nivel = 0
+        destino = o.get("destination")
+        if not destino:
+            continue
         p = PrecioReal(
-            precio_pp=float(o["price"]), aerolinea=o.get("airline") or "—",
-            ida=(o.get("departure_at") or "")[:10], vuelta=(o.get("return_at") or "")[:10],
+            precio_pp=float(o["price"]), aerolinea=o.get("airline") or "",
+            ida=ida.isoformat(), vuelta=vuelta.isoformat(),
             escalas_ida=int(o.get("transfers") or 0),
             escalas_vuelta=int(o.get("return_transfers") or 0),
-            aeropuerto_origen=o.get("origin_airport") or origen,
-            aeropuerto_destino=o.get("destination_airport") or o["destination"],
-            ruta_link=o.get("link") or "",
+            aeropuerto_origen=o.get("origin_airport") or origen_tp,
+            aeropuerto_destino=o.get("destination_airport") or destino,
+            ruta_link=o.get("link") or "", fechas_cercanas=bool(nivel),
         )
-        # Se guarda la oferta más barata por aeropuerto y por ciudad
-        for dic, k in ((tabla.por_aeropuerto, p.aeropuerto_destino), (tabla.por_ciudad, o["destination"])):
-            if k not in dic or p.precio_pp < dic[k].precio_pp:
-                dic[k] = p
+        # Se guarda la mejor oferta por aeropuerto y por ciudad (primero fechas exactas, luego precio)
+        for dic, k in ((mejor_aero, o.get("destination_airport")), (mejor_ciudad, destino)):
+            if k and (k not in dic or (nivel, p.precio_pp) < dic[k][0]):
+                dic[k] = ((nivel, p.precio_pp), p)
+    tabla.por_aeropuerto = {k: v[1] for k, v in mejor_aero.items()}
+    tabla.por_ciudad = {k: v[1] for k, v in mejor_ciudad.items()}
     return tabla
