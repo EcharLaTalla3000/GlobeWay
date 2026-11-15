@@ -69,14 +69,30 @@
   #demo { left: 16px; top: 14px; padding: 6px 11px; font-size: 11px; color: #fbbf24;
     border-color: rgba(251,191,36,.35); letter-spacing: .03em; }
 
-  @media (max-width: 640px) {
-    #ficha { width: auto; left: 10px; right: 10px; top: auto; bottom: 10px; max-height: 55%;
-      transform: translateY(120%); }
+  #leyenda .flecha { display: none; }
+  @media (max-width: 700px) {
+    /* Ficha: hoja que sube desde abajo, a todo el ancho */
+    #ficha { width: auto; left: 8px; right: 8px; top: auto; bottom: 8px; max-height: 62%;
+      padding: 14px 14px 10px; transform: translateY(120%); }
     #ficha.visible { transform: translateY(0); }
-    #calorVivo { top: 52px; bottom: auto; right: 10px; }
-    #verDestinos { top: 98px; bottom: auto; right: 10px; }
-    #leyenda { display: none; }
+    #ficha .cerrar { font-size: 26px; right: 6px; top: 2px; padding: 4px 8px; }
+    .destino { padding: 9px 10px; }
+    /* Botones arriba a la derecha, más compactos */
+    .boton { min-width: 0; }
+    #verDestinos, #calorVivo { right: 8px; padding: 8px 11px; font-size: 12px; }
+    #calorVivo { top: 8px; bottom: auto; }
+    #verDestinos { top: 50px; bottom: auto; }
+    /* Leyenda plegable: solo el título hasta que se toca */
+    #leyenda { left: 8px; bottom: 8px; padding: 8px 10px; max-width: 170px; font-size: 11px; cursor: pointer; }
+    #leyenda h4 { margin: 0; font-size: 10px; }
+    #leyenda .flecha { display: inline; }
+    #leyenda .fila { display: none; }
+    #leyenda.abierta h4 { margin-bottom: 6px; }
+    #leyenda.abierta .fila { display: flex; }
+    #leyenda.abierta .flecha { display: inline-block; transform: rotate(180deg); }
+    #ficha.visible ~ #leyenda, body:has(#ficha.visible) #leyenda { display: none; }
     #ayuda { display: none; }
+    #demo { top: auto; bottom: 8px; left: auto; right: 8px; font-size: 9.5px; padding: 4px 8px; }
   }
 </style>
 </head>
@@ -111,9 +127,19 @@ const memoria = {
   guardar(k, v) { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
 };
 let textoDatos = null, ultimoEnfoque = null;
+// En celulares el globo es más bajo, para que quepa en la pantalla junto al resto
+const esMovil = () => window.innerWidth < 700;
+function altoGlobo(alto) {
+  if (!esMovil()) return alto || 640;
+  const pantalla = (window.screen && window.screen.height) || 700;
+  return Math.max(380, Math.min(alto || 640, Math.round(pantalla * 0.62)));
+}
+let altoPedido = 640;
+window.addEventListener('resize', () => avisarStreamlit('streamlit:setFrameHeight', { height: altoGlobo(altoPedido) }));
 function arrancar(args) {
   textoDatos = JSON.stringify(args.datos);
-  avisarStreamlit('streamlit:setFrameHeight', { height: args.alto || 640 });
+  altoPedido = args.alto || 640;
+  avisarStreamlit('streamlit:setFrameHeight', { height: altoGlobo(altoPedido) });
   iniciar(args.datos);
   revisarEnfoque(args);
 }
@@ -158,8 +184,10 @@ function codigoPais(f) {
 }
 
 // ---------- Leyenda ----------
-document.getElementById('leyenda').innerHTML =
-  `<h4>${DATOS.titulo_leyenda}</h4>` +
+const leyendaEl = document.getElementById('leyenda');
+leyendaEl.onclick = () => leyendaEl.classList.toggle('abierta');
+leyendaEl.innerHTML =
+  `<h4>${DATOS.titulo_leyenda}<span class="flecha"> ▾</span></h4>` +
   DATOS.leyenda.map(l => `<div class="fila"><span class="punto" style="background:${l.color};color:${l.color}"></span>${l.etiqueta}</div>`).join('') +
   `<div class="fila" style="margin-top:8px;color:var(--suave)"><span class="punto" style="background:#334155;color:transparent"></span>Sin datos / filtrado</div>`;
 
@@ -407,7 +435,7 @@ function colorCostado(f) {
 // Cada país conserva SIEMPRE su color (su tono). Lo único que cambia es el brillo:
 // manchas de calor que fluyen lentamente sobre la superficie, como en una cámara
 // térmica. Así la leyenda se sigue leyendo igual.
-let calorVivo = true;   // activado por defecto; se recuerda si la persona lo apaga
+let calorVivo = !esMovil();   // activado por defecto en computador; en celular parte apagado (ahorra batería)
 try { const v = sessionStorage.getItem('gt_calor_vivo'); if (v !== null) calorVivo = v === '1'; } catch (e) {}
 const tiempoCalor = { value: 0 };
 const materialesCalor = {};
@@ -539,6 +567,9 @@ window.alternarCalor = () => {
 function indiceMin(lista) {
   let i = 0; lista.forEach((d, k) => { if (d.total_usd < lista[i].total_usd) i = k; }); return i;
 }
+
+// En celulares se dibuja con menos resolución: se ve casi igual y va mucho más fluido
+try { if (esMovil()) globo.renderer().setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5)); } catch (e) {}
 
 // Rotación automática suave hasta que el usuario interactúa
 const ctl = globo.controls();

@@ -61,10 +61,42 @@ def cargar_destinos() -> list[dict]:
         return json.load(f)["destinos"]
 
 
+RUTA_RED = RUTA_DATOS.with_name("red_vuelos.pkl")
+
+
+def huella_red() -> str:
+    """Identifica los datos con que se armó la red: si cambian destinos.json,
+    rutas.py o los orígenes, el archivo precalculado deja de servir."""
+    import hashlib
+    h = hashlib.sha256()
+    h.update(Path(RUTA_DATOS).read_bytes())
+    h.update(Path(__file__).with_name("rutas.py").read_bytes())
+    h.update(repr(sorted(ORIGENES.items())).encode())
+    return h.hexdigest()
+
+
+def construir_red(con_rutas: bool = False) -> Red:
+    r = Red(ORIGENES, cargar_destinos())
+    if con_rutas:
+        for o in ORIGENES:
+            r.desde(o)
+    return r
+
+
 @lru_cache(maxsize=1)
 def red() -> Red:
-    """Red de aeropuertos (se construye una sola vez)."""
-    return Red(ORIGENES, cargar_destinos())
+    """Red de aeropuertos. Usa la versión precalculada (datos/red_vuelos.pkl, la
+    genera scripts/precalcular_red.py) si corresponde a los datos actuales; si no,
+    la construye (tarda un poco más)."""
+    import pickle
+    try:
+        with open(RUTA_RED, "rb") as f:
+            guardado = pickle.load(f)
+        if guardado.get("huella") == huella_red():
+            return guardado["red"]
+    except Exception:
+        pass
+    return construir_red()
 
 
 def unidades_alojamiento(tipo: str, viajeros: int) -> int:

@@ -293,13 +293,20 @@ class Red:
         lb, lob, _ = self.nodos[b]
         return distancia_km(la, lo, lb, lob)
 
-    @lru_cache(maxsize=64)
     def desde(self, origen: str) -> dict[str, tuple[float, list[str]]]:
         """
         Ruta más barata (solo ida) desde `origen` a todos los aeropuertos,
         con un máximo de MAX_TRAMOS tramos. Bellman-Ford limitado por tramos.
         Devuelve {código: (precio, [códigos de la ruta])}.
+        El resultado se guarda dentro de la red, así viaja en el archivo
+        precalculado (datos/red_vuelos.pkl) y la primera carga es más rápida.
         """
+        guardadas = self.__dict__.setdefault("_rutas_desde", {})
+        if origen not in guardadas:
+            guardadas[origen] = self._calcular_desde(origen)
+        return guardadas[origen]
+
+    def _calcular_desde(self, origen: str) -> dict[str, tuple[float, list[str]]]:
         mejor = {origen: (0.0, [origen])}
         frontera = dict(mejor)
         for _ in range(MAX_TRAMOS):

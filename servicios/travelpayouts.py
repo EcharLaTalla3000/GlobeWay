@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import os
 import re
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 
@@ -273,20 +274,30 @@ def obtener_precios(origen: str, llegada: date | None, salida: date | None,
     else:
         limite = int(os.getenv("TRAVELPAYOUTS_MAX_DIARIO", "500"))
         ofertas, errores = [], []
-        for fuente, params, paginas in _consultas(llegada, salida):
+
+        def una_consulta(consulta) -> tuple[list[dict], str | None]:
+            fuente, params, paginas = consulta
             url = URL_PRECIOS if fuente == "v3" else URL_ULTIMOS
+            salida = []
             try:
                 for pagina in range(1, paginas + 1):
                     if not cache.registrar_llamada("travelpayouts", limite):
                         raise RuntimeError(f"se alcanzó el límite diario de {limite} consultas")
                     lote = _pedir(url, {**params, "origin": origen_tp, "page": pagina}, token)
-                    ofertas += [n for o in lote if (n := _normalizar(fuente, o))]
+                    salida += [n for o in lote if (n := _normalizar(fuente, o))]
                     if len(lote) < params["limit"]:
                         break
             except RuntimeError as e:
-                errores.append(str(e))
-                if "token" in str(e) or "límite" in str(e):
-                    break
+                return salida, str(e)
+            return salida, None
+
+        # Las consultas van en paralelo: la primera carga espera la más lenta, no la suma de todas
+        with ThreadPoolExecutor(max_workers=4) as ex:
+            for parcial, err in ex.map(una_consulta, _consultas(llegada, salida)):
+                ofertas += parcial
+                if err:
+                    errores.append(err)
+        errores.sort(key=lambda e: ("token" not in e, "límite" not in e))   # el error más claro primero
         if not ofertas:
             tabla.error = errores[0] if errores else "Travelpayouts no tiene precios recientes desde este origen"
             return tabla

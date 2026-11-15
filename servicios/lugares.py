@@ -15,6 +15,8 @@ de la pestaña "Destinos".
 from __future__ import annotations
 
 import io
+import threading
+import time
 import statistics
 import unicodedata
 import zipfile
@@ -116,8 +118,33 @@ def _descargar() -> tuple[pd.DataFrame, dict[str, dict]]:
     return df.reset_index(drop=True), paises
 
 
+_candado = threading.Lock()
+_precarga: dict = {"hilo": None}
+
+
+def precargar(espera_seg: int = 15) -> None:
+    """Descarga la lista en segundo plano (unos segundos después de abrir la app),
+    para que la primera búsqueda sea inmediata. No hace nada si ya está cargada."""
+    if _lista is not None or _precarga["hilo"] is not None:
+        return
+
+    def tarea():
+        time.sleep(espera_seg)   # deja pasar primero la carga inicial de la página
+        cargar()
+
+    _precarga["hilo"] = threading.Thread(target=tarea, daemon=True)
+    _precarga["hilo"].start()
+
+
 def cargar() -> pd.DataFrame | None:
     """Devuelve la tabla de lugares (descarga la primera vez). None si no se pudo."""
+    if _lista is not None:
+        return _lista
+    with _candado:   # si ya se está descargando en segundo plano, espera a que termine
+        return _cargar()
+
+
+def _cargar() -> pd.DataFrame | None:
     global _lista, _paises, error_carga
     if _lista is not None:
         return _lista

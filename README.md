@@ -108,8 +108,10 @@ globeway/
 │   ├── info_destino.py       # Fotos y resumen desde Wikipedia
 │   └── cache.py              # Caché SQLite con fecha/hora y límite de llamadas
 ├── datos/destinos.json       # 1.512 destinos (se genera con scripts/generar_destinos.py)
+├── datos/red_vuelos.pkl      # Red de vuelos precalculada (scripts/precalcular_red.py), acelera la primera carga
 ├── datos/ranking/*.txt       # Listas de destinos más turísticos por país (editables)
 ├── scripts/generar_destinos.py  # Regenera destinos.json a partir de las listas
+├── scripts/precalcular_red.py   # Regenera datos/red_vuelos.pkl
 ├── .streamlit/config.toml    # Tema oscuro
 ├── .env.example
 └── requirements.txt
@@ -117,12 +119,17 @@ globeway/
 
 ## Cómo ampliarlo
 
-- **Más destinos o cambiar el ranking base:** edita `datos/ranking/*.txt` (una línea por destino, en orden de popularidad) y ejecuta `python scripts/generar_destinos.py`. Para darle aeropuerto propio a un destino, agrégalo al diccionario `AEROPUERTOS` de ese script.
+- **Más destinos o cambiar el ranking base:** edita `datos/ranking/*.txt` (una línea por destino, en orden de popularidad) y ejecuta `python scripts/generar_destinos.py` y luego `python scripts/precalcular_red.py` (si se olvida el segundo, la app igual funciona: arma la red al vuelo, solo que la primera carga tarda un poco más). Para darle aeropuerto propio a un destino, agrégalo al diccionario `AEROPUERTOS` de ese script.
 - **Más monedas:** agrega la moneda al diccionario `MONEDAS` en `servicios/tipos_cambio.py`.
 - **Más orígenes:** agrega aeropuertos a `ORIGENES` en `servicios/vuelos.py`.
 - **Etapa 2:**
   - Reemplazar `destinos.json` y `cache.db` por PostgreSQL + PostGIS.
   - Mover `servicios/` a un backend FastAPI; el motor de cálculo ya está separado de la interfaz.
+
+## Velocidad y celulares
+
+- **Primera carga más rápida:** la red de vuelos viene precalculada (`datos/red_vuelos.pkl`); el ranking de Wikipedia se consulta en segundo plano (mientras tanto se ve el ranking base y la página se actualiza sola al terminar); las consultas a Travelpayouts van en paralelo; la lista mundial de ciudades se descarga en segundo plano unos segundos después de abrir la app.
+- **Celulares:** el globo se achica a la pantalla, la ficha sube desde abajo, la leyenda se pliega (se toca para abrirla), los botones van arriba a la derecha, "Calor vivo" parte apagado para ahorrar batería y el globo se dibuja con menos resolución. Los indicadores se ven en 2 columnas y las pestañas se deslizan de lado.
 
 ## Limitación conocida de Streamlit
 

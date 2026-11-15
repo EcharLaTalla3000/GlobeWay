@@ -53,6 +53,26 @@ st.markdown("""
   .etq { display:inline-block; font-size:.72rem; padding:.12rem .55rem; border-radius:999px;
          border:1px solid currentColor; font-weight:600; }
   div[data-testid="stTabs"] button p { font-size: .95rem; }
+  .solo-movil { display: none; }
+
+  /* ---- Celulares ---- */
+  @media (max-width: 700px) {
+    .block-container { padding-top: .8rem; padding-left: .75rem; padding-right: .75rem; }
+    .marca { font-size: 1.35rem; }
+    .bajada { font-size: .88rem; margin-bottom: .6rem; }
+    .aviso-demo { font-size: .78rem; padding: .45rem .7rem; }
+    /* Indicadores en 2 columnas en vez de 4 filas */
+    div[data-testid="stHorizontalBlock"]:has(.kpi) { flex-wrap: wrap !important; gap: .5rem !important; }
+    div[data-testid="stHorizontalBlock"]:has(.kpi) > div[data-testid="stColumn"] {
+      flex: 1 1 calc(50% - .5rem) !important; min-width: calc(50% - .5rem) !important; width: auto !important; }
+    .kpi { padding: .55rem .7rem; }
+    .kpi .n { font-size: 1.2rem; }
+    .kpi .t { font-size: .72rem; }
+    /* Pestañas: se deslizan de lado */
+    div[data-testid="stTabs"] [role="tablist"] { overflow-x: auto; scrollbar-width: none; }
+    div[data-testid="stTabs"] button p { font-size: .85rem; }
+    .solo-movil { display: block; color: #94a3b8; font-size: .8rem; margin: -.3rem 0 .6rem; }
+  }
 </style>
 """, unsafe_allow_html=True)
 
@@ -274,10 +294,20 @@ if travelpayouts.configurado():
     with st.spinner("Buscando precios reales de vuelos…"):
         precios_tp = travelpayouts.obtener_precios(origen, llegada, salida, noches)
 
-# Ranking turístico: visitas en Wikipedia (en vivo) o ranking base (sin conexión)
-with st.spinner("Actualizando ranking turístico…"):
-    popularidad = turismo.obtener_popularidad(DESTINOS)
+# Ranking turístico: visitas en Wikipedia (en vivo) o ranking base (sin conexión).
+# Wikipedia se consulta en segundo plano: la página no la espera. Cuando termina,
+# este pequeño "fragmento" lo detecta y actualiza la página una vez.
+popularidad = turismo.obtener_popularidad(DESTINOS)
 RANKING = turismo.calcular_ranking(DESTINOS, popularidad)
+if popularidad.actualizando:
+    @st.fragment(run_every=5)
+    def _esperar_ranking():
+        if not turismo.actualizando():
+            st.rerun()
+    _esperar_ranking()
+
+# La lista mundial de ciudades (buscador) se descarga en segundo plano, sin frenar la app
+lugares.precargar()
 
 filas = []
 for d in DESTINOS:
@@ -421,6 +451,8 @@ else:
                 f'<b>{vuelos.ORIGENES[origen]["nombre"]}</b>, {viajeros} viajero'
                 f'{"s" if viajeros > 1 else ""} y {dias} días: ¿a dónde puedes ir?</p>',
                 unsafe_allow_html=True)
+st.markdown('<div class="solo-movil">☰ Para cambiar presupuesto, origen o fechas, toca la '
+            'flecha <b>»</b> arriba a la izquierda.</div>', unsafe_allow_html=True)
 n_reales = sum(1 for f in filas if f["calc"].vuelo_real)
 if precios_tp is not None and n_reales:
     st.markdown('<div class="aviso-demo">⚠ <b>Modo demostración parcial.</b> '
@@ -442,8 +474,9 @@ if turisticos:
     top_pais = max({f["iso3"] for f in filas}, key=lambda i: turismo.LLEGADAS.get(i, 0)) if filas else None
     nombre_pais = next((f["pais"] for f in filas if f["iso3"] == top_pais), "—")
     indicadores = [
-        ("En vivo" if popularidad.en_vivo else "Base",
+        ("En vivo" if popularidad.en_vivo else "Cargando…" if popularidad.actualizando else "Base",
          "ranking por visitas a Wikipedia (30 días)" if popularidad.en_vivo
+         else "consultando Wikipedia; mientras, ranking base" if popularidad.actualizando
          else "ranking base (sin conexión a Wikipedia)",
          "#34d399" if popularidad.en_vivo else "#facc15"),
         (top["ciudad"] if top else "—", "zona más visitada (estimación)", "#ef4444"),

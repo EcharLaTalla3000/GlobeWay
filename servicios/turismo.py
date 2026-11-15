@@ -21,6 +21,7 @@ Mapa de calor ("Más turísticos"):
 from __future__ import annotations
 
 import os
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime
@@ -76,6 +77,7 @@ class Popularidad:
     actualizado: datetime | None
     cobertura: float                 # fracción de destinos con dato en vivo
     error: str | None = None
+    actualizando: bool = False       # True mientras se consulta Wikipedia en segundo plano
 
 
 def _cabeceras() -> dict:
@@ -139,33 +141,62 @@ def obtener_popularidad(destinos: list[dict]) -> Popularidad:
             fechas.append(c[1])
 
     error = None
+    pendientes = [t for t in pendientes if t not in _sin_respuesta]
     if pendientes and time.time() - _ultimo_fallo["t"] < REINTENTO_SEG:
         error = _ultimo_fallo["error"]
         pendientes = []
-    if pendientes:
-        lotes = [pendientes[i:i + LOTE] for i in range(0, len(pendientes), LOTE)]
-        try:
-            # Primer lote solo: si no hay conexión, se abandona rápido
-            nuevos = _consultar_lote(lotes[0])
-            if len(lotes) > 1:
-                with ThreadPoolExecutor(max_workers=4) as ex:
-                    for parcial in ex.map(_consultar_lote, lotes[1:]):
-                        nuevos.update(parcial)
-        except Exception as e:
-            nuevos = locals().get("nuevos", {})
-            error = (f"Wikipedia respondió HTTP {e.response.status_code}"
-                     if isinstance(e, requests.HTTPError) and e.response is not None
-                     else f"no se pudo consultar Wikipedia ({e.__class__.__name__})")
-            _ultimo_fallo.update(t=time.time(), error=error)
-        if nuevos:
-            fechas.append(cache.guardar_muchos({f"pv:{t}": v for t, v in nuevos.items()}))
-            datos.update(nuevos)
+    corriendo = _actualizar_en_segundo_plano(pendientes) if pendientes else actualizando()
     fecha_min = min(fechas) if fechas else None
 
     visitas = {d["id"]: datos.get(d["wiki"]) for d in destinos}
     con_dato = sum(1 for v in visitas.values() if v)
     cobertura = con_dato / len(visitas) if visitas else 0
-    return Popularidad(visitas, cobertura > 0.3, fecha_min, cobertura, error)
+    return Popularidad(visitas, cobertura > 0.3, fecha_min, cobertura, error, corriendo)
+
+
+# --------------------------------------------------------------------------
+# Consulta en segundo plano: la app no espera a Wikipedia para mostrarse.
+# Mientras tanto usa el ranking base (o lo que haya en caché) y, al terminar,
+# los datos quedan en la caché para la siguiente actualización de la página.
+# --------------------------------------------------------------------------
+_hilo: dict = {"hilo": None}
+_candado = threading.Lock()
+_sin_respuesta: set[str] = set()   # títulos que Wikipedia no devolvió (no se reintentan)
+
+
+def actualizando() -> bool:
+    h = _hilo["hilo"]
+    return bool(h and h.is_alive())
+
+
+def _actualizar_en_segundo_plano(pendientes: list[str]) -> bool:
+    with _candado:
+        if actualizando():
+            return True
+        h = threading.Thread(target=_consultar_y_guardar, args=(list(pendientes),), daemon=True)
+        _hilo["hilo"] = h
+        h.start()
+        return True
+
+
+def _consultar_y_guardar(pendientes: list[str]) -> None:
+    lotes = [pendientes[i:i + LOTE] for i in range(0, len(pendientes), LOTE)]
+    nuevos: dict[str, int | None] = {}
+    try:
+        # Primer lote solo: si no hay conexión, se abandona rápido
+        nuevos.update(_consultar_lote(lotes[0]))
+        if len(lotes) > 1:
+            with ThreadPoolExecutor(max_workers=4) as ex:
+                for parcial in ex.map(_consultar_lote, lotes[1:]):
+                    nuevos.update(parcial)
+    except Exception as e:
+        error = (f"Wikipedia respondió HTTP {e.response.status_code}"
+                 if isinstance(e, requests.HTTPError) and e.response is not None
+                 else f"no se pudo consultar Wikipedia ({e.__class__.__name__})")
+        _ultimo_fallo.update(t=time.time(), error=error)
+    if nuevos:
+        cache.guardar_muchos({f"pv:{t}": v for t, v in nuevos.items()})
+        _sin_respuesta.update(set(pendientes) - set(nuevos))
 
 
 def calcular_ranking(destinos: list[dict], pop: Popularidad) -> dict[str, dict]:
