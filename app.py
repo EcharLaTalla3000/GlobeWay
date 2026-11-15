@@ -284,7 +284,7 @@ else:
 
 def texto_vuelo_real(r) -> str:
     """Fechas, escalas y aerolínea de un precio real (para el globo y las tablas)."""
-    partes = [r.fechas_txt() + (" (fechas cercanas a las tuyas)" if r.fechas_cercanas else ""),
+    partes = [r.fechas_txt() + (" (fechas cercanas a las tuyas)" if getattr(r, "fechas_cercanas", False) else ""),
               r.escalas_txt()]
     if r.aerolinea:
         partes.append(f"aerolínea {r.aerolinea}")
@@ -409,7 +409,28 @@ for col, (n, t, c) in zip(cols, indicadores):
                  f'<div class="t">{t}</div></div>', unsafe_allow_html=True)
 
 st.write("")
-mostrar_globo(datos_globo, alto=640)
+clic = mostrar_globo(datos_globo, alto=640)
+
+# ---- El clic en el globo actualiza las pestañas de abajo ----
+# El globo devuelve el último clic con su hora ("t"); se procesa una sola vez.
+ir_a_pestana = None
+if clic and clic.get("t") != st.session_state.get("_ultimo_clic"):
+    st.session_state["_ultimo_clic"] = clic.get("t")
+    ids_globo = {f["id"]: f for f in filas}
+    if clic.get("tipo") == "destino" and clic.get("id") in ids_globo:
+        f_clic = ids_globo[clic["id"]]
+        st.session_state["dest_explorar"] = clic["id"]
+        st.session_state["pais_globo"] = f_clic["iso3"]
+        ir_a_pestana = "Explorar destino"
+        st.toast(f"📍 {f_clic['ciudad']}: mira el detalle en «Explorar destino», bajo el globo.")
+    elif clic.get("tipo") == "pais" and clic.get("iso3"):
+        st.session_state["pais_globo"] = clic["iso3"]
+        ir_a_pestana = "Destinos"
+    elif clic.get("tipo") in ("cerrar", "pais"):
+        st.session_state.pop("pais_globo", None)
+pais_globo = st.session_state.get("pais_globo")
+if pais_globo and not any(f["iso3"] == pais_globo for f in filas):
+    pais_globo = None
 
 
 # --------------------------------------------------------------------------
@@ -436,7 +457,7 @@ def fila_tabla(f: dict) -> dict:
         f"Vuelo p/p ({moneda})": round(tipos_cambio.convertir(c.vuelo_pp, moneda, tasas)),
         "Precio del vuelo": "✈ Real (búsquedas recientes)" if r else "Estimado",
         "Ruta": (f"{r.aeropuerto_origen} → {r.aeropuerto_destino} · {r.fechas_txt()}"
-                 + (" (fechas cercanas)" if r.fechas_cercanas else "")) if r
+                 + (" (fechas cercanas)" if getattr(r, "fechas_cercanas", False) else "")) if r
                 else c.ruta.recorrido() + (f" + {round(c.ruta.traslado_km)} km de traslado"
                                            if f.get("extra") and c.ruta.traslado_km >= 30 else ""),
         "Escalas": r.escalas_ida if r else c.ruta.escalas,
@@ -502,7 +523,14 @@ with tab_lista:
                       if len(extras) >= lugares.MAX_RESULTADOS - 5 else "")
                    + ". Los que no están en el globo también se pueden ver en «Explorar destino».")
     else:
-        resultado = filas
+        resultado = [f for f in filas if f["iso3"] == pais_globo] if pais_globo else filas
+        if pais_globo:
+            nombre_sel = resultado[0]["pais"]
+            c1, c2 = st.columns([3, 1])
+            c1.caption(f"Mostrando los **{len(resultado)}** destinos de **{nombre_sel}** "
+                       "(elegido en el globo).")
+            c2.button("Ver todos los países", key="quitar_pais", width="stretch",
+                      on_click=lambda: st.session_state.pop("pais_globo", None))
         if lugares.cantidad():
             st.caption(f"¿No encuentras tu destino? Búscalo arriba entre "
                        f"{lugares.cantidad():,} ciudades y pueblos del mundo.".replace(",", "."))
@@ -762,3 +790,22 @@ with tab_fuentes:
                           " · falta TRAVELPAYOUTS_MARKER: los enlaces no son de afiliado") + ".")
     st.caption(f"Consultas a Duffel hoy: {vuelos.cache.llamadas_hoy('duffel')}. "
                "Las respuestas de APIs se guardan en `datos/cache.db` con su fecha y hora.")
+
+# ---- Abrir la pestaña que corresponde al clic en el globo ----
+# Streamlit no permite cambiar de pestaña desde Python; un script mínimo hace clic
+# en la pestaña. Lleva la hora del clic para que se ejecute una vez por clic.
+if ir_a_pestana:
+    components.html(f"""<script>
+(function () {{
+  let intentos = 0;
+  (function abrir() {{
+    try {{
+      const pestanas = [...window.parent.document.querySelectorAll('button[role="tab"]')];
+      const p = pestanas.find(b => b.innerText.trim() === {ir_a_pestana!r});
+      if (p) {{ if (p.getAttribute('aria-selected') !== 'true') p.click(); return; }}
+    }} catch (e) {{ return; }}
+    if (intentos++ < 20) setTimeout(abrir, 150);
+  }})();
+}})();
+/* {st.session_state.get("_ultimo_clic")} */
+</script>""", height=0)

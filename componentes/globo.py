@@ -1,22 +1,27 @@
 """
-Componente del globo 3D.
+Componente del globo 3D (bidireccional).
 
-Usa Globe.gl (Three.js/WebGL) dentro de un iframe de Streamlit. Se eligió
-Globe.gl sobre CesiumJS porque no requiere token, pesa poco, y trae de serie
-polígonos de países, puntos, arcos y anillos, que es lo que este proyecto
-necesita. CesiumJS conviene si más adelante se quiere terreno 3D real.
+Usa Globe.gl (Three.js/WebGL). La página está en componentes/globo_web/index.html
+y se carga como "componente de Streamlit" sin React: los datos llegan por
+mensajes y, cuando la persona toca un destino o un país, el globo le devuelve
+a Python qué se tocó. Así la app puede actualizar las pestañas de abajo.
+
+Valor que devuelve mostrar_globo() (o None si aún no se ha tocado nada):
+    {"tipo": "destino", "id": "...", "iso3": "ITA", "t": 1731400000000}
+    {"tipo": "pais", "iso3": "ITA", "nombre": "Italy", "t": ...}
+    {"tipo": "cerrar", "t": ...}
+"t" es la hora del clic: sirve para no procesar dos veces el mismo clic.
 """
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import streamlit.components.v1 as components
 
-PLANTILLA = Path(__file__).with_name("globo.html").read_text(encoding="utf-8")
+_globo = components.declare_component(
+    "globo_globeway", path=str(Path(__file__).with_name("globo_web")))
 
 
-def mostrar_globo(datos: dict, alto: int = 640) -> None:
-    """Renderiza el globo con los datos ya calculados (colores, totales, textos)."""
-    html = PLANTILLA.replace("__DATOS__", json.dumps(datos, ensure_ascii=False))
-    components.html(html, height=alto, scrolling=False)
+def mostrar_globo(datos: dict, alto: int = 640, key: str = "globo") -> dict | None:
+    """Dibuja el globo con los datos ya calculados y devuelve el último clic."""
+    return _globo(datos=datos, alto=alto, key=key, default=None)

@@ -20,8 +20,8 @@ Se abre solo en el navegador, en `http://localhost:8501`.
 ## Qué hace
 
 - **Globo 3D** (Globe.gl / WebGL): gira solo hasta que lo tocas; se puede arrastrar, acercar y hacer clic.
-  - Clic en un **país**: abre una ficha con sus destinos ordenados por precio.
-  - Clic en un **punto**: desglose del viaje y un arco animado desde tu origen.
+  - Clic en un **país**: abre una ficha con sus destinos y la pestaña *Destinos* muestra solo ese país.
+  - Clic en un **punto**: desglose del viaje, un arco animado desde tu origen, y las pestañas *Explorar destino* y *Alojamientos* pasan a ese destino.
 - **Colores**:
   - Modo *presupuesto* (por defecto): verde (≤60 %), amarillo (60–85 %), naranjo (85–100 %), violeta (hasta +15 %, ligeramente sobre) y rojo (fuera de presupuesto). Los destinos accesibles tienen un anillo pulsante.
   - Interruptor **Precios generales**: oculta el presupuesto y colorea cada destino según lo caro que es comparado con el resto del mundo (cuartiles), ya sea por costo total del viaje o por costo de vida en destino. La leyenda muestra los rangos de precio.
@@ -90,8 +90,8 @@ Nunca subas `.env` a un repositorio.
 globeway/
 ├── app.py                    # Interfaz Streamlit (panel lateral, indicadores, pestañas)
 ├── componentes/
-│   ├── globo.html            # Globo 3D (Globe.gl): países, puntos, arcos, ficha lateral
-│   └── globo.py              # Inserta el globo en Streamlit con los datos calculados
+│   ├── globo_web/index.html  # Globo 3D (Globe.gl): países, puntos, arcos, ficha lateral
+│   └── globo.py              # Componente bidireccional: manda los datos y recibe los clics
 ├── servicios/
 │   ├── costos.py             # Motor de cálculo: costo de vida vs. costo total, colores
 │   ├── rutas.py              # Red de hubs y ruta más barata con escalas
@@ -122,4 +122,4 @@ globeway/
 
 ## Limitación conocida de Streamlit
 
-El globo vive dentro de un iframe. La ficha que se abre al hacer clic funciona dentro del propio globo, pero el clic no cambia automáticamente el destino de las pestañas inferiores; ahí se elige con el selector. Para que el clic controle toda la página, en la Etapa 2 conviene pasar el frontend a React/Next.js.
+El globo es un componente bidireccional de Streamlit hecho sin React (`componentes/globo_web/index.html`): recibe los datos por mensajes y devuelve a Python el último clic (destino, país o cierre de la ficha). Como Streamlit no permite cambiar de pestaña desde Python, un script mínimo hace clic en la pestaña que corresponde.
