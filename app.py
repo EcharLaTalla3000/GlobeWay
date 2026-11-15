@@ -66,7 +66,9 @@ st.markdown("""
   .stApp { background:
       radial-gradient(520px 420px at 4% 18%, rgba(56,189,248,.30), transparent 70%),
       radial-gradient(460px 380px at 12% 82%, rgba(245,165,36,.22), transparent 70%),
-      radial-gradient(1200px 600px at 60% -10%, rgba(56,189,248,.08), transparent 60%), #05070d !important; }
+      linear-gradient(rgba(5,7,13,.35), rgba(5,7,13,.35)),
+      url("https://unpkg.com/three-globe/example/img/night-sky.png") center / 1400px auto repeat,
+      #05070d !important; background-attachment: scroll, scroll, scroll, fixed, scroll !important; }
   /* Panel lateral: vidrio esmerilado (deja ver, difuminados, los brillos de color de atrás) */
   section[data-testid="stSidebar"] {
     background: linear-gradient(160deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.035) 45%, rgba(255,255,255,.06) 100%) !important;
@@ -98,9 +100,10 @@ st.markdown("""
     div[data-testid="stTabs"] [role="tablist"] { overflow-x: auto; scrollbar-width: none; }
     div[data-testid="stTabs"] button p { font-size: .85rem; }
     /* Globo a pantalla completa, como Google Earth */
-    header[data-testid="stHeader"] { background: transparent !important; pointer-events: none; }
+    header[data-testid="stHeader"] { background: transparent !important; }
+    header[data-testid="stHeader"], header[data-testid="stHeader"] * { pointer-events: none !important; }
     header[data-testid="stHeader"] button, header[data-testid="stHeader"] a,
-    header[data-testid="stHeader"] [data-testid="stToolbar"] * { pointer-events: auto; }
+    header[data-testid="stHeader"] [role="button"] { pointer-events: auto !important; }
     div[data-testid="stElementContainer"]:has(iframe[src*="globo_globeway"]) {
       position: fixed !important; inset: 0 !important; z-index: 5; margin: 0 !important; visibility: visible; }
     iframe[src*="globo_globeway"] { position: fixed; inset: 0; width: 100vw !important; height: 100dvh !important; }
@@ -141,6 +144,22 @@ if MODO_CLARO:
 # a la página principal. Va antes de la portada para que esté en todas las vistas.
 # --------------------------------------------------------------------------
 TP_DRIVE_SRC = "https://emrldtp.com/NTk5NTYy.js?t=599562"
+
+# En el celular, la franja de arriba (zona de la hora/batería) toma el color de la página
+# "de afuera" de Streamlit Cloud, que es blanca. Se pinta del mismo azul noche de la app.
+components.html("""<script>
+try {
+  const docs = [window.parent.document];
+  try { if (window.top.document !== window.parent.document) docs.push(window.top.document); } catch (e) {}
+  for (const d of docs) {
+    d.documentElement.style.backgroundColor = '#05070d';
+    if (d.body) d.body.style.backgroundColor = '#05070d';
+    let m = d.querySelector('meta[name="theme-color"]');
+    if (!m) { m = d.createElement('meta'); m.name = 'theme-color'; d.head.appendChild(m); }
+    m.content = '#05070d';
+  }
+} catch (e) {}
+</script>""", height=0)
 
 # Tema por defecto: oscuro. La primera vez (o si el navegador seguía "el del sistema"),
 # se deja guardado "oscuro"; el botón "☀️ Modo claro" lo cambia después.
@@ -252,6 +271,10 @@ def numero_con_espera(etiqueta: str, clave: str, **opciones) -> int:
 # --------------------------------------------------------------------------
 # Portada animada: se muestra hasta que la persona aprieta "Iniciar"
 # --------------------------------------------------------------------------
+# Si la página se abrió con una búsqueda en la dirección (enlace compartido o recarga al
+# cambiar de tema), se entra directo a la app sin mostrar la portada otra vez.
+if "moneda" in st.query_params:
+    st.session_state["iniciado"] = True
 if not st.session_state.get("iniciado"):
     mostrar_portada()   # detiene la app aquí (st.stop) mientras no se aprieta el botón
 
@@ -633,7 +656,7 @@ if turisticos:
          "#34d399" if popularidad.en_vivo else "#facc15"),
         (top["ciudad"] if top else "—", "zona más visitada (estimación)", "#ef4444"),
         (nombre_pais, f"país con más turistas (~{turismo.LLEGADAS.get(top_pais, 0):g} M/año)", "#fb923c"),
-        (len(filas), f"destinos en {len({f['iso3'] for f in filas})} países", "#e5e9f0"),
+        (len(filas), f"destinos en {len({f['iso3'] for f in filas})} países", "#0f172a" if MODO_CLARO else "#e5e9f0"),
     ]
 elif generales:
     valores = sorted(metrica(f) for f in filas)
@@ -641,7 +664,7 @@ elif generales:
     caro = max(filas, key=metrica) if filas else None
     sufijo = "" if base_general == "total" else " / día"
     indicadores = [
-        (len(filas), f"destinos en {len({f['iso3'] for f in filas})} países", "#e5e9f0"),
+        (len(filas), f"destinos en {len({f['iso3'] for f in filas})} países", "#0f172a" if MODO_CLARO else "#e5e9f0"),
         (fmt(metrica(barato)) + sufijo if barato else "—",
          f"más barato: {barato['ciudad']}" if barato else "", "#34d399"),
         (fmt(valores[len(valores) // 2]) + sufijo if valores else "—", "valor típico (mediana)", "#facc15"),
@@ -655,7 +678,8 @@ else:
         (int(conteo.get("ligeramente_sobre", 0)), "ligeramente sobre (hasta +15%)", "#a78bfa"),
         (int(conteo.get("fuera", 0)), "fuera de presupuesto", "#ef4444"),
         (fmt(filas[0]["calc"].total) if filas else "—",
-         f"opción más barata: {filas[0]['ciudad']}" if filas else "sin destinos", "#e5e9f0"),
+         f"opción más barata: {filas[0]['ciudad']}" if filas else "sin destinos",
+         "#0f172a" if MODO_CLARO else "#e5e9f0"),
     ]
 for col, (n, t, c) in zip(cols, indicadores):
     col.markdown(f'<div class="kpi"><div class="n" style="color:{c}">{n}</div>'
@@ -1047,6 +1071,16 @@ with tab_explorar:
                         st.success(f"El mes más barato es **{barato.mes_txt}**: "
                                    f"**{fmt(barato.precio.precio_pp)}** por persona, ida y vuelta "
                                    f"({barato.precio.fechas_txt()}, {barato.noches} noches).")
+                        # Color de cada mes = mismo semáforo del mapa: cómo queda el viaje completo
+                        # con el vuelo de ese mes (en modo presupuesto) o qué tan caro es el mes
+                        # comparado con los demás (en los otros modos)
+                        def estado_mes(m):
+                            if presupuesto_usd:
+                                total_mes = c.total - c.vuelos + m.precio.precio_pp * int(viajeros)
+                                return estado_presupuesto(total_mes, presupuesto_usd)
+                            precios_m = sorted(x.precio.precio_pp for x in lista_meses)
+                            pos = precios_m.index(m.precio.precio_pp) / max(len(precios_m) - 1, 1)
+                            return ESTADOS_GENERALES[min(3, int(pos * 4))][0]
                         filas_mes = [{
                             "Mes": m.mes_txt, "orden": m.mes,
                             "Precio": round(tipos_cambio.convertir(m.precio.precio_pp, moneda, tasas)),
@@ -1054,6 +1088,8 @@ with tab_explorar:
                             "Escalas": m.precio.escalas_txt(),
                             "Duración": "Otra duración" if m.otra_duracion else "Parecida a la tuya",
                             "Destacado": "Más barato" if m is barato else "",
+                            "Estado": textos.get(estado_mes(m), estado_mes(m)),
+                            "_color": colores.get(estado_mes(m), "#64748b"),
                             "Ver": m.precio.enlace(int(viajeros)),
                         } for m in lista_meses]
                         tabla_mes = pd.DataFrame(filas_mes)
@@ -1064,12 +1100,14 @@ with tab_explorar:
                                         axis=alt.Axis(labelAngle=-40)),
                                 y=alt.Y("Precio:Q", title=f"Ida y vuelta por persona ({moneda})",
                                         axis=alt.Axis(format="~s", gridOpacity=0.15)),
-                                tooltip=["Mes", alt.Tooltip("Precio:Q", format=",.0f"), "Fechas",
+                                tooltip=["Mes", alt.Tooltip("Precio:Q", format=",.0f"), "Estado", "Fechas",
                                          "Noches", "Escalas", "Duración"])
                             barras = base.mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4,
                                                    stroke=FONDO_GRAFICO, strokeWidth=2).encode(
-                                color=alt.condition(alt.datum.Destacado == "Más barato",
-                                                    alt.value("#F5A524"), alt.value("#2a78d6" if MODO_CLARO else "#3987e5")),
+                                color=alt.Color("Estado:N", title=None,
+                                                scale=alt.Scale(domain=list(dict.fromkeys(tabla_mes["Estado"])),
+                                                                range=list(dict.fromkeys(tabla_mes["_color"]))),
+                                                legend=alt.Legend(orient="top", labelLimit=260)),
                                 opacity=alt.condition(alt.datum["Duración"] == "Otra duración",
                                                       alt.value(0.45), alt.value(1.0)))
                             etiqueta = base.transform_filter(alt.datum.Destacado == "Más barato") \
@@ -1078,7 +1116,7 @@ with tab_explorar:
                         except Exception:
                             pass   # si el gráfico falla, igual se muestra la tabla
                         st.dataframe(
-                            tabla_mes.drop(columns=["orden", "Destacado"]), hide_index=True, width="stretch",
+                            tabla_mes.drop(columns=["orden", "Destacado", "_color"]), hide_index=True, width="stretch",
                             column_config={
                                 "Precio": st.column_config.NumberColumn(f"Precio p/p ({moneda})",
                                                                         format="localized"),
@@ -1087,7 +1125,10 @@ with tab_explorar:
                         st.caption(f"Precios reales de búsquedas recientes, por persona, ida y vuelta. "
                                    f"Se prefieren viajes de duración parecida a la tuya (±{travelpayouts.tolerancia(noches)} "
                                    "noches); las barras más claras son meses donde solo hubo viajes de otra "
-                                   "duración. Los meses sin búsquedas recientes no aparecen.")
+                                   "duración. Los colores son los mismos del mapa: "
+                                   + ("cómo queda el viaje completo frente a tu presupuesto con el vuelo de ese mes. "
+                                      if presupuesto_usd else "del mes más barato (verde) al más caro (rojo). ")
+                                   + "Los meses sin búsquedas recientes no aparecen.")
 
 # ---- Actividades del destino ----
 with tab_activ:
@@ -1346,8 +1387,11 @@ if ir_a_pestana:
       const p = pestanas.find(b => b.innerText.trim() === {ir_a_pestana!r});
       if (p) {{
         if (p.getAttribute('aria-selected') !== 'true') p.click();
-        if ({'true' if ir_a_pestana in ("Actividades", "Alojamientos") else 'false'} && !window.parent.document.body.classList.contains('gw-panel'))
-          p.closest('[data-testid="stTabs"]').scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+        if ({'true' if ir_a_pestana in ("Actividades", "Alojamientos") else 'false'} && !window.parent.document.body.classList.contains('gw-panel')) {{
+          // Se espera a que la pestaña se dibuje y se baja hasta ella (dos veces, por si cambia el alto)
+          const bajar = () => p.closest('[data-testid="stTabs"]').scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+          setTimeout(bajar, 350); setTimeout(bajar, 1200);
+        }}
         return;
       }}
     }} catch (e) {{ return; }}

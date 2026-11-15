@@ -97,12 +97,15 @@ _CSS_PAGINA = f"""<style>
 section[data-testid="stSidebar"], div[data-testid="stSidebarCollapsedControl"],
 button[data-testid="stExpandSidebarButton"] {{ display: none !important; }}
 header[data-testid="stHeader"] {{ background: transparent !important; }}
-.block-container {{ padding-top: 8vh !important; }}
+.block-container {{ padding-top: 8vh !important; visibility: visible !important; position: static !important; }}
 iframe {{ border: 0; }}
 
 /* Botón "Iniciar": aparece 1 segundo después de terminar la animación */
-.st-key-iniciar {{ display: flex !important; justify-content: center; opacity: 0; visibility: hidden;
-  animation: gw-boton 0.6s ease-out 3.6s forwards; }}
+.st-key-iniciar {{ display: flex !important; justify-content: center !important; width: 100% !important;
+  opacity: 0; visibility: hidden; animation: gw-boton 0.6s ease-out 3.6s forwards; }}
+.st-key-iniciar > div, .st-key-iniciar [data-testid="stButton"] {{ display: flex !important;
+  justify-content: center !important; width: 100% !important; }}
+.st-key-iniciar button {{ margin: 0 auto !important; }}
 .st-key-iniciar button {{ background: {AMBAR} !important; color: {AZUL} !important; border: 0 !important;
   border-radius: 999px !important; padding: 0.7rem 2.8rem !important; min-height: 48px;
   box-shadow: 0 10px 30px rgba(245,165,36,.25); transition: transform .15s, box-shadow .15s; }}

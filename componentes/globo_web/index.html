@@ -83,10 +83,15 @@
   .accion.primaria { background: #F5A524; border-color: #F5A524; color: #0B1E3F; }
   .accion:hover { filter: brightness(1.08); }
   #buscarMovil { display: none; }
+  #ficha .asa { display: none; }
   @media (max-width: 700px) {
     /* Ficha: hoja que sube desde abajo, a todo el ancho */
-    #ficha { width: auto; left: 8px; right: 8px; top: auto; bottom: 8px; max-height: 62%;
-      padding: 14px 14px 10px; transform: translateY(120%); }
+    #ficha { width: auto; left: 8px; right: 8px; top: auto; bottom: 8px; max-height: 44%;
+      padding: 22px 14px 10px; transform: translateY(120%); transition: transform .35s cubic-bezier(.2,.8,.2,1), max-height .3s; }
+    #ficha.expandida { max-height: 82%; }
+    #ficha .asa { display: block; position: absolute; top: 0; left: 0; right: 44px; height: 20px; cursor: pointer; }
+    #ficha .asa::before { content: ""; position: absolute; left: 50%; top: 7px; width: 42px; height: 5px;
+      margin-left: -21px; border-radius: 3px; background: rgba(148,163,184,.55); }
     #ficha.visible { transform: translateY(0); }
     #ficha .cerrar { font-size: 26px; right: 6px; top: 2px; padding: 4px 8px; }
     .destino { padding: 9px 10px; }
@@ -105,13 +110,14 @@
     #leyenda.abierta .flecha { display: inline-block; transform: rotate(180deg); }
     #ficha.visible ~ #leyenda, body:has(#ficha.visible) #leyenda { display: none; }
     #ayuda { display: none; }
-    #demo { top: auto; bottom: 8px; left: auto; right: 8px; font-size: 9.5px; padding: 4px 8px; }
+    #demo { top: 124px; bottom: auto; left: 12px; right: auto; font-size: 9.5px; padding: 5px 9px; }
+    #leyenda { bottom: 84px !important; }
     #zoom { display: none; }
     /* En el celular "Calor vivo" siempre está activo: se oculta su botón */
     #calorVivo { display: none !important; }
-    #verDestinos { top: 64px; }
+    #verDestinos { top: 118px; }
     /* Barra "Buscar destinos" arriba, como en Google Earth */
-    #buscarMovil { display: flex; align-items: center; gap: 10px; left: 56px; right: 56px; top: 10px; height: 44px;
+    #buscarMovil { display: flex; align-items: center; gap: 10px; left: 12px; right: 12px; top: 62px; height: 46px;
       padding: 0 16px; border-radius: 999px; color: var(--suave); font: 500 15px "Inter", system-ui, sans-serif;
       cursor: pointer; text-align: left; }
     #buscarMovil .lupa { font-size: 20px; color: var(--texto); line-height: 1; }
@@ -125,7 +131,7 @@
 <button id="calorVivo" class="panel boton" type="button" onclick="alternarCalor()" title="Efecto de cámara térmica: el brillo se mueve, el color de cada país no cambia"><span class="ico"></span><span id="calorTxt">Calor vivo</span></button>
 <button id="verDestinos" class="panel boton" type="button" onclick="alternarTodos()"><span class="ico"></span><span id="verTxt">Ver destinos</span></button>
 <div id="leyenda" class="panel"></div>
-<div id="ficha" class="panel"><button class="cerrar" onclick="cerrarFicha()" aria-label="Cerrar">×</button><div id="contenido"></div></div>
+<div id="ficha" class="panel"><div class="asa" onclick="this.parentElement.classList.toggle('expandida')" title="Ver más / ver menos"></div><button class="cerrar" onclick="cerrarFicha()" aria-label="Cerrar">×</button><div id="contenido"></div></div>
 <div id="zoom" class="panel"><button type="button" onclick="acercar(0.65)" aria-label="Acercar" title="Acercar">+</button><button type="button" onclick="acercar(1.5)" aria-label="Alejar" title="Alejar">−</button></div>
 <button id="buscarMovil" class="panel" type="button" onclick="abrirPanel()"><span class="lupa">⌕</span>Buscar destinos</button>
 
@@ -572,7 +578,7 @@ const GLSL_RUIDO = `
     vec3 q = normalize(p) * 3.2;
     float n = 0.65 * gtRuido(q + vec3(t * 0.10, t * 0.07, -t * 0.08))
             + 0.35 * gtRuido(q * 2.2 + vec3(-t * 0.17, t * 0.13, t * 0.11));
-    return smoothstep(-0.55, 0.55, n);
+    return smoothstep(-0.55, 0.55, clamp(n, -1.0, 1.0));
   }
 `;
 function preparaShader(shader) {
@@ -617,6 +623,7 @@ function crearMaterialCalor(f) {
   mat.side = 2;                               // THREE.DoubleSide
   mat.opacity = Math.min(1, +m[4] + 0.08);
   mat.transparent = true;
+  mat.precision = 'highp';
   mat.onBeforeCompile = preparaShader;
   mat.customProgramCacheKey = () => 'gt-calor-vivo';
   return (materialesCalor[clave] = mat);
@@ -625,7 +632,9 @@ let animando = false;
 function animarCalor() {
   if (!calorVivo) { animando = false; return; }
   animando = true;
-  tiempoCalor.value = reducirMovimiento ? 0 : performance.now() / 1000;
+  // El tiempo se mantiene en un rango chico: con números grandes, algunos celulares (iPhone)
+  // pierden precisión en el efecto y aparecen manchas negras.
+  tiempoCalor.value = reducirMovimiento ? 0 : (performance.now() / 1000) % 300;
   requestAnimationFrame(animarCalor);
 }
 function aplicarCalor() {
@@ -657,10 +666,15 @@ ctl.autoRotate = true; ctl.autoRotateSpeed = 0.35; ctl.enableDamping = true;
 contenedor.addEventListener('pointerdown', () => { ctl.autoRotate = false; });
 const vistaGuardada = memoria.leer('gw_vista');
 if (vistaGuardada) { ctl.autoRotate = false; globo.pointOfView(vistaGuardada, 0); }
-else globo.pointOfView({ lat: DATOS.origen.lat, lng: DATOS.origen.lon, altitude: 2.3 }, 0);
+else globo.pointOfView({ lat: DATOS.origen.lat, lng: DATOS.origen.lon, altitude: esMovil() ? 1.75 : 2.3 }, 0);
 window.vistaActual = () => globo.pointOfView();
 
-function volarA(lat, lng, alt) { ctl.autoRotate = false; globo.pointOfView({ lat, lng, altitude: alt }, 1200); }
+function volarA(lat, lng, alt) {
+  ctl.autoRotate = false;
+  // En el celular la ficha tapa la mitad de abajo: el destino se deja en la parte de arriba
+  const corrimiento = esMovil() ? 12 * alt : 0;
+  globo.pointOfView({ lat: Math.max(-85, lat - corrimiento), lng, altitude: alt * (esMovil() ? 1.25 : 1) }, 1200);
+}
 
 // Arco desde el origen hacia el destino seleccionado
 function mostrarArco(d) {
@@ -761,6 +775,8 @@ function mostrarDestino(d, avisar = true) {
     ${d.aeropuerto_txt ? `<div class="det" style="margin-top:8px">${d.aeropuerto_txt}</div>` : ''}
     <div class="nota">${d.vuelo_real ? 'El vuelo es un precio real de búsquedas recientes y puede cambiar; alojamiento, comida, transporte y actividades son estimados de demostración.' : 'Valores estimados de demostración, no tarifas reales.'}</div>`;
   mostrarArco(d);
+  ficha.classList.remove('expandida');
+  ficha.scrollTop = 0;
   ficha.classList.add('visible');
   document.body.classList.add('ficha-abierta');
   if (avisar) modoFoco(true);   // computador: al tocar un destino, el globo pasa a pantalla completa
