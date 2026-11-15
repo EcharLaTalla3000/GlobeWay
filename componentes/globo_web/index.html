@@ -70,6 +70,19 @@
     border-color: rgba(251,191,36,.35); letter-spacing: .03em; }
 
   #leyenda .flecha { display: none; }
+  /* Lupas de zoom (solo computador) */
+  #zoom { right: 16px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; overflow: hidden; }
+  #zoom button { width: 40px; height: 40px; background: none; border: 0; color: var(--texto); font: 600 22px/1 "Inter", system-ui, sans-serif; cursor: pointer; }
+  #zoom button + button { border-top: 1px solid var(--borde); }
+  #zoom button:hover { background: rgba(56,189,248,.12); color: var(--acento); }
+  body.ficha-abierta #zoom { right: 352px; }
+  /* Botones de la ficha */
+  .acciones { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .accion { flex: 1 1 140px; text-align: center; text-decoration: none; padding: 9px 10px; border-radius: 10px;
+    font: 600 12.5px "Inter", system-ui, sans-serif; cursor: pointer; border: 1px solid var(--borde); color: var(--texto); background: rgba(255,255,255,.04); }
+  .accion.primaria { background: #F5A524; border-color: #F5A524; color: #0B1E3F; }
+  .accion:hover { filter: brightness(1.08); }
+  #buscarMovil { display: none; }
   @media (max-width: 700px) {
     /* Ficha: hoja que sube desde abajo, a todo el ancho */
     #ficha { width: auto; left: 8px; right: 8px; top: auto; bottom: 8px; max-height: 62%;
@@ -93,6 +106,15 @@
     #ficha.visible ~ #leyenda, body:has(#ficha.visible) #leyenda { display: none; }
     #ayuda { display: none; }
     #demo { top: auto; bottom: 8px; left: auto; right: 8px; font-size: 9.5px; padding: 4px 8px; }
+    #zoom { display: none; }
+    /* En el celular "Calor vivo" siempre está activo: se oculta su botón */
+    #calorVivo { display: none !important; }
+    #verDestinos { top: 64px; }
+    /* Barra "Buscar destinos" arriba, como en Google Earth */
+    #buscarMovil { display: flex; align-items: center; gap: 10px; left: 56px; right: 56px; top: 10px; height: 44px;
+      padding: 0 16px; border-radius: 999px; color: var(--suave); font: 500 15px "Inter", system-ui, sans-serif;
+      cursor: pointer; text-align: left; }
+    #buscarMovil .lupa { font-size: 20px; color: var(--texto); line-height: 1; }
   }
 </style>
 </head>
@@ -103,7 +125,9 @@
 <button id="calorVivo" class="panel boton" type="button" onclick="alternarCalor()" title="Efecto de cámara térmica: el brillo se mueve, el color de cada país no cambia"><span class="ico"></span><span id="calorTxt">Calor vivo</span></button>
 <button id="verDestinos" class="panel boton" type="button" onclick="alternarTodos()"><span class="ico"></span><span id="verTxt">Ver destinos</span></button>
 <div id="leyenda" class="panel"></div>
-<div id="ficha" class="panel"><button class="cerrar" onclick="cerrarFicha()">×</button><div id="contenido"></div></div>
+<div id="ficha" class="panel"><button class="cerrar" onclick="cerrarFicha()" aria-label="Cerrar">×</button><div id="contenido"></div></div>
+<div id="zoom" class="panel"><button type="button" onclick="acercar(0.65)" aria-label="Acercar" title="Acercar">+</button><button type="button" onclick="acercar(1.5)" aria-label="Alejar" title="Alejar">−</button></div>
+<button id="buscarMovil" class="panel" type="button" onclick="abrirPanel()"><span class="lupa">⌕</span>Buscar destinos</button>
 
 <script src="https://unpkg.com/globe.gl@2/dist/globe.gl.min.js"></script>
 <script>
@@ -127,12 +151,64 @@ const memoria = {
   guardar(k, v) { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
 };
 let textoDatos = null, ultimoEnfoque = null;
+
+// La página de Streamlit (el "padre" de este iframe). Es del mismo origen, así que el
+// globo puede agregarle estilos y clases para ponerse a pantalla completa.
+function docPadre() { try { return window.parent.document; } catch (e) { return null; } }
+(function estilosPadre() {
+  const d = docPadre();
+  if (!d || d.getElementById('gw-estilos-globo')) return;
+  const st = d.createElement('style');
+  st.id = 'gw-estilos-globo';
+  st.textContent = `
+    @keyframes gwFoco { from { opacity: .4; transform: scale(.985); } to { opacity: 1; transform: none; } }
+    body.gw-foco iframe[src*="globo_globeway"] { position: fixed !important; inset: 0 !important;
+      width: 100vw !important; height: 100vh !important; z-index: 999990 !important; border: 0;
+      animation: gwFoco .35s ease-out; }
+    body.gw-foco section[data-testid="stSidebar"], body.gw-foco [data-testid="stSidebarCollapsedControl"],
+    body.gw-foco header[data-testid="stHeader"] { visibility: hidden !important; }
+    body.gw-foco { overflow: hidden !important; }
+    #gw-cerrar-panel { display: none; }
+    body.gw-panel #gw-cerrar-panel { display: flex; }`;
+  d.head.appendChild(st);
+})();
+let enFoco = false;
+function modoFoco(activo) {
+  const d = docPadre();
+  if (!d || esMovil() || activo === enFoco) return;   // en el celular el globo ya ocupa toda la pantalla
+  enFoco = activo;
+  d.body.classList.toggle('gw-foco', activo);
+}
+window.addEventListener('keydown', e => { if (e.key === 'Escape' && window.cerrarFicha) window.cerrarFicha(); });
+
+// Celular: el panel "Buscar destinos" muestra las pestañas de abajo sobre el globo
+function abrirPanel(pestana) {
+  const d = docPadre();
+  if (!d) return;
+  if (!d.getElementById('gw-cerrar-panel')) {
+    const b = d.createElement('button');
+    b.id = 'gw-cerrar-panel'; b.type = 'button'; b.textContent = '✕  Volver al globo';
+    b.onclick = () => d.body.classList.remove('gw-panel');
+    d.body.appendChild(b);
+  }
+  d.body.classList.add('gw-panel');
+  const ir = () => {
+    const pestanas = [...d.querySelectorAll('button[role="tab"]')];
+    const p = pestana ? pestanas.find(x => x.innerText.trim() === pestana) : null;
+    if (p && p.getAttribute('aria-selected') !== 'true') p.click();
+    const lista = d.querySelector('[data-testid="stTabs"]');
+    const caja = d.querySelector('.block-container');
+    if (pestana && lista && caja) caja.scrollTo({ top: lista.offsetTop - 70, behavior: 'smooth' });
+    else if (caja) caja.scrollTo({ top: 0 });
+  };
+  setTimeout(ir, 60);
+}
+window.abrirPanel = abrirPanel;
 // En celulares el globo es más bajo, para que quepa en la pantalla junto al resto
 const esMovil = () => window.innerWidth < 700;
 function altoGlobo(alto) {
   if (!esMovil()) return alto || 640;
-  const pantalla = (window.screen && window.screen.height) || 700;
-  return Math.max(380, Math.min(alto || 640, Math.round(pantalla * 0.62)));
+  return (window.screen && window.screen.height) || 800;   // en el celular ocupa toda la pantalla
 }
 let altoPedido = 640;
 window.addEventListener('resize', () => avisarStreamlit('streamlit:setFrameHeight', { height: altoGlobo(altoPedido) }));
@@ -154,12 +230,15 @@ window.addEventListener('message', ev => {
   const m = ev.data;
   if (!m || m.type !== 'streamlit:render' || !m.args || !m.args.datos) return;
   if (textoDatos === null) { arrancar(m.args); return; }
+  clearTimeout(window.__gwRecarga);
   if (JSON.stringify(m.args.datos) === textoDatos) { revisarEnfoque(m.args); return; }
-  {
+  // Si la persona cambia algo varias veces seguidas (por ejemplo, aprieta "+" muchas
+  // veces), se espera a que termine y se recarga UNA sola vez con lo último.
+  window.__gwRecarga = setTimeout(() => {
     memoria.guardar('gw_args', m.args);
     if (window.vistaActual) memoria.guardar('gw_vista', window.vistaActual());
     location.reload();
-  }
+  }, 900);
 });
 const argsGuardados = memoria.leer('gw_args');
 if (argsGuardados) arrancar(argsGuardados);
@@ -435,8 +514,8 @@ function colorCostado(f) {
 // Cada país conserva SIEMPRE su color (su tono). Lo único que cambia es el brillo:
 // manchas de calor que fluyen lentamente sobre la superficie, como en una cámara
 // térmica. Así la leyenda se sigue leyendo igual.
-let calorVivo = !esMovil();   // activado por defecto en computador; en celular parte apagado (ahorra batería)
-try { const v = sessionStorage.getItem('gt_calor_vivo'); if (v !== null) calorVivo = v === '1'; } catch (e) {}
+let calorVivo = true;   // activado por defecto; en el computador se recuerda si la persona lo apaga
+try { const v = sessionStorage.getItem('gt_calor_vivo'); if (v !== null && !esMovil()) calorVivo = v === '1'; } catch (e) {}
 const tiempoCalor = { value: 0 };
 const materialesCalor = {};
 
@@ -608,6 +687,8 @@ function mostrarArco(d) {
 const ficha = document.getElementById('ficha'), contenido = document.getElementById('contenido');
 function cerrarFicha() {
   ficha.classList.remove('visible'); globo.arcsData([]); globo.labelsData([]);
+  document.body.classList.remove('ficha-abierta');
+  modoFoco(false);   // vuelve a la vista normal
   seleccionarPais(null, null);   // al cerrar se ocultan los palos del país (salvo "Ver destinos")
   enviarAStreamlit({ tipo: 'cerrar' });
 }
@@ -645,6 +726,7 @@ function mostrarPais(nombre, lista) {
   }
   globo.arcsData([]); globo.labelsData([]);
   ficha.classList.add('visible');
+  document.body.classList.add('ficha-abierta');
 }
 
 function mostrarDestino(d, avisar = true) {
@@ -669,10 +751,28 @@ function mostrarDestino(d, avisar = true) {
     <div class="det" style="margin-top:10px;color:var(--suave);font-size:12px">Costo de vida en destino: <b style="color:var(--texto)">${d.diario_fmt}</b> por persona/día (sin vuelo)</div>
     ${d.atractivos.length ? `<div style="margin-top:12px;font-size:12px;color:var(--suave);text-transform:uppercase;letter-spacing:.06em">Atractivos</div>
     <ul class="atr">${d.atractivos.map(a => `<li>${a}</li>`).join('')}</ul>` : ''}
+    <div class="acciones">
+      ${d.vuelo_link ? `<a class="accion primaria" href="${d.vuelo_link}" target="_blank" rel="noopener">✈ Ver vuelos disponibles</a>` : ''}
+      <button class="accion" type="button" onclick="verActividades('${d.id}')">🎟 Ver actividades</button>
+      ${esMovil() ? `<button class="accion" type="button" onclick="abrirPanel('Explorar destino')">Ver detalle completo</button>` : ''}
+    </div>
+    ${d.aeropuerto_txt ? `<div class="det" style="margin-top:8px">${d.aeropuerto_txt}</div>` : ''}
     <div class="nota">${d.vuelo_real ? 'El vuelo es un precio real de búsquedas recientes y puede cambiar; alojamiento, comida, transporte y actividades son estimados de demostración.' : 'Valores estimados de demostración, no tarifas reales.'}</div>`;
   mostrarArco(d);
   ficha.classList.add('visible');
+  document.body.classList.add('ficha-abierta');
+  if (avisar) modoFoco(true);   // computador: al tocar un destino, el globo pasa a pantalla completa
 }
+window.verActividades = id => {
+  enviarAStreamlit({ tipo: 'actividades', id });
+  modoFoco(false);
+  if (esMovil()) abrirPanel('Actividades');
+};
+window.acercar = factor => {
+  const v = globo.pointOfView();
+  ctl.autoRotate = false;
+  globo.pointOfView({ lat: v.lat, lng: v.lng, altitude: Math.min(4.5, Math.max(0.15, v.altitude * factor)) }, 450);
+};
 
 // Ajuste de tamaño
 function ajustar() { globo.width(contenedor.clientWidth).height(contenedor.clientHeight); }

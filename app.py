@@ -21,8 +21,11 @@ import streamlit.components.v1 as components
 
 from componentes.globo import mostrar_globo
 from componentes.portada import logo_mini, mostrar_portada
-from servicios import (alojamientos, info_destino, lugares, secretos, tipos_cambio, travelpayouts,
+from servicios import (actividades, alojamientos, hoteles, info_destino, lugares, secretos, tipos_cambio,
+                       travelpayouts,
                        turismo, vuelos)
+from servicios.costos import red as red_costos
+from servicios.rutas import distancia_km
 from servicios.costos import (ESTADOS, ESTADOS_GENERALES, TIPOS_ALOJAMIENTO, calcular,
                               cargar_destinos, estado_presupuesto, estados_cuartiles)
 
@@ -30,7 +33,13 @@ secretos.cargar()  # claves desde variables de entorno, .env o Secrets de Stream
 
 _ICONO = Path(__file__).parent / "componentes" / "logo_gw.png"
 st.set_page_config(page_title="GlobeWay", page_icon=str(_ICONO) if _ICONO.exists() else "🌍",
-                   layout="wide", initial_sidebar_state="expanded")
+                   layout="wide", initial_sidebar_state="auto")
+
+# Modo claro u oscuro: lo elige la persona con el botón de arriba (Streamlit lo recuerda)
+try:
+    MODO_CLARO = st.context.theme.type == "light"
+except Exception:
+    MODO_CLARO = False
 
 # --------------------------------------------------------------------------
 # Estilos
@@ -53,7 +62,22 @@ st.markdown("""
   .etq { display:inline-block; font-size:.72rem; padding:.12rem .55rem; border-radius:999px;
          border:1px solid currentColor; font-weight:600; }
   div[data-testid="stTabs"] button p { font-size: .95rem; }
-  .solo-movil { display: none; }
+  /* Fondo con un brillo suave (se nota a través del vidrio del panel lateral) */
+  .stApp { background:
+      radial-gradient(1200px 600px at 8% -10%, rgba(56,189,248,.10), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(245,165,36,.07), transparent 55%), #05070d !important; }
+  /* Panel lateral: vidrio esmerilado y entrada de arriba hacia abajo */
+  section[data-testid="stSidebar"] { background: rgba(13,18,32,.55) !important;
+    backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border-right: 1px solid rgba(255,255,255,.08); }
+  section[data-testid="stSidebar"] > div { background: transparent !important; }
+  @keyframes gwBajar { from { opacity: 0; transform: translateY(-28px); clip-path: inset(0 0 100% 0); }
+                       to { opacity: 1; transform: none; clip-path: inset(0 0 0 0); } }
+  [data-testid="stSidebarContent"] { animation: gwBajar .8s cubic-bezier(.2,.8,.2,1) both; }
+  @media (prefers-reduced-motion: reduce) { [data-testid="stSidebarContent"] { animation: none; } }
+  #gw-cerrar-panel { position: fixed; top: 10px; right: 10px; z-index: 1000001; align-items: center;
+    padding: 9px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.18);
+    background: rgba(13,18,32,.85); color: #e5e9f0; font: 600 13px Inter, system-ui, sans-serif; cursor: pointer; }
   /* ---- Celulares (ojo: sin líneas en blanco dentro de este bloque, o Streamlit lo muestra como texto) ---- */
   @media (max-width: 700px) {
     .block-container { padding-top: .8rem; padding-left: .75rem; padding-right: .75rem; }
@@ -70,10 +94,40 @@ st.markdown("""
     /* Pestañas: se deslizan de lado */
     div[data-testid="stTabs"] [role="tablist"] { overflow-x: auto; scrollbar-width: none; }
     div[data-testid="stTabs"] button p { font-size: .85rem; }
-    .solo-movil { display: block; color: #94a3b8; font-size: .8rem; margin: -.3rem 0 .6rem; }
+    /* Globo a pantalla completa, como Google Earth */
+    header[data-testid="stHeader"] { background: transparent !important; }
+    div[data-testid="stElementContainer"]:has(iframe[src*="globo_globeway"]) {
+      position: fixed !important; inset: 0 !important; z-index: 5; margin: 0 !important; visibility: visible; }
+    iframe[src*="globo_globeway"] { position: fixed; inset: 0; width: 100vw !important; height: 100dvh !important; }
+    /* El resto de la página queda escondido hasta tocar "Buscar destinos" */
+    body:not(.gw-panel) .block-container { visibility: hidden; }
+    body:not(.gw-panel) section[data-testid="stMain"] { overflow: hidden !important; }
+    @keyframes gwExpandir { from { clip-path: inset(10px 56px calc(100% - 54px) 56px round 22px); opacity: .6; }
+                            to { clip-path: inset(0 0 0 0 round 0); opacity: 1; } }
+    body.gw-panel .block-container { visibility: visible; position: fixed; inset: 0; z-index: 1000000;
+      overflow-y: auto; max-width: none; padding: 60px .8rem 2rem; background: #05070d;
+      animation: gwExpandir .45s cubic-bezier(.2,.8,.2,1); }
+    body.gw-panel div[data-testid="stElementContainer"]:has(iframe[src*="globo_globeway"]) { visibility: hidden; }
   }
 </style>
 """, unsafe_allow_html=True)
+if MODO_CLARO:
+    st.markdown("""
+<style>
+  .stApp { background:
+      radial-gradient(1200px 600px at 8% -10%, rgba(56,189,248,.12), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(245,165,36,.10), transparent 55%), #f6f7fb !important; }
+  section[data-testid="stSidebar"] { background: rgba(255,255,255,.62) !important; border-right: 1px solid rgba(15,23,42,.08); }
+  .bajada { color: #475569; }
+  .marca span { color: #d48806; }
+  .kpi { background: #ffffff; border-color: rgba(15,23,42,.10); box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .kpi .t { color: #475569; }
+  .aviso-demo { background: #fffbeb; border-color: rgba(217,119,6,.35); color: #92400e; }
+  #gw-cerrar-panel { background: rgba(255,255,255,.92); color: #0f172a; border-color: rgba(15,23,42,.15); }
+  body.gw-panel .block-container { background: #f6f7fb !important; }
+</style>
+""", unsafe_allow_html=True)
+
 
 # --------------------------------------------------------------------------
 # Script "Drive" de Travelpayouts (lo exige su registro para verificar el sitio).
@@ -190,6 +244,9 @@ TIPOS_TURISMO = sorted({t for d in DESTINOS for t in d["tipo"]})
 # Panel lateral: parámetros del viaje
 # --------------------------------------------------------------------------
 with st.sidebar:
+    sorpresa = st.button("🎲 Sorpréndeme", type="primary", width="stretch",
+                         help="Elige al azar un destino que te alcanza (o uno de los más "
+                              "turísticos, en ese modo) y te lo muestra en el globo.")
     # ---- Interruptor principal ----
     _defecto("cfg_generales", False)
     _defecto("cfg_turisticos", False)
@@ -388,6 +445,51 @@ def texto_vuelo_real(r) -> str:
     return " · ".join(partes)
 
 
+def fechas_busqueda() -> tuple[date, date]:
+    """Fechas para los enlaces de búsqueda: las elegidas o, si no hay, en un mes más."""
+    if usar_fechas:
+        return llegada, salida
+    ida = date.today() + timedelta(days=30)
+    return ida, ida + timedelta(days=noches)
+
+
+def enlace_vuelos(f: dict) -> str:
+    """Enlace a Aviasales para comprar el vuelo (afiliado si hay marker)."""
+    c = f["calc"]
+    if c.ruta.por_tierra:
+        return ""
+    if c.vuelo_real:
+        return c.vuelo_real.enlace(int(viajeros))
+    destino = (f.get("iata") or c.ruta.aeropuerto_final
+               or red_costos().nodo_para(f["lat"], f["lon"], f["iso3"]))   # aeropuerto real más cercano
+    if not destino or destino == origen:
+        return ""
+    ida, vuelta = fechas_busqueda()
+    return travelpayouts.enlace_busqueda(origen, destino, ida, vuelta, int(viajeros))
+
+
+def texto_aeropuerto(f: dict, largo: bool = False) -> str:
+    """Aeropuerto al que se vuela y a cuántos km queda del destino."""
+    c, r = f["calc"], f["calc"].vuelo_real
+    if c.ruta.por_tierra:
+        return "Muy cerca de tu origen: se llega por tierra." if largo else "Por tierra"
+    if r and getattr(r, "km_destino", 0) >= 15:
+        return (f"Sin aeropuerto propio: vuelo real hasta {r.aeropuerto_destino}, a "
+                f"{r.km_destino:.0f} km por tierra." if largo
+                else f"{r.aeropuerto_destino} · {r.km_destino:.0f} km")
+    if r:
+        return "" if largo else f"{r.aeropuerto_destino} · en el destino"
+    cod, km = c.ruta.aeropuerto_final, c.ruta.traslado_km
+    if not cod:   # sin aeropuerto en la red: el aeropuerto real más cercano y su distancia
+        cod = red_costos().nodo_para(f["lat"], f["lon"], f["iso3"])
+        la, lo, _ = red_costos().nodos[cod]
+        km = distancia_km(f["lat"], f["lon"], la, lo)
+    if km >= 15:
+        return (f"Aeropuerto más cercano: {cod}, a {km:.0f} km por tierra." if largo
+                else f"{cod} · {km:.0f} km")
+    return "" if largo else f"{cod} · en el destino"
+
+
 colores.setdefault("sin_datos", "#64748b")
 textos.setdefault("sin_datos", "Sin datos turísticos")
 
@@ -417,7 +519,8 @@ datos_globo = {
         "vuelo_pp_fmt": fmt(f["calc"].vuelo_pp),
         "vuelo_real": bool(f["calc"].vuelo_real),
         "vuelo_real_txt": texto_vuelo_real(f["calc"].vuelo_real) if f["calc"].vuelo_real else "",
-        "vuelo_link": f["calc"].vuelo_real.enlace(int(viajeros)) if f["calc"].vuelo_real else "",
+        "vuelo_link": enlace_vuelos(f),
+        "aeropuerto_txt": texto_aeropuerto(f, largo=True),
         "diario_fmt": fmt(f["calc"].diario_pp),
         "distancia_km": f["calc"].distancia_km,
         "ruta_txt": f["calc"].ruta.texto(),
@@ -432,7 +535,20 @@ datos_globo = {
 # --------------------------------------------------------------------------
 # Encabezado e indicadores
 # --------------------------------------------------------------------------
-st.markdown(f'<p class="marca">{logo_mini(30)}Globe<span>Way</span></p>', unsafe_allow_html=True)
+col_marca, col_tema = st.columns([5, 1], vertical_alignment="center")
+col_marca.markdown(f'<p class="marca">{logo_mini(30)}Globe<span>Way</span></p>', unsafe_allow_html=True)
+if col_tema.button("🌙 Modo oscuro" if MODO_CLARO else "☀️ Modo claro", key="boton_tema", width="stretch",
+                   help="Cambia los colores de la página. Se recuerda en este navegador."):
+    # Streamlit guarda el tema elegido en el navegador; se cambia y se recarga la página
+    components.html(f"""<script>
+    try {{
+      const w = window.parent, k = 'stActiveTheme-' + w.location.pathname + '-v2';
+      if ({'false' if MODO_CLARO else 'true'}) w.localStorage.setItem(k, JSON.stringify('Light'));
+      else w.localStorage.removeItem(k);
+      w.location.reload();
+    }} catch (e) {{}}
+    /* {time.time()} */
+    </script>""", height=0)
 if turisticos:
     st.markdown('<p class="bajada"><b>Más turísticos</b>: zonas más visitadas del mundo. '
                 'Usa <b>Ver destinos</b> (a la derecha del globo) para mostrar las columnas de turistas. '
@@ -450,8 +566,6 @@ else:
                 f'<b>{vuelos.ORIGENES[origen]["nombre"]}</b>, {viajeros} viajero'
                 f'{"s" if viajeros > 1 else ""} y {dias} días: ¿a dónde puedes ir?</p>',
                 unsafe_allow_html=True)
-st.markdown('<div class="solo-movil">☰ Para cambiar presupuesto, origen o fechas, toca la '
-            'flecha <b>»</b> arriba a la izquierda.</div>', unsafe_allow_html=True)
 n_reales = sum(1 for f in filas if f["calc"].vuelo_real)
 if precios_tp is not None and n_reales:
     st.markdown('<div class="aviso-demo">⚠ <b>Modo demostración parcial.</b> '
@@ -511,10 +625,7 @@ for col, (n, t, c) in zip(cols, indicadores):
 # ---- Botón "Sorpréndeme": elige al azar un destino que te alcanza ----
 ir_a_pestana = None
 enfoque = None
-_, col_sorpresa = st.columns([4, 1])
-if col_sorpresa.button("🎲 Sorpréndeme", width="stretch",
-                       help="Elige al azar un destino que te alcanza (o uno de los más "
-                            "turísticos, en ese modo) y te lo muestra en el globo."):
+if sorpresa:
     if turisticos:
         candidatos = [f for f in filas if (f.get("rank") or 99) <= 3]
     else:
@@ -546,6 +657,10 @@ if clic and clic.get("t") != st.session_state.get("_ultimo_clic"):
         st.session_state["pais_globo"] = f_clic["iso3"]
         ir_a_pestana = "Explorar destino"
         st.toast(f"📍 {f_clic['ciudad']}: mira el detalle en «Explorar destino», bajo el globo.")
+    elif clic.get("tipo") == "actividades" and clic.get("id") in ids_globo:
+        st.session_state["dest_explorar"] = clic["id"]
+        st.session_state["pais_globo"] = ids_globo[clic["id"]]["iso3"]
+        ir_a_pestana = "Actividades"
     elif clic.get("tipo") == "pais" and clic.get("iso3"):
         st.session_state["pais_globo"] = clic["iso3"]
         ir_a_pestana = "Destinos"
@@ -559,6 +674,9 @@ if pais_globo and not any(f["iso3"] == pais_globo for f in filas):
 # --------------------------------------------------------------------------
 # Pestañas inferiores
 # --------------------------------------------------------------------------
+
+
+FONDO_GRAFICO = "#ffffff" if MODO_CLARO else "#05070d"   # separación entre barras
 
 
 def grafico(chart) -> None:
@@ -577,8 +695,8 @@ def alternar_favorito(dest: str) -> None:
         favs.append(dest)
 
 
-tab_lista, tab_explorar, tab_comparar, tab_aloj, tab_fuentes = st.tabs(
-    ["Destinos", "Explorar destino", "Comparar", "Alojamientos", "Datos y fuentes"])
+tab_lista, tab_explorar, tab_activ, tab_comparar, tab_aloj, tab_fuentes = st.tabs(
+    ["Destinos", "Explorar destino", "Actividades", "Comparar", "Alojamientos", "Datos y fuentes"])
 
 opciones_ids = [f["id"] for f in filas]
 por_id = {f["id"]: f for f in filas}
@@ -606,6 +724,7 @@ def fila_tabla(f: dict) -> dict:
                 else c.ruta.recorrido() + (f" + {round(c.ruta.traslado_km)} km de traslado"
                                            if f.get("extra") and c.ruta.traslado_km >= 30 else ""),
         "Escalas": r.escalas_ida if r else c.ruta.escalas,
+        "Aeropuerto más cercano": texto_aeropuerto(f),
         f"Costo de vida p/p/día ({moneda})": round(tipos_cambio.convertir(c.diario_pp, moneda, tasas)),
         "% del presupuesto": (c.total / presupuesto_usd * 100) if presupuesto_usd else None,
         "Alerta": "⚠️" if f.get("riesgo") else "",
@@ -734,6 +853,9 @@ with tab_explorar:
                           help="Tus favoritos quedan en el enlace de la página: guárdalo o "
                                "compártelo para no perderlos. También puedes compararlos "
                                "en la pestaña «Comparar».")
+            if st.button("🎟 Ver actividades", key=f"act_{dest_id}",
+                         help="Lugares para visitar y cosas para hacer en este destino"):
+                ir_a_pestana = "Actividades"
             if f.get("extra"):
                 st.caption(f"Ciudad o pueblo de {f['pais']} · {f['poblacion']:,} habitantes".replace(",", ".")
                            + " (GeoNames). No está en el globo: el costo de vida es el promedio de "
@@ -794,7 +916,10 @@ with tab_explorar:
                            + ". Puede haber cambiado o agotarse: confírmalo antes de comprar."
                            + (f" Consultado {precios_tp.consultado.astimezone().strftime('%d/%m/%Y %H:%M')}."
                               if precios_tp.consultado else ""))
-                st.link_button("Ver este vuelo en Aviasales ↗", r.enlace(int(viajeros)), width="stretch")
+                if texto_aeropuerto(f, largo=True):
+                    st.caption(texto_aeropuerto(f, largo=True))
+                st.link_button("✈ Ver vuelos disponibles ↗", r.enlace(int(viajeros)), type="primary",
+                               width="stretch")
             else:
                 st.write(f"Estimado: **{fmt(c.vuelo_pp)}** ida y vuelta por persona · "
                          f"{c.distancia_km:,.0f} km volados".replace(",", "."))
@@ -806,11 +931,14 @@ with tab_explorar:
                     st.caption("No hay precio real reciente para este destino"
                                + (f" ({precios_tp.periodo})" if precios_tp.periodo else "")
                                + ": se muestra el estimado.")
-                    if usar_fechas and c.ruta.aeropuerto_final:
-                        st.link_button("Buscar este vuelo en Aviasales ↗",
-                                       travelpayouts.enlace_busqueda(origen, c.ruta.aeropuerto_final,
-                                                                     llegada, salida, int(viajeros)),
-                                       width="stretch")
+                if texto_aeropuerto(f, largo=True):
+                    st.caption(texto_aeropuerto(f, largo=True))
+                if enlace_vuelos(f):
+                    st.link_button("✈ Ver vuelos disponibles ↗", enlace_vuelos(f), type="primary",
+                                   width="stretch",
+                                   help="Abre la búsqueda en Aviasales"
+                                        + ("" if usar_fechas else " con fechas de ejemplo (en un mes más)")
+                                        + "; ahí ves los vuelos reales y los compras.")
 
             # Verificación en tiempo real (solo si hay credenciales reales)
             if not vuelos.duffel_configurado():
@@ -895,13 +1023,13 @@ with tab_explorar:
                                 tooltip=["Mes", alt.Tooltip("Precio:Q", format=",.0f"), "Fechas",
                                          "Noches", "Escalas", "Duración"])
                             barras = base.mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4,
-                                                   stroke="#05070d", strokeWidth=2).encode(
+                                                   stroke=FONDO_GRAFICO, strokeWidth=2).encode(
                                 color=alt.condition(alt.datum.Destacado == "Más barato",
-                                                    alt.value("#F5A524"), alt.value("#3987e5")),
+                                                    alt.value("#F5A524"), alt.value("#2a78d6" if MODO_CLARO else "#3987e5")),
                                 opacity=alt.condition(alt.datum["Duración"] == "Otra duración",
                                                       alt.value(0.45), alt.value(1.0)))
                             etiqueta = base.transform_filter(alt.datum.Destacado == "Más barato") \
-                                .mark_text(dy=-8, color="#e5e9f0", fontSize=12).encode(text="Destacado:N")
+                                .mark_text(dy=-8, color="#0f172a" if MODO_CLARO else "#e5e9f0", fontSize=12).encode(text="Destacado:N")
                             grafico((barras + etiqueta).properties(height=260))
                         except Exception:
                             pass   # si el gráfico falla, igual se muestra la tabla
@@ -917,9 +1045,58 @@ with tab_explorar:
                                    "noches); las barras más claras son meses donde solo hubo viajes de otra "
                                    "duración. Los meses sin búsquedas recientes no aparecen.")
 
+# ---- Actividades del destino ----
+with tab_activ:
+    dest_act = st.session_state.get("dest_explorar")
+    if dest_act not in por_id:
+        dest_act = opciones_ids[0] if opciones_ids else None
+    if not dest_act:
+        st.info("No hay destinos con los filtros actuales.")
+    else:
+        fa = por_id[dest_act]
+        ca1, ca2 = st.columns([3, 1], vertical_alignment="center")
+        ca1.markdown(f"### 🎟 Actividades en {fa['ciudad']}")
+        ca1.caption("Para ver otro destino, elígelo en «Explorar destino» o tócalo en el globo.")
+        ca2.link_button("Tours y entradas ↗", actividades.enlace_tours(fa["ciudad"].split(" (")[0], fa["pais"]),
+                        width="stretch", help="Busca tours, excursiones y entradas en GetYourGuide")
+        nombre_base = fa["ciudad"].split(" (")[0]
+        with st.spinner("Buscando actividades…"):
+            res_act = actividades.buscar([nombre_base, fa.get("wiki") or "", fa["ciudad"]])
+        if res_act.actividades:
+            if res_act.idioma == "en":
+                st.caption("Wikivoyage no tiene una guía en español para este destino: los textos están en inglés.")
+            for tipo, titulo in (("ver", "Lugares para visitar"), ("hacer", "Cosas para hacer")):
+                grupo = [a for a in res_act.actividades if a.tipo == tipo]
+                if not grupo:
+                    continue
+                st.markdown(f"#### {titulo}")
+                cols_act = st.columns(2)
+                for i, a in enumerate(grupo):
+                    with cols_act[i % 2].container(border=True):
+                        st.markdown(f"**{a.nombre}**")
+                        if a.descripcion:
+                            st.write(a.descripcion)
+                        if a.precio:
+                            st.caption(f"Precio informado en la guía: {a.precio}")
+                        enlaces = [f"[Ver en el mapa]({actividades.enlace_mapa(a.nombre, nombre_base)})"]
+                        if a.web.startswith("http"):
+                            enlaces.append(f"[Sitio web]({a.web})")
+                        st.caption(" · ".join(enlaces))
+            st.caption(f"Fuente: [Wikivoyage]({res_act.url}) (guía de viajes libre, CC BY-SA). "
+                       "Los precios son los informados en la guía y pueden haber cambiado.")
+        else:
+            st.info("No encontramos actividades en Wikivoyage para este destino"
+                    + (f" ({res_act.error})." if res_act.error else ".")
+                    + " Puedes buscar tours y entradas con el botón de arriba.")
+            if fa.get("atractivos"):
+                st.markdown("**Atractivos principales**")
+                st.markdown("\n".join(f"- {x}" for x in fa["atractivos"]))
+
 # ---- Comparar destinos ----
 CONCEPTOS = ["Vuelos", "Alojamiento", "Alimentación", "Transporte local", "Actividades"]
-PALETA_CONCEPTOS = ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181"]   # validada para fondo oscuro
+# Paletas validadas (daltonismo y contraste): una para fondo oscuro y otra para fondo claro
+PALETA_CONCEPTOS = (["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"] if MODO_CLARO
+                    else ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181"])
 
 with tab_comparar:
     favs = [i for i in st.session_state.get("favoritos", []) if i in por_id]
@@ -979,7 +1156,7 @@ with tab_comparar:
                 for i, (k, v) in enumerate(zip(CONCEPTOS, (x["calc"].vuelos, x["calc"].alojamiento,
                                                             x["calc"].comida, x["calc"].transporte,
                                                             x["calc"].actividades)))])
-            chart_cmp = alt.Chart(datos_cmp).mark_bar(stroke="#05070d", strokeWidth=2).encode(
+            chart_cmp = alt.Chart(datos_cmp).mark_bar(stroke=FONDO_GRAFICO, strokeWidth=2).encode(
                 y=alt.Y("Destino:N", sort=[x["ciudad"] for x in elegidos], title=None),
                 x=alt.X("Monto:Q", stack="zero", title=f"Costo del viaje para {viajeros} pers. ({moneda})",
                         axis=alt.Axis(format="~s", gridOpacity=0.15)),
@@ -999,57 +1176,72 @@ with tab_aloj:
     if not opciones_ids:
         st.info("No hay destinos con los filtros actuales.")
     else:
-        proveedor = alojamientos.proveedor_activo()
-        a1, a2, a3 = st.columns([1.6, 1, 1])
+        a1, a2 = st.columns([2, 1], vertical_alignment="bottom")
         dest_a = a1.selectbox("Destino", opciones_ids, format_func=etiqueta_dest,
                               index=opciones_ids.index(st.session_state.get("dest_explorar", opciones_ids[0]))
                               if st.session_state.get("dest_explorar") in opciones_ids else 0,
                               key="dest_aloj")
-        tipo_filtro = a2.selectbox("Tipo", [None] + list(TIPOS_ALOJAMIENTO),
-                                   format_func=lambda t: "Todos" if t is None else TIPOS_ALOJAMIENTO[t])
-        tope = a3.number_input(f"Máx. por noche ({moneda})", min_value=0, value=0, step=paso,
-                               help="0 = sin límite")
+        fh = por_id[dest_a]
+        ida_h, vuelta_h = fechas_busqueda()
 
-        lista = proveedor.buscar(por_id[dest_a], noches, int(viajeros), tipo_filtro, llegada, salida)
-        if tope:
-            lista = [x for x in lista
-                     if tipos_cambio.convertir(x.precio_noche_usd, moneda, tasas) <= tope]
-
-        if isinstance(proveedor, alojamientos.ProveedorDemo):
-            st.markdown('<div class="aviso-demo">Estos alojamientos son <b>ejemplos ficticios</b> '
-                        'generados a partir de precios promedio. El botón abre una búsqueda real '
-                        'en Booking.com con tu destino, fechas y huéspedes.</div>', unsafe_allow_html=True)
-
-        if not lista:
-            st.info("Ninguna opción cumple el precio máximo.")
+        if hoteles.configurado():
+            clave_h = f"{dest_a}:{ida_h}:{vuelta_h}:{int(viajeros)}"
+            if a2.button("🏨 Buscar hoteles reales", type="primary", width="stretch", key=f"hot_{clave_h}"):
+                st.session_state["hoteles_ver"] = clave_h
+            if not usar_fechas:
+                st.caption(f"Sin fechas definidas se buscan del {ida_h:%d/%m} al {vuelta_h:%d/%m/%Y} "
+                           f"({noches} noches). Activa «Tengo fechas definidas» para buscar las tuyas.")
+            if st.session_state.get("hoteles_ver") == clave_h:
+                with st.spinner("Consultando hoteles y precios…"):
+                    res_h = hoteles.buscar(fh["lat"], fh["lon"], fh["ciudad"].split(" (")[0],
+                                           ida_h, vuelta_h, int(viajeros))
+                if res_h.prueba:
+                    st.warning("Estás usando una clave de **prueba** de LiteAPI (sandbox): los hoteles son "
+                               "reales, pero **los precios son de prueba**. Con una clave de producción "
+                               "serán los precios reales.", icon="🧪")
+                if not res_h.cantidad:
+                    st.info(f"No se encontraron hoteles con precio: {res_h.error or 'sin resultados'}.")
+                else:
+                    st.success(f"**{res_h.cantidad} hoteles** con precio para {noches} noches y "
+                               f"{viajeros} persona{'s' if viajeros > 1 else ''}"
+                               + (" (precios de prueba)." if res_h.prueba else " (precios reales de LiteAPI)."))
+                    for estrellas, lista_h in res_h.por_estrellas.items():
+                        st.markdown(f"#### {'★' * estrellas}{'☆' * (5 - estrellas)}  {estrellas} estrella"
+                                    f"{'s' if estrellas > 1 else ''} · {len(lista_h)} hotel"
+                                    f"{'es' if len(lista_h) != 1 else ''}")
+                        cols_h = st.columns(5)
+                        for k, h in enumerate(lista_h):
+                            with cols_h[k % 5].container(border=True):
+                                if h.foto:
+                                    st.image(h.foto, width="stretch")
+                                st.markdown(f"**{h.nombre}**")
+                                if h.nota:
+                                    st.caption(f"⭐ {h.nota:.1f}"
+                                               + (f" · {h.resenas:,} reseñas".replace(",", ".") if h.resenas else ""))
+                                st.markdown(f"**{fmt(h.precio_total)}** total")
+                                st.caption(f"{fmt(h.precio_total / max(noches, 1))} por noche")
+                                st.link_button("Reservar ↗", h.enlace, width="stretch")
+                    st.caption("Precio mínimo disponible para toda la estadía (todas las habitaciones), "
+                               "según LiteAPI; puede cambiar al reservar. El total del viaje de arriba "
+                               "sigue usando el alojamiento estimado.")
         else:
+            proveedor = alojamientos.proveedor_activo()
+            tipo_filtro = a2.selectbox("Tipo", [None] + list(TIPOS_ALOJAMIENTO),
+                                       format_func=lambda t: "Todos" if t is None else TIPOS_ALOJAMIENTO[t])
+            lista = proveedor.buscar(fh, noches, int(viajeros), tipo_filtro, llegada, salida)
+            st.markdown('<div class="aviso-demo">Estos alojamientos son <b>ejemplos ficticios</b> '
+                        'generados a partir de precios promedio. Para ver <b>hoteles reales con precio</b> '
+                        '(10 por cada nivel de estrellas), configura <code>LITEAPI_KEY</code> en los '
+                        'Secrets de la app (ver README). El botón abre una búsqueda real en Booking.com.</div>',
+                        unsafe_allow_html=True)
             columnas = st.columns(3)
-            for i, a in enumerate(lista):
-                with columnas[i % 3].container(border=True):
+            for k, a in enumerate(lista):
+                with columnas[k % 3].container(border=True):
                     st.markdown(f"**{a.nombre}**")
-                    st.caption(f"{TIPOS_ALOJAMIENTO[a.tipo]} · {a.zona}")
+                    st.caption(f"{TIPOS_ALOJAMIENTO[a.tipo]} · {a.zona} · ejemplo")
                     st.markdown(f"{fmt(a.precio_noche_usd)} / noche · **{fmt(a.precio_total_usd)}** total "
                                 f"({noches} noches)")
-                    st.caption(f"Calificación {a.calificacion}/10 · "
-                               + ("Disponibilidad no verificada" if a.disponible is None
-                                  else "Disponible" if a.disponible else "Sin disponibilidad"))
-                    st.link_button("Buscar en Booking.com" if a.es_demo else "Ver / reservar",
-                                   a.enlace, width="stretch")
-
-            st.markdown("#### Comparar alternativas")
-            nombres = [a.nombre for a in lista]
-            elegidos = st.multiselect("Elige 2 o más", nombres, default=nombres[:3])
-            if len(elegidos) >= 2:
-                comp = [a for a in lista if a.nombre in elegidos]
-                st.dataframe(pd.DataFrame({
-                    "Alojamiento": [a.nombre for a in comp],
-                    "Tipo": [TIPOS_ALOJAMIENTO[a.tipo] for a in comp],
-                    "Zona": [a.zona for a in comp],
-                    f"Por noche ({moneda})": [round(tipos_cambio.convertir(a.precio_noche_usd, moneda, tasas)) for a in comp],
-                    f"Total ({moneda})": [round(tipos_cambio.convertir(a.precio_total_usd, moneda, tasas)) for a in comp],
-                    "Calificación": [a.calificacion for a in comp],
-                    "Origen del dato": ["Demostración" if a.es_demo else proveedor.nombre for a in comp],
-                }), hide_index=True, width="stretch")
+                    st.link_button("Buscar en Booking.com", a.enlace, width="stretch")
 
 # ---- Transparencia de datos ----
 with tab_fuentes:
@@ -1065,7 +1257,8 @@ with tab_fuentes:
 |---|---|---|
 | Tipo de cambio | {tasas.fuente} | {"⚠️ Respaldo fijo" if tasas.es_respaldo else "✅ Real, actualizado cada ~24 h"} |
 | Vuelos | {fuente_vuelos} | {estado_vuelos} |
-| Alojamientos | {proveedor.nombre if filas else "—"} | 🟡 Ejemplos ficticios + enlace a búsqueda real |
+| Alojamientos | {"LiteAPI: hoteles cercanos, 10 por nivel de estrellas" if hoteles.configurado() else "Ejemplos ficticios"} | {("🧪 Hoteles reales, precios de prueba (clave sandbox)" if hoteles.es_prueba() else "✅ Real (precio mínimo disponible)") if hoteles.configurado() else "🟡 Ejemplos ficticios + enlace a búsqueda real"} |
+| Actividades | Wikivoyage (secciones «Ver» y «Hacer») + búsqueda de tours en GetYourGuide | ✅ Real (guía de viajes libre, CC BY-SA) |
 | Costo de vida (comida, transporte, actividades) | `datos/destinos.json` | 🟡 Estimado manual (demostración) |
 | Fotos e información general | Wikipedia en español | ✅ Real |
 | Ranking de destinos por país | {"Visitas a Wikipedia en los últimos 30 días" if popularidad.en_vivo else "Lista base compilada manualmente"} | {"✅ Real, actualizado cada 3 días" if popularidad.en_vivo else "🟡 Base (sin conexión)"} |
@@ -1102,7 +1295,12 @@ if ir_a_pestana:
     try {{
       const pestanas = [...window.parent.document.querySelectorAll('button[role="tab"]')];
       const p = pestanas.find(b => b.innerText.trim() === {ir_a_pestana!r});
-      if (p) {{ if (p.getAttribute('aria-selected') !== 'true') p.click(); return; }}
+      if (p) {{
+        if (p.getAttribute('aria-selected') !== 'true') p.click();
+        if ({'true' if ir_a_pestana == "Actividades" else 'false'} && !window.parent.document.body.classList.contains('gw-panel'))
+          p.closest('[data-testid="stTabs"]').scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+        return;
+      }}
     }} catch (e) {{ return; }}
     if (intentos++ < 20) setTimeout(abrir, 150);
   }})();

@@ -26,7 +26,14 @@ Se abre solo en el navegador, en `http://localhost:8501`.
   - Modo *presupuesto* (por defecto): verde (≤60 %), amarillo (60–85 %), naranjo (85–100 %), violeta (hasta +15 %, ligeramente sobre) y rojo (fuera de presupuesto). Los destinos accesibles tienen un anillo pulsante.
   - Interruptor **Precios generales**: oculta el presupuesto y colorea cada destino según lo caro que es comparado con el resto del mundo (cuartiles), ya sea por costo total del viaje o por costo de vida en destino. La leyenda muestra los rangos de precio.
 - Interruptor **Más turísticos**: mapa de calor 3D (columnas hexagonales) con las zonas más visitadas del mundo. La altura y el color de cada columna dependen de los turistas estimados en la zona: llegadas internacionales del país (cifra aproximada) × participación de cada destino.
-- **🎲 Sorpréndeme**: elige al azar un destino que te alcanza (≤85 % del presupuesto, sin advertencias de seguridad), vuela hasta él en el globo y abre su detalle.
+- **Pantalla completa al tocar un destino** (computador): el globo ocupa toda la pantalla; al cerrar la ficha (× o Esc) vuelve a la vista normal. La ficha trae **✈ Ver vuelos disponibles** (abre Aviasales para comprar) y **🎟 Ver actividades**.
+- **Lupas + / −** a la derecha del globo para acercar y alejar (solo computador).
+- **☀️ Modo claro / 🌙 Modo oscuro**: botón arriba a la derecha; se recuerda en el navegador.
+- **Actividades**: pestaña con lugares para visitar y cosas para hacer del destino (Wikivoyage) y búsqueda de tours en GetYourGuide.
+- **Hoteles reales** (con `LITEAPI_KEY`): en *Alojamientos*, hasta 10 hoteles por cada nivel de estrellas con su precio para tus fechas.
+- **Destinos sin aeropuerto**: se usa el precio real del aeropuerto más cercano (hasta 300 km) y la tabla muestra a qué distancia queda.
+- **Celular**: el globo ocupa toda la pantalla; arriba hay una barra «Buscar destinos» que se expande y muestra las pestañas; «Calor vivo» siempre activo; el panel lateral parte cerrado.
+- **🎲 Sorpréndeme** (en el panel lateral): elige al azar un destino que te alcanza (≤85 % del presupuesto, sin advertencias de seguridad), vuela hasta él en el globo y abre su detalle.
 - **Comparar**: pestaña para poner 2 o 3 destinos lado a lado (tabla y gráfico de barras con vuelos, alojamiento, comida, transporte y actividades).
 - **Favoritos y enlace para compartir**: ☆ en *Explorar destino* guarda favoritos. La búsqueda completa (moneda, presupuesto, origen, fechas o duración, viajeros, alojamiento, favoritos y destino) queda en la dirección de la página; el panel lateral muestra el enlace listo para copiar.
 - **📅 ¿Cuándo es más barato ir?**: en *Explorar destino*, el pasaje real más barato de cada uno de los próximos 12 meses (Travelpayouts), con gráfico y enlaces a Aviasales.
@@ -84,7 +91,11 @@ Las claves se leen con `servicios/secretos.py`, que busca en este orden: variabl
    - Para cubrir la mayor cantidad de destinos, combina varias consultas por origen y fechas (unas 4 a 8: `prices_for_dates` por mes y `prices/latest`), las guarda 6 horas en caché y respeta `TRAVELPAYOUTS_MAX_DIARIO` (500 por defecto).
    - Con fechas: prefiere exactamente esas fechas y, si no hay, fechas cercanas (±7 días al salir), marcadas como tales. Sin fechas: salidas en los próximos ~2 meses. En ambos casos solo acepta viajes de duración parecida (±3 noches, o ±50 % en viajes largos).
    - Los destinos con dato muestran **✈ precio real de búsquedas recientes** y un botón a Aviasales con tu marker (enlace de afiliado). Los demás siguen estimados.
-4. **Booking.com:** la Demand API exige ser afiliado aprobado. El punto de conexión está preparado en `servicios/alojamientos.py` (`ProveedorBooking`), pero no está implementado, para no simular una API sin credenciales.
+4. **LiteAPI (hoteles reales con precio):**
+   - Crea una cuenta gratis en https://dashboard.liteapi.travel y copia tu clave en `LITEAPI_KEY`.
+   - La clave de prueba (`sand_...`) se entrega al tiro, pero sus **precios son de prueba** (la app lo avisa). Para precios reales hay que activar la clave de producción (`prod_...`) en el panel de LiteAPI; según su documentación, para eso pide registrar una tarjeta, aunque las búsquedas son gratis.
+   - (Opcional) `LITEAPI_WHITELABEL_URL`: tu sitio de reservas de LiteAPI, para que «Reservar» vaya ahí y ganes comisión.
+5. **Booking.com:** la Demand API exige ser afiliado aprobado. El punto de conexión está preparado en `servicios/alojamientos.py` (`ProveedorBooking`), pero no está implementado, para no simular una API sin credenciales.
 
 Nunca subas `.env` a un repositorio.
 

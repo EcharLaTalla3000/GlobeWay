@@ -284,8 +284,7 @@ class Red:
         cerca = [(km, c) for km, c, p in reales if (p == iso3 and km <= 250) or km <= 120]
         if cerca:
             return min(cerca)[1]
-        todos = [(distancia_km(lat, lon, v[0], v[1]), c) for c, v in self.nodos.items()
-                 if v[2] == iso3] or [(km, c) for km, c, _ in reales]
+        todos = [(km, c) for km, c, p in reales if p == iso3] or [(km, c) for km, c, _ in reales]
         return min(todos)[1]
 
     def _km(self, a: str, b: str) -> float:

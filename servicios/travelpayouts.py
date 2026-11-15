@@ -22,7 +22,7 @@ from __future__ import annotations
 import os
 import re
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timedelta
 
 import requests
@@ -64,6 +64,7 @@ class PrecioReal:
     aeropuerto_destino: str
     ruta_link: str            # enlace relativo que entrega Aviasales
     fechas_cercanas: bool = False   # True si no hubo precio para tus fechas exactas
+    km_destino: float = 0.0         # distancia del aeropuerto al destino (si no tiene aeropuerto propio)
 
     def enlace(self, viajeros: int = 1) -> str:
         """Enlace a la búsqueda en Aviasales (con tu marker de afiliado si existe)."""
@@ -91,6 +92,7 @@ class TablaPrecios:
     por_aeropuerto: dict[str, PrecioReal] = field(default_factory=dict)
     por_ciudad: dict[str, PrecioReal] = field(default_factory=dict)
     ciudad_de: dict[str, str] = field(default_factory=dict)   # aeropuerto -> código de ciudad
+    coords: dict[str, list] = field(default_factory=dict)      # aeropuerto -> [lat, lon]
     consultado: datetime | None = None
     desde_cache: bool = False
     error: str | None = None
@@ -111,6 +113,31 @@ class TablaPrecios:
             if ciudad in self.por_ciudad:
                 return self.por_ciudad[ciudad]
         return None
+
+    def buscar_cercano(self, lat: float, lon: float, max_km: float = 300) -> PrecioReal | None:
+        """Para destinos sin aeropuerto propio (o sin vuelos): el aeropuerto con precio real
+        más cercano, a máximo `max_km`. Devuelve el precio con su distancia en `km_destino`."""
+        if "_arr" not in self.__dict__:
+            import numpy as np
+            codigos = [c for c in self.coords
+                       if c in self.por_aeropuerto or self.ciudad_de.get(c) in self.por_ciudad]
+            self.__dict__["_cod"] = codigos
+            self.__dict__["_arr"] = np.radians(np.array([self.coords[c] for c in codigos], dtype=float)) \
+                if codigos else None
+        arr = self.__dict__["_arr"]
+        if arr is None:
+            return None
+        import numpy as np
+        la, lo = np.radians(lat), np.radians(lon)
+        a = (np.sin((arr[:, 0] - la) / 2) ** 2
+             + np.cos(la) * np.cos(arr[:, 0]) * np.sin((arr[:, 1] - lo) / 2) ** 2)
+        km = 2 * 6371 * np.arcsin(np.sqrt(a))
+        i = int(np.argmin(km))
+        if km[i] > max_km:
+            return None
+        codigo = self.__dict__["_cod"][i]
+        p = self.por_aeropuerto.get(codigo) or self.por_ciudad[self.ciudad_de[codigo]]
+        return replace(p, aeropuerto_destino=codigo, km_destino=float(km[i]))
 
 
 # --------------------------------------------------------------------------
@@ -147,21 +174,32 @@ def enlace_busqueda(origen: str, destino: str, ida: date, vuelta: date, viajeros
     return armar_enlace(ruta, viajeros)
 
 
-def _ciudades() -> dict[str, str]:
-    """Aeropuerto → código de ciudad (ej. CDG → PAR). Se guarda 30 días en caché."""
-    en_cache = cache.obtener("tp:aeropuertos", TTL_AEROPUERTOS)
+def _aeropuertos() -> tuple[dict[str, str], dict[str, list]]:
+    """Aeropuerto → código de ciudad (ej. CDG → PAR) y aeropuerto → [lat, lon].
+    Se guarda 30 días en caché."""
+    en_cache = cache.obtener("tp:aeropuertos2", TTL_AEROPUERTOS)
     if en_cache:
-        return en_cache[0]
+        return en_cache[0]["ciudad"], en_cache[0]["coords"]
     try:
         r = requests.get(URL_AEROPUERTOS, timeout=30)
         r.raise_for_status()
-        mapa = {a["code"]: a["city_code"] for a in r.json()
-                if a.get("code") and a.get("city_code")}
+        lista = r.json()
     except Exception:
-        return {}   # sin la lista igual funciona, solo con coincidencia exacta de aeropuerto
+        return {}, {}   # sin la lista igual funciona, solo con coincidencia exacta de aeropuerto
+    mapa = {a["code"]: a["city_code"] for a in lista if a.get("code") and a.get("city_code")}
+    coords = {}
+    for a in lista:
+        c = a.get("coordinates") or {}
+        if a.get("code") and c.get("lat") is not None and c.get("lon") is not None \
+                and a.get("iata_type", "airport") == "airport" and a.get("flightable", True):
+            coords[a["code"]] = [float(c["lat"]), float(c["lon"])]
     if mapa:
-        cache.guardar("tp:aeropuertos", mapa)
-    return mapa
+        cache.guardar("tp:aeropuertos2", {"ciudad": mapa, "coords": coords})
+    return mapa, coords
+
+
+def _ciudades() -> dict[str, str]:
+    return _aeropuertos()[0]
 
 
 def _pedir(url: str, params: dict, token: str) -> list[dict]:
@@ -254,7 +292,7 @@ def obtener_precios(origen: str, llegada: date | None, salida: date | None,
         tabla.error = "no hay TRAVELPAYOUTS_TOKEN configurado"
         return tabla
 
-    tabla.ciudad_de = _ciudades()
+    tabla.ciudad_de, tabla.coords = _aeropuertos()
     origen_tp = tabla.ciudad_de.get(origen, origen)   # SCL→SCL, JFK→NYC, EZE→BUE
     hoy = date.today()
     exactas = bool(llegada and salida)

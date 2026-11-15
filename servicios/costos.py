@@ -133,6 +133,9 @@ def calcular(destino: dict, origen: str, dias: int, viajeros: int, tipo_aloj: st
     real = None
     if precios_reales is not None and not ruta.por_tierra:
         real = precios_reales.buscar([destino.get("iata"), ruta.aeropuerto_final])
+        if real is None and (not destino.get("iata") or (ruta.aeropuerto_final or "@").startswith("@")):
+            # Destino sin aeropuerto propio: precio real del aeropuerto más cercano (≤300 km)
+            real = precios_reales.buscar_cercano(destino["lat"], destino["lon"])
         if real is not None:
             vuelo_pp = real.precio_pp
     aloj_noche = destino[tipo_aloj] * unidades_alojamiento(tipo_aloj, viajeros)
