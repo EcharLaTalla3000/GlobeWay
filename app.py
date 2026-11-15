@@ -54,8 +54,7 @@ st.markdown("""
          border:1px solid currentColor; font-weight:600; }
   div[data-testid="stTabs"] button p { font-size: .95rem; }
   .solo-movil { display: none; }
-
-  /* ---- Celulares ---- */
+  /* ---- Celulares (ojo: sin líneas en blanco dentro de este bloque, o Streamlit lo muestra como texto) ---- */
   @media (max-width: 700px) {
     .block-container { padding-top: .8rem; padding-left: .75rem; padding-right: .75rem; }
     .marca { font-size: 1.35rem; }
