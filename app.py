@@ -8,8 +8,12 @@ Ejecutar:  streamlit run app.py
 """
 from __future__ import annotations
 
+import os
+import random
+import time
 from datetime import date, timedelta
 from pathlib import Path
+from urllib.parse import urlencode
 
 import pandas as pd
 import streamlit as st
@@ -79,6 +83,60 @@ st.markdown("<style>iframe[height='0']{display:block;margin:0}"
             unsafe_allow_html=True)
 
 # --------------------------------------------------------------------------
+# Enlace para compartir: la búsqueda se guarda en la dirección (URL) de la página.
+# Al abrir un enlace compartido, se leen sus valores una sola vez por sesión.
+# --------------------------------------------------------------------------
+APP_URL = os.getenv("APP_URL", "https://globeway.streamlit.app").rstrip("/")
+
+
+def _cargar_desde_url() -> None:
+    ss, qp = st.session_state, st.query_params
+    if ss.get("_url_cargada"):
+        return
+    ss["_url_cargada"] = True
+
+    def entero(k, lo, hi):
+        try:
+            v = int(qp[k])
+            return v if lo <= v <= hi else None
+        except (KeyError, TypeError, ValueError):
+            return None
+
+    modo = qp.get("modo", "")
+    ss["cfg_generales"], ss["cfg_turisticos"] = modo == "general", modo == "turismo"
+    moneda = qp.get("moneda")
+    if moneda in tipos_cambio.MONEDAS:
+        ss["cfg_moneda"] = moneda
+        if (p := entero("p", 0, 10**11)) is not None:
+            ss[f"cfg_presupuesto_{moneda}"] = p
+    if qp.get("o") in vuelos.ORIGENES:
+        ss["cfg_origen"] = qp["o"]
+    try:
+        ida, vuelta = date.fromisoformat(qp["ida"]), date.fromisoformat(qp["vuelta"])
+        if date.today() <= ida < vuelta:
+            ss["cfg_fechas"], ss["cfg_rango"] = True, (ida, vuelta)
+    except (KeyError, ValueError):
+        pass
+    if (d := entero("d", 2, 30)) is not None:
+        ss["cfg_dias"] = d
+    if (v := entero("v", 1, 10)) is not None:
+        ss["cfg_viajeros"] = v
+    if qp.get("aloj") in TIPOS_ALOJAMIENTO:
+        ss["cfg_aloj"] = qp["aloj"]
+    ss["favoritos"] = [x for x in qp.get("fav", "").split(",") if x][:20]
+    if qp.get("dest"):
+        ss["_dest_url"] = qp["dest"]
+
+
+def _defecto(clave: str, valor) -> None:
+    """Valor inicial de un control (si no viene del enlace ni de antes)."""
+    if clave not in st.session_state:
+        st.session_state[clave] = valor
+
+
+_cargar_desde_url()
+
+# --------------------------------------------------------------------------
 # Portada animada: se muestra hasta que la persona aprieta "Iniciar"
 # --------------------------------------------------------------------------
 if not st.session_state.get("iniciado"):
@@ -114,36 +172,42 @@ TIPOS_TURISMO = sorted({t for d in DESTINOS for t in d["tipo"]})
 # --------------------------------------------------------------------------
 with st.sidebar:
     # ---- Interruptor principal ----
+    _defecto("cfg_generales", False)
+    _defecto("cfg_turisticos", False)
     generales = st.toggle(
-        "Precios generales", value=False,
+        "Precios generales", key="cfg_generales",
         help="Colorea el mapa según lo caro o barato de cada destino comparado con el "
              "resto del mundo, sin necesidad de ingresar un presupuesto.")
     turisticos = st.toggle(
-        "Más turísticos", value=False,
+        "Más turísticos", key="cfg_turisticos",
         help="Muestra un mapa de calor de las zonas más visitadas del mundo. Con conexión, "
              "el ranking se actualiza con las visitas recientes a cada destino en Wikipedia.")
     if turisticos and generales:
         st.caption("El mapa muestra «Más turísticos»; «Precios generales» se aplica a las tablas.")
 
     st.markdown("### Tu viaje")
-    moneda = st.selectbox("Moneda", list(tipos_cambio.MONEDAS),
+    _defecto("cfg_moneda", next(iter(tipos_cambio.MONEDAS)))
+    moneda = st.selectbox("Moneda", list(tipos_cambio.MONEDAS), key="cfg_moneda",
                           format_func=lambda m: f"{m} · {tipos_cambio.MONEDAS[m]['nombre']}")
     paso = 50_000 if moneda == "CLP" else 50
     if generales or turisticos:
         presupuesto = 0
     else:
         por_defecto = {"CLP": 2_000_000, "USD": 2_000, "EUR": 1_900}.get(moneda, 2000)
+        _defecto(f"cfg_presupuesto_{moneda}", por_defecto)
         presupuesto = st.number_input(f"Presupuesto total ({moneda})", min_value=0,
-                                      value=por_defecto, step=paso)
+                                      step=paso, key=f"cfg_presupuesto_{moneda}")
 
-    origen = st.selectbox("Desde dónde viajas", list(vuelos.ORIGENES),
+    _defecto("cfg_origen", next(iter(vuelos.ORIGENES)))
+    origen = st.selectbox("Desde dónde viajas", list(vuelos.ORIGENES), key="cfg_origen",
                           format_func=lambda c: vuelos.ORIGENES[c]["nombre"])
 
-    usar_fechas = st.toggle("Tengo fechas definidas", value=False)
+    _defecto("cfg_fechas", False)
+    usar_fechas = st.toggle("Tengo fechas definidas", key="cfg_fechas")
     if usar_fechas:
         hoy = date.today()
-        rango = st.date_input("Fechas (ida – vuelta)",
-                              value=(hoy + timedelta(days=30), hoy + timedelta(days=37)),
+        _defecto("cfg_rango", (hoy + timedelta(days=30), hoy + timedelta(days=37)))
+        rango = st.date_input("Fechas (ida – vuelta)", key="cfg_rango",
                               min_value=hoy, format="DD/MM/YYYY")
         if isinstance(rango, tuple) and len(rango) == 2 and rango[1] > rango[0]:
             llegada, salida = rango
@@ -154,10 +218,13 @@ with st.sidebar:
         st.caption(f"{dias} días · {dias - 1} noches")
     else:
         llegada = salida = None
-        dias = st.slider("Duración (días)", 2, 30, 8)
+        _defecto("cfg_dias", 8)
+        dias = st.slider("Duración (días)", 2, 30, key="cfg_dias")
 
-    viajeros = st.number_input("Viajeros", 1, 10, 2)
-    tipo_aloj = st.selectbox("Alojamiento", list(TIPOS_ALOJAMIENTO), index=1,
+    _defecto("cfg_viajeros", 2)
+    viajeros = st.number_input("Viajeros", 1, 10, key="cfg_viajeros")
+    _defecto("cfg_aloj", list(TIPOS_ALOJAMIENTO)[1])
+    tipo_aloj = st.selectbox("Alojamiento", list(TIPOS_ALOJAMIENTO), key="cfg_aloj",
                              format_func=lambda t: TIPOS_ALOJAMIENTO[t])
 
     st.markdown("### Vista del mapa")
@@ -175,6 +242,7 @@ with st.sidebar:
     ocultar_riesgo = st.checkbox("Ocultar países con advertencias de seguridad", value=False)
 
     st.divider()
+    zona_compartir = st.container()   # se llena al final, con el enlace de esta búsqueda
     st.caption("**Tipo de cambio:** " + tasas.fuente +
                (f" · actualizado {tasas.actualizado.astimezone().strftime('%d/%m/%Y %H:%M')}"
                 if tasas.actualizado else ""))
@@ -408,12 +476,35 @@ for col, (n, t, c) in zip(cols, indicadores):
     col.markdown(f'<div class="kpi"><div class="n" style="color:{c}">{n}</div>'
                  f'<div class="t">{t}</div></div>', unsafe_allow_html=True)
 
-st.write("")
-clic = mostrar_globo(datos_globo, alto=640)
+# ---- Botón "Sorpréndeme": elige al azar un destino que te alcanza ----
+ir_a_pestana = None
+enfoque = None
+_, col_sorpresa = st.columns([4, 1])
+if col_sorpresa.button("🎲 Sorpréndeme", width="stretch",
+                       help="Elige al azar un destino que te alcanza (o uno de los más "
+                            "turísticos, en ese modo) y te lo muestra en el globo."):
+    if turisticos:
+        candidatos = [f for f in filas if (f.get("rank") or 99) <= 3]
+    else:
+        candidatos = ([f for f in filas if f["estado"] in ("economico", "intermedio")]
+                      or [f for f in filas if f["estado"] == "costoso"])
+    candidatos = [f for f in candidatos if not f.get("riesgo")] or candidatos
+    if candidatos:
+        elegido = random.choice(candidatos)
+        st.session_state["dest_explorar"] = elegido["id"]
+        st.session_state["pais_globo"] = elegido["iso3"]
+        enfoque = {"id": elegido["id"], "t": time.time()}
+        ir_a_pestana = "Explorar destino"
+        st.toast(f"🎲 ¡Te tocó **{elegido['ciudad']}** ({elegido['pais']})! "
+                 "Mira el detalle en «Explorar destino».")
+    else:
+        st.toast("No hay destinos que te alcancen con este presupuesto. Prueba subiéndolo "
+                 "o cambiando la duración del viaje.")
+
+clic = mostrar_globo(datos_globo, alto=640, enfoque=enfoque)
 
 # ---- El clic en el globo actualiza las pestañas de abajo ----
 # El globo devuelve el último clic con su hora ("t"); se procesa una sola vez.
-ir_a_pestana = None
 if clic and clic.get("t") != st.session_state.get("_ultimo_clic"):
     st.session_state["_ultimo_clic"] = clic.get("t")
     ids_globo = {f["id"]: f for f in filas}
@@ -436,11 +527,33 @@ if pais_globo and not any(f["iso3"] == pais_globo for f in filas):
 # --------------------------------------------------------------------------
 # Pestañas inferiores
 # --------------------------------------------------------------------------
-tab_lista, tab_explorar, tab_aloj, tab_fuentes = st.tabs(
-    ["Destinos", "Explorar destino", "Alojamientos", "Datos y fuentes"])
+
+
+def grafico(chart) -> None:
+    """Muestra un gráfico de Altair a todo el ancho (compatible con varias versiones)."""
+    try:
+        st.altair_chart(chart, width="stretch")
+    except TypeError:
+        st.altair_chart(chart, use_container_width=True)
+
+
+def alternar_favorito(dest: str) -> None:
+    favs = st.session_state.setdefault("favoritos", [])
+    if dest in favs:
+        favs.remove(dest)
+    else:
+        favs.append(dest)
+
+
+tab_lista, tab_explorar, tab_comparar, tab_aloj, tab_fuentes = st.tabs(
+    ["Destinos", "Explorar destino", "Comparar", "Alojamientos", "Datos y fuentes"])
 
 opciones_ids = [f["id"] for f in filas]
 por_id = {f["id"]: f for f in filas}
+
+# Destino que venía en un enlace compartido
+if st.session_state.get("_dest_url") in por_id:
+    st.session_state["dest_explorar"] = st.session_state.pop("_dest_url")
 etiqueta_dest = lambda i: f"{por_id[i]['ciudad']} · {por_id[i]['pais']} — {fmt(por_id[i]['calc'].total)}"
 
 # ---- Ranking y buscador ----
@@ -582,6 +695,13 @@ with tab_explorar:
             if wiki and wiki.get("imagen"):
                 st.image(wiki["imagen"], width="stretch")
             st.markdown(f"## {f['ciudad']}")
+            if not f.get("extra"):
+                es_fav = dest_id in st.session_state.get("favoritos", [])
+                st.button("★ Quitar de favoritos" if es_fav else "☆ Guardar en favoritos",
+                          key=f"fav_{dest_id}", on_click=alternar_favorito, args=(dest_id,),
+                          help="Tus favoritos quedan en el enlace de la página: guárdalo o "
+                               "compártelo para no perderlos. También puedes compararlos "
+                               "en la pestaña «Comparar».")
             if f.get("extra"):
                 st.caption(f"Ciudad o pueblo de {f['pais']} · {f['poblacion']:,} habitantes".replace(",", ".")
                            + " (GeoNames). No está en el globo: el costo de vida es el promedio de "
@@ -693,6 +813,154 @@ with tab_explorar:
                                                "entorno de pruebas, no tarifas reales.")
                         except vuelos.ErrorVuelos as e:
                             st.error(str(e))
+
+        # ---- ¿Cuándo es más barato ir? ----
+        if not c.ruta.por_tierra:
+            st.markdown("#### 📅 ¿Cuándo es más barato ir?")
+            codigo_dest = ((c.vuelo_real.aeropuerto_destino if c.vuelo_real else None)
+                           or f.get("iata") or c.ruta.aeropuerto_final)
+            if not travelpayouts.configurado():
+                st.caption("Necesita TRAVELPAYOUTS_TOKEN en los Secrets de la app (ver README).")
+            elif not codigo_dest or codigo_dest.startswith("@"):
+                st.caption("Este destino no tiene un aeropuerto identificado para buscar precios por mes.")
+            else:
+                clave_meses = f"{origen}:{codigo_dest}"
+                if st.session_state.get("meses_ver") != clave_meses:
+                    st.caption("Mira el pasaje más barato de cada uno de los próximos 12 meses, "
+                               "según búsquedas reales recientes en Aviasales.")
+                    if st.button("Ver precios por mes", key=f"meses_{dest_id}"):
+                        st.session_state["meses_ver"] = clave_meses
+                if st.session_state.get("meses_ver") == clave_meses:
+                    with st.spinner("Buscando precios por mes…"):
+                        lista_meses, error_meses = travelpayouts.precios_por_mes(origen, codigo_dest, noches)
+                    if not lista_meses:
+                        st.info("No hay precios recientes por mes para esta ruta"
+                                + (f" ({error_meses})." if error_meses else ".")
+                                + " Prueba con otro destino cercano o más tarde.")
+                    else:
+                        parecidos = [m for m in lista_meses if not m.otra_duracion] or lista_meses
+                        barato = min(parecidos, key=lambda m: m.precio.precio_pp)
+                        st.success(f"El mes más barato es **{barato.mes_txt}**: "
+                                   f"**{fmt(barato.precio.precio_pp)}** por persona, ida y vuelta "
+                                   f"({barato.precio.fechas_txt()}, {barato.noches} noches).")
+                        filas_mes = [{
+                            "Mes": m.mes_txt, "orden": m.mes,
+                            "Precio": round(tipos_cambio.convertir(m.precio.precio_pp, moneda, tasas)),
+                            "Fechas": m.precio.fechas_txt(), "Noches": m.noches,
+                            "Escalas": m.precio.escalas_txt(),
+                            "Duración": "Otra duración" if m.otra_duracion else "Parecida a la tuya",
+                            "Destacado": "Más barato" if m is barato else "",
+                            "Ver": m.precio.enlace(int(viajeros)),
+                        } for m in lista_meses]
+                        tabla_mes = pd.DataFrame(filas_mes)
+                        try:
+                            import altair as alt
+                            base = alt.Chart(tabla_mes).encode(
+                                x=alt.X("Mes:N", sort=[m.mes_txt for m in lista_meses], title=None,
+                                        axis=alt.Axis(labelAngle=-40)),
+                                y=alt.Y("Precio:Q", title=f"Ida y vuelta por persona ({moneda})",
+                                        axis=alt.Axis(format="~s", gridOpacity=0.15)),
+                                tooltip=["Mes", alt.Tooltip("Precio:Q", format=",.0f"), "Fechas",
+                                         "Noches", "Escalas", "Duración"])
+                            barras = base.mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4,
+                                                   stroke="#05070d", strokeWidth=2).encode(
+                                color=alt.condition(alt.datum.Destacado == "Más barato",
+                                                    alt.value("#F5A524"), alt.value("#3987e5")),
+                                opacity=alt.condition(alt.datum["Duración"] == "Otra duración",
+                                                      alt.value(0.45), alt.value(1.0)))
+                            etiqueta = base.transform_filter(alt.datum.Destacado == "Más barato") \
+                                .mark_text(dy=-8, color="#e5e9f0", fontSize=12).encode(text="Destacado:N")
+                            grafico((barras + etiqueta).properties(height=260))
+                        except Exception:
+                            pass   # si el gráfico falla, igual se muestra la tabla
+                        st.dataframe(
+                            tabla_mes.drop(columns=["orden", "Destacado"]), hide_index=True, width="stretch",
+                            column_config={
+                                "Precio": st.column_config.NumberColumn(f"Precio p/p ({moneda})",
+                                                                        format="localized"),
+                                "Ver": st.column_config.LinkColumn("Aviasales", display_text="Ver ↗"),
+                            })
+                        st.caption(f"Precios reales de búsquedas recientes, por persona, ida y vuelta. "
+                                   f"Se prefieren viajes de duración parecida a la tuya (±{travelpayouts.tolerancia(noches)} "
+                                   "noches); las barras más claras son meses donde solo hubo viajes de otra "
+                                   "duración. Los meses sin búsquedas recientes no aparecen.")
+
+# ---- Comparar destinos ----
+CONCEPTOS = ["Vuelos", "Alojamiento", "Alimentación", "Transporte local", "Actividades"]
+PALETA_CONCEPTOS = ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181"]   # validada para fondo oscuro
+
+with tab_comparar:
+    favs = [i for i in st.session_state.get("favoritos", []) if i in por_id]
+    if favs:
+        cf1, cf2 = st.columns([3, 1])
+        cf1.caption("⭐ Tus favoritos: " + ", ".join(por_id[i]["ciudad"] for i in favs))
+        cf2.button("Comparar mis favoritos", width="stretch", key="cmp_favs",
+                   on_click=lambda: st.session_state.update(cmp_sel=favs[:3]))
+    else:
+        st.caption("Consejo: guarda destinos con ☆ en «Explorar destino» y aparecerán aquí.")
+    if "cmp_sel" not in st.session_state:
+        actual = st.session_state.get("dest_explorar")
+        st.session_state["cmp_sel"] = favs[:3] or ([actual] if actual in por_id else [])
+    st.session_state["cmp_sel"] = [i for i in st.session_state["cmp_sel"] if i in por_id][:3]
+    sel_cmp = st.multiselect("Elige 2 o 3 destinos para comparar", opciones_ids, key="cmp_sel",
+                             max_selections=3, format_func=etiqueta_dest,
+                             placeholder="Escribe para buscar un destino…")
+    if len(sel_cmp) < 2:
+        st.info("Elige al menos 2 destinos.")
+    else:
+        elegidos = [por_id[i] for i in sel_cmp]
+        mas_barato = min(elegidos, key=lambda x: x["calc"].total)
+        mas_caro = max(elegidos, key=lambda x: x["calc"].total)
+        if mas_barato is not mas_caro:
+            st.success(f"💡 **{mas_barato['ciudad']}** es el más barato: ahorras "
+                       f"**{fmt(mas_caro['calc'].total - mas_barato['calc'].total)}** frente a "
+                       f"{mas_caro['ciudad']}.")
+
+        def fila_cmp(x):
+            c = x["calc"]
+            return {
+                "Total del viaje": fmt(c.total),
+                "% del presupuesto": f"{c.total / presupuesto_usd * 100:.0f} %" if presupuesto_usd else "—",
+                "Estado": textos[x["estado"]],
+                "Vuelo por persona": fmt(c.vuelo_pp) + (" ✈ real" if c.vuelo_real else " (estimado)"),
+                f"Vuelos ({viajeros} pers.)": fmt(c.vuelos),
+                f"Alojamiento ({noches} noches)": fmt(c.alojamiento),
+                "Alimentación": fmt(c.comida),
+                "Transporte local": fmt(c.transporte),
+                "Actividades": fmt(c.actividades),
+                "Costo de vida por persona al día": fmt(c.diario_pp),
+                "Escalas": str(c.vuelo_real.escalas_ida if c.vuelo_real else c.ruta.escalas),
+                "Distancia volada": f"{c.distancia_km:,.0f} km".replace(",", "."),
+                "Ranking en su país": f"#{x['rank']}" if x.get("rank") else "—",
+                "Advertencias de seguridad": "⚠️ Sí" if x.get("riesgo") else "No",
+            }
+
+        tabla_cmp = pd.DataFrame({f"{x['ciudad']} ({x['pais']})": fila_cmp(x) for x in elegidos})
+        st.dataframe(tabla_cmp, width="stretch")
+
+        try:
+            import altair as alt
+            datos_cmp = pd.DataFrame([
+                {"Destino": x["ciudad"], "Concepto": k, "orden": i,
+                 "Monto": round(tipos_cambio.convertir(v, moneda, tasas))}
+                for x in elegidos
+                for i, (k, v) in enumerate(zip(CONCEPTOS, (x["calc"].vuelos, x["calc"].alojamiento,
+                                                            x["calc"].comida, x["calc"].transporte,
+                                                            x["calc"].actividades)))])
+            chart_cmp = alt.Chart(datos_cmp).mark_bar(stroke="#05070d", strokeWidth=2).encode(
+                y=alt.Y("Destino:N", sort=[x["ciudad"] for x in elegidos], title=None),
+                x=alt.X("Monto:Q", stack="zero", title=f"Costo del viaje para {viajeros} pers. ({moneda})",
+                        axis=alt.Axis(format="~s", gridOpacity=0.15)),
+                color=alt.Color("Concepto:N", scale=alt.Scale(domain=CONCEPTOS, range=PALETA_CONCEPTOS),
+                                legend=alt.Legend(orient="top", title=None)),
+                order=alt.Order("orden:Q"),
+                tooltip=["Destino", "Concepto", alt.Tooltip("Monto:Q", format=",.0f")],
+            ).properties(height=70 * len(elegidos) + 50)
+            grafico(chart_cmp)
+        except Exception:
+            pass   # si el gráfico falla, igual queda la tabla
+        st.caption("Vuelos marcados ✈: precio real de búsquedas recientes; el resto de los montos son "
+                   "estimados de demostración.")
 
 # ---- Alojamientos ----
 with tab_aloj:
@@ -809,3 +1077,33 @@ if ir_a_pestana:
 }})();
 /* {st.session_state.get("_ultimo_clic")} */
 </script>""", height=0)
+
+
+# ---- Enlace para compartir (se arma al final, con todo lo elegido) ----
+params_url = {"moneda": moneda, "o": origen, "v": str(int(viajeros)), "aloj": tipo_aloj}
+if generales:
+    params_url["modo"] = "general"
+elif turisticos:
+    params_url["modo"] = "turismo"
+else:
+    params_url["p"] = str(int(presupuesto))
+if usar_fechas:
+    params_url["ida"], params_url["vuelta"] = llegada.isoformat(), salida.isoformat()
+else:
+    params_url["d"] = str(int(dias))
+favs_url = [i for i in st.session_state.get("favoritos", []) if not i.startswith("gn")]
+if favs_url:
+    params_url["fav"] = ",".join(favs_url)
+dest_url = st.session_state.get("dest_explorar")
+if dest_url and not str(dest_url).startswith("gn"):
+    params_url["dest"] = dest_url
+if dict(st.query_params) != params_url:
+    st.query_params.from_dict(params_url)   # la dirección de la página siempre refleja la búsqueda
+enlace_compartir = f"{APP_URL}/?{urlencode(params_url)}"
+with zona_compartir:
+    with st.expander("🔗 Compartir esta búsqueda"
+                     + (f" · ⭐ {len(favs_url)}" if favs_url else "")):
+        st.code(enlace_compartir, language=None, wrap_lines=True)
+        st.caption("Copia el enlace con el botón de la esquina. Quien lo abra verá tu misma "
+                   "búsqueda, tus favoritos y el destino que estás mirando. Guárdalo también "
+                   "para no perder tus favoritos.")

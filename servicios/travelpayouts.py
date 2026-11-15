@@ -334,3 +334,112 @@ def obtener_precios(origen: str, llegada: date | None, salida: date | None,
     tabla.por_aeropuerto = {k: v[1] for k, v in mejor_aero.items()}
     tabla.por_ciudad = {k: v[1] for k, v in mejor_ciudad.items()}
     return tabla
+
+
+# --------------------------------------------------------------------------
+# ¿Cuándo es más barato ir? (precio más bajo por mes para UNA ruta)
+# --------------------------------------------------------------------------
+URL_MENSUAL = "https://api.travelpayouts.com/v1/prices/monthly"
+TTL_MESES = 12 * 3600
+
+
+@dataclass
+class PrecioMes:
+    mes: str                  # "AAAA-MM"
+    precio: PrecioReal
+    noches: int
+    otra_duracion: bool       # True si no hubo viajes de duración parecida ese mes
+
+    @property
+    def mes_txt(self) -> str:
+        a, m = self.mes.split("-")
+        return f"{MESES[int(m) - 1].capitalize()} {a}"
+
+
+def precios_por_mes(origen: str, destino: str, noches: int, meses: int = 12
+                    ) -> tuple[list[PrecioMes], str | None]:
+    """
+    Precio real más bajo de búsquedas recientes para cada uno de los próximos meses.
+    Prefiere viajes de duración parecida a la elegida; si un mes no tiene, usa el más
+    barato de otra duración y lo marca. Devuelve (lista ordenada por mes, error o None).
+    """
+    token = os.getenv("TRAVELPAYOUTS_TOKEN")
+    if not token:
+        return [], "no hay TRAVELPAYOUTS_TOKEN configurado"
+    ciudades = _ciudades()
+    o, d = ciudades.get(origen, origen), ciudades.get(destino, destino)
+    if o == d:
+        return [], "el destino está en la misma ciudad que el origen"
+    clave = f"tp:meses:{o}:{d}"
+    en_cache = cache.obtener(clave, TTL_MESES)
+    if en_cache:
+        ofertas = en_cache[0]
+    else:
+        limite = int(os.getenv("TRAVELPAYOUTS_MAX_DIARIO", "500"))
+        ofertas, errores = [], []
+        hoy = date.today()
+
+        def pedir(url, params, fuente):
+            if not cache.registrar_llamada("travelpayouts", limite):
+                raise RuntimeError(f"se alcanzó el límite diario de {limite} consultas")
+            if fuente == "mensual":   # este método devuelve un diccionario por mes
+                r = requests.get(url, params={**params, "token": token}, timeout=30)
+                if r.status_code == 401:
+                    raise RuntimeError("el token de Travelpayouts no es válido")
+                datos = (r.json() or {}).get("data") or {} if r.status_code < 400 else {}
+                lote = list(datos.values()) if isinstance(datos, dict) else []
+                return [{"destination": d, "price": x.get("price"), "airline": x.get("airline"),
+                         "departure_at": x.get("departure_at"), "return_at": x.get("return_at"),
+                         "transfers": x.get("transfers"), "return_transfers": x.get("transfers"),
+                         "origin_airport": o, "destination_airport": None, "link": ""}
+                        for x in lote if x.get("return_at")]
+            return [n for x in _pedir(url, params, token) if (n := _normalizar(fuente, x))]
+
+        consultas = [
+            (URL_MENSUAL, {"origin": o, "destination": d, "currency": "usd"}, "mensual"),
+            (URL_ULTIMOS, {"origin": o, "destination": d, "period_type": "year", "one_way": "false",
+                           "show_to_affiliates": "false", "currency": "usd", "limit": 1000}, "v2"),
+        ] + [
+            (URL_PRECIOS, {"origin": o, "destination": d, "departure_at": _mes(hoy, i),
+                           "return_at": _mes(hoy, i), "one_way": "false", "unique": "false",
+                           "sorting": "price", "currency": "usd", "limit": 1000}, "v3")
+            for i in range(0, 7)
+        ]
+        for url, params, fuente in consultas:
+            if fuente == "v3" and len({(x.get("departure_at") or "")[:7] for x in ofertas}) >= 8:
+                break   # ya hay suficientes meses: se ahorran consultas
+            try:
+                ofertas += pedir(url, params, fuente)
+            except (RuntimeError, ValueError, requests.RequestException) as e:
+                errores.append(str(e))
+                if "token" in str(e) or "límite" in str(e):
+                    break
+        if not ofertas:
+            return [], (errores[0] if errores else "no hay precios recientes para esta ruta")
+        cache.guardar(clave, ofertas)
+
+    tol, hoy = tolerancia(noches), date.today()
+    por_mes: dict[str, tuple] = {}
+    for x in ofertas:
+        try:
+            ida = date.fromisoformat((x.get("departure_at") or "")[:10])
+            vuelta = date.fromisoformat((x.get("return_at") or "")[:10])
+        except ValueError:
+            continue
+        n = (vuelta - ida).days
+        if n < 1 or ida < hoy + timedelta(days=2) or not x.get("price"):
+            continue
+        mes = ida.strftime("%Y-%m")
+        if mes > _mes(hoy, meses - 1):
+            continue
+        otra = abs(n - noches) > tol
+        p = PrecioReal(precio_pp=float(x["price"]), aerolinea=x.get("airline") or "",
+                       ida=ida.isoformat(), vuelta=vuelta.isoformat(),
+                       escalas_ida=int(x.get("transfers") or 0),
+                       escalas_vuelta=int(x.get("return_transfers") or 0),
+                       aeropuerto_origen=x.get("origin_airport") or o,
+                       aeropuerto_destino=x.get("destination_airport") or d,
+                       ruta_link=x.get("link") or "")
+        if mes not in por_mes or (otra, p.precio_pp) < por_mes[mes][0]:
+            por_mes[mes] = ((otra, p.precio_pp), PrecioMes(mes, p, n, otra))
+    return [v[1] for _, v in sorted(por_mes.items())], None

@@ -110,17 +110,26 @@ const memoria = {
   leer(k) { try { const v = sessionStorage.getItem(k); sessionStorage.removeItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } },
   guardar(k, v) { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
 };
-let textoDatos = null;
+let textoDatos = null, ultimoEnfoque = null;
 function arrancar(args) {
   textoDatos = JSON.stringify(args.datos);
   avisarStreamlit('streamlit:setFrameHeight', { height: args.alto || 640 });
   iniciar(args.datos);
+  revisarEnfoque(args);
+}
+// "Sorpréndeme": Python pide volar a un destino (sin volver a avisar a Python)
+function revisarEnfoque(args) {
+  const e = args.enfoque;
+  if (!e || e.t === ultimoEnfoque || !window.enfocar) return;
+  ultimoEnfoque = e.t;
+  window.enfocar(e.id);
 }
 window.addEventListener('message', ev => {
   const m = ev.data;
   if (!m || m.type !== 'streamlit:render' || !m.args || !m.args.datos) return;
   if (textoDatos === null) { arrancar(m.args); return; }
-  if (JSON.stringify(m.args.datos) !== textoDatos) {
+  if (JSON.stringify(m.args.datos) === textoDatos) { revisarEnfoque(m.args); return; }
+  {
     memoria.guardar('gw_args', m.args);
     if (window.vistaActual) memoria.guardar('gw_vista', window.vistaActual());
     location.reload();
@@ -582,6 +591,13 @@ function tarjeta(d) {
     ${d.riesgo ? '<div class="det" style="color:#fbbf24">⚠ Advertencias de seguridad</div>' : ''}
     <span class="chip" style="color:${c}">${d.estado_txt}</span></div>`;
 }
+window.enfocar = id => {
+  const d = destinos.find(x => x.id === id);
+  if (!d) return;
+  seleccionarPais(d.iso3);   // muestra los palos de su país
+  mostrarDestino(d, false);
+  volarA(d.lat, d.lon, 1.2);
+};
 window.seleccionarPorId = id => { const d = destinos.find(x => x.id === id); mostrarDestino(d); volarA(d.lat, d.lon, 1.2); };
 
 function mostrarPais(nombre, lista) {
@@ -600,8 +616,8 @@ function mostrarPais(nombre, lista) {
   ficha.classList.add('visible');
 }
 
-function mostrarDestino(d) {
-  enviarAStreamlit({ tipo: 'destino', id: d.id, iso3: d.iso3 });
+function mostrarDestino(d, avisar = true) {
+  if (avisar) enviarAStreamlit({ tipo: 'destino', id: d.id, iso3: d.iso3 });
   if (paisSel !== d.iso3) seleccionarPais(d.iso3);
   const c = colorEstado(d.estado), f = d.fmt;
   contenido.innerHTML = `<h2>${d.ciudad}</h2>
