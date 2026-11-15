@@ -64,12 +64,15 @@ st.markdown("""
   div[data-testid="stTabs"] button p { font-size: .95rem; }
   /* Fondo con un brillo suave (se nota a través del vidrio del panel lateral) */
   .stApp { background:
-      radial-gradient(1200px 600px at 8% -10%, rgba(56,189,248,.10), transparent 60%),
-      radial-gradient(900px 500px at 100% 0%, rgba(245,165,36,.07), transparent 55%), #05070d !important; }
-  /* Panel lateral: vidrio esmerilado y entrada de arriba hacia abajo */
-  section[data-testid="stSidebar"] { background: rgba(13,18,32,.55) !important;
-    backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%);
-    border-right: 1px solid rgba(255,255,255,.08); }
+      radial-gradient(520px 420px at 4% 18%, rgba(56,189,248,.30), transparent 70%),
+      radial-gradient(460px 380px at 12% 82%, rgba(245,165,36,.22), transparent 70%),
+      radial-gradient(1200px 600px at 60% -10%, rgba(56,189,248,.08), transparent 60%), #05070d !important; }
+  /* Panel lateral: vidrio esmerilado (deja ver, difuminados, los brillos de color de atrás) */
+  section[data-testid="stSidebar"] {
+    background: linear-gradient(160deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.035) 45%, rgba(255,255,255,.06) 100%) !important;
+    backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%);
+    border-right: 1px solid rgba(255,255,255,.14);
+    box-shadow: inset -1px 0 0 rgba(255,255,255,.05), 8px 0 32px rgba(0,0,0,.35); }
   section[data-testid="stSidebar"] > div { background: transparent !important; }
   @keyframes gwBajar { from { opacity: 0; transform: translateY(-28px); clip-path: inset(0 0 100% 0); }
                        to { opacity: 1; transform: none; clip-path: inset(0 0 0 0); } }
@@ -95,7 +98,9 @@ st.markdown("""
     div[data-testid="stTabs"] [role="tablist"] { overflow-x: auto; scrollbar-width: none; }
     div[data-testid="stTabs"] button p { font-size: .85rem; }
     /* Globo a pantalla completa, como Google Earth */
-    header[data-testid="stHeader"] { background: transparent !important; }
+    header[data-testid="stHeader"] { background: transparent !important; pointer-events: none; }
+    header[data-testid="stHeader"] button, header[data-testid="stHeader"] a,
+    header[data-testid="stHeader"] [data-testid="stToolbar"] * { pointer-events: auto; }
     div[data-testid="stElementContainer"]:has(iframe[src*="globo_globeway"]) {
       position: fixed !important; inset: 0 !important; z-index: 5; margin: 0 !important; visibility: visible; }
     iframe[src*="globo_globeway"] { position: fixed; inset: 0; width: 100vw !important; height: 100dvh !important; }
@@ -115,9 +120,10 @@ if MODO_CLARO:
     st.markdown("""
 <style>
   .stApp { background:
-      radial-gradient(1200px 600px at 8% -10%, rgba(56,189,248,.12), transparent 60%),
-      radial-gradient(900px 500px at 100% 0%, rgba(245,165,36,.10), transparent 55%), #f6f7fb !important; }
-  section[data-testid="stSidebar"] { background: rgba(255,255,255,.62) !important; border-right: 1px solid rgba(15,23,42,.08); }
+      radial-gradient(520px 420px at 4% 18%, rgba(56,189,248,.28), transparent 70%),
+      radial-gradient(460px 380px at 12% 82%, rgba(245,165,36,.24), transparent 70%), #f6f7fb !important; }
+  section[data-testid="stSidebar"] { background: linear-gradient(160deg, rgba(255,255,255,.75), rgba(255,255,255,.45)) !important;
+    border-right: 1px solid rgba(15,23,42,.10); box-shadow: 8px 0 32px rgba(15,23,42,.08); }
   .bajada { color: #475569; }
   .marca span { color: #d48806; }
   .kpi { background: #ffffff; border-color: rgba(15,23,42,.10); box-shadow: 0 1px 2px rgba(15,23,42,.04); }
@@ -135,6 +141,18 @@ if MODO_CLARO:
 # a la página principal. Va antes de la portada para que esté en todas las vistas.
 # --------------------------------------------------------------------------
 TP_DRIVE_SRC = "https://emrldtp.com/NTk5NTYy.js?t=599562"
+
+# Tema por defecto: oscuro. La primera vez (o si el navegador seguía "el del sistema"),
+# se deja guardado "oscuro"; el botón "☀️ Modo claro" lo cambia después.
+components.html("""<script>
+try {
+  const w = window.parent, k = 'stActiveTheme-' + w.location.pathname + '-v2', v = w.localStorage.getItem(k);
+  if (v === null || v === '"System"') {
+    w.localStorage.setItem(k, '"Dark"');
+    if (w.matchMedia && w.matchMedia('(prefers-color-scheme: light)').matches) w.location.reload();
+  }
+} catch (e) {}
+</script>""", height=0)
 components.html(f"""<script>
 (function () {{
   function poner(doc) {{
@@ -209,6 +227,28 @@ def _defecto(clave: str, valor) -> None:
 
 _cargar_desde_url()
 
+
+def numero_con_espera(etiqueta: str, clave: str, **opciones) -> int:
+    """Campo numérico que NO recarga la página en cada clic de + / −.
+    Los clics solo actualizan el campo; cuando dejas de apretar (~0,7 s) se aplica
+    el valor final y la página se actualiza una sola vez."""
+    aplicado = f"{clave}__aplicado"
+    if aplicado not in st.session_state:
+        st.session_state[aplicado] = st.session_state[clave]
+
+    @st.fragment(run_every=0.7)
+    def campo():
+        ss = st.session_state
+        v = st.number_input(etiqueta, key=clave, **opciones)
+        if v != ss.get(f"{clave}__visto"):
+            ss[f"{clave}__visto"], ss[f"{clave}__t"] = v, time.time()
+        elif v != ss[aplicado] and time.time() - ss.get(f"{clave}__t", 0) >= 0.6:
+            ss[aplicado] = v
+            st.rerun(scope="app")
+
+    campo()
+    return st.session_state[aplicado]
+
 # --------------------------------------------------------------------------
 # Portada animada: se muestra hasta que la persona aprieta "Iniciar"
 # --------------------------------------------------------------------------
@@ -271,8 +311,8 @@ with st.sidebar:
     else:
         por_defecto = {"CLP": 2_000_000, "USD": 2_000, "EUR": 1_900}.get(moneda, 2000)
         _defecto(f"cfg_presupuesto_{moneda}", por_defecto)
-        presupuesto = st.number_input(f"Presupuesto total ({moneda})", min_value=0,
-                                      step=paso, key=f"cfg_presupuesto_{moneda}")
+        presupuesto = numero_con_espera(f"Presupuesto total ({moneda})", f"cfg_presupuesto_{moneda}",
+                                        min_value=0, step=paso)
 
     _defecto("cfg_origen", next(iter(vuelos.ORIGENES)))
     origen = st.selectbox("Desde dónde viajas", list(vuelos.ORIGENES), key="cfg_origen",
@@ -298,7 +338,7 @@ with st.sidebar:
         dias = st.slider("Duración (días)", 2, 30, key="cfg_dias")
 
     _defecto("cfg_viajeros", 2)
-    viajeros = st.number_input("Viajeros", 1, 10, key="cfg_viajeros")
+    viajeros = numero_con_espera("Viajeros", "cfg_viajeros", min_value=1, max_value=10)
     _defecto("cfg_aloj", list(TIPOS_ALOJAMIENTO)[1])
     tipo_aloj = st.selectbox("Alojamiento", list(TIPOS_ALOJAMIENTO), key="cfg_aloj",
                              format_func=lambda t: TIPOS_ALOJAMIENTO[t])
@@ -543,8 +583,7 @@ if col_tema.button("🌙 Modo oscuro" if MODO_CLARO else "☀️ Modo claro", ke
     components.html(f"""<script>
     try {{
       const w = window.parent, k = 'stActiveTheme-' + w.location.pathname + '-v2';
-      if ({'false' if MODO_CLARO else 'true'}) w.localStorage.setItem(k, JSON.stringify('Light'));
-      else w.localStorage.removeItem(k);
+      w.localStorage.setItem(k, JSON.stringify({'"Dark"' if MODO_CLARO else '"Light"'}));
       w.location.reload();
     }} catch (e) {{}}
     /* {time.time()} */
@@ -661,6 +700,11 @@ if clic and clic.get("t") != st.session_state.get("_ultimo_clic"):
         st.session_state["dest_explorar"] = clic["id"]
         st.session_state["pais_globo"] = ids_globo[clic["id"]]["iso3"]
         ir_a_pestana = "Actividades"
+    elif clic.get("tipo") == "hoteles" and clic.get("id") in ids_globo:
+        st.session_state["dest_explorar"] = clic["id"]
+        st.session_state["dest_aloj"] = clic["id"]
+        st.session_state["hoteles_auto"] = clic["id"]   # busca los hoteles sin apretar otro botón
+        ir_a_pestana = "Alojamientos"
     elif clic.get("tipo") == "pais" and clic.get("iso3"):
         st.session_state["pais_globo"] = clic["iso3"]
         ir_a_pestana = "Destinos"
@@ -1077,7 +1121,8 @@ with tab_activ:
                         if a.descripcion:
                             st.write(a.descripcion)
                         if a.precio:
-                            st.caption(f"Precio informado en la guía: {a.precio}")
+                            st.caption("Precio informado en la guía: "
+                                       + (a.precio if len(a.precio) <= 110 else a.precio[:110].rsplit(" ", 1)[0] + "…"))
                         enlaces = [f"[Ver en el mapa]({actividades.enlace_mapa(a.nombre, nombre_base)})"]
                         if a.web.startswith("http"):
                             enlaces.append(f"[Sitio web]({a.web})")
@@ -1177,16 +1222,20 @@ with tab_aloj:
         st.info("No hay destinos con los filtros actuales.")
     else:
         a1, a2 = st.columns([2, 1], vertical_alignment="bottom")
-        dest_a = a1.selectbox("Destino", opciones_ids, format_func=etiqueta_dest,
-                              index=opciones_ids.index(st.session_state.get("dest_explorar", opciones_ids[0]))
-                              if st.session_state.get("dest_explorar") in opciones_ids else 0,
-                              key="dest_aloj")
+        if st.session_state.get("dest_aloj") not in opciones_ids or st.session_state.get("_aloj_sigue") != st.session_state.get("dest_explorar"):
+            # El destino de Alojamientos sigue al de "Explorar destino" (o al tocado en el globo)
+            st.session_state["dest_aloj"] = (st.session_state.get("dest_explorar")
+                                             if st.session_state.get("dest_explorar") in opciones_ids
+                                             else opciones_ids[0])
+            st.session_state["_aloj_sigue"] = st.session_state.get("dest_explorar")
+        dest_a = a1.selectbox("Destino", opciones_ids, format_func=etiqueta_dest, key="dest_aloj")
         fh = por_id[dest_a]
         ida_h, vuelta_h = fechas_busqueda()
 
         if hoteles.configurado():
             clave_h = f"{dest_a}:{ida_h}:{vuelta_h}:{int(viajeros)}"
-            if a2.button("🏨 Buscar hoteles reales", type="primary", width="stretch", key=f"hot_{clave_h}"):
+            if (a2.button("🏨 Buscar hoteles reales", type="primary", width="stretch", key=f"hot_{clave_h}")
+                    or st.session_state.pop("hoteles_auto", None) == dest_a):
                 st.session_state["hoteles_ver"] = clave_h
             if not usar_fechas:
                 st.caption(f"Sin fechas definidas se buscan del {ida_h:%d/%m} al {vuelta_h:%d/%m/%Y} "
@@ -1293,11 +1342,11 @@ if ir_a_pestana:
   let intentos = 0;
   (function abrir() {{
     try {{
-      const pestanas = [...window.parent.document.querySelectorAll('button[role="tab"]')];
+      const pestanas = [...window.parent.document.querySelectorAll('[role="tab"]')];
       const p = pestanas.find(b => b.innerText.trim() === {ir_a_pestana!r});
       if (p) {{
         if (p.getAttribute('aria-selected') !== 'true') p.click();
-        if ({'true' if ir_a_pestana == "Actividades" else 'false'} && !window.parent.document.body.classList.contains('gw-panel'))
+        if ({'true' if ir_a_pestana in ("Actividades", "Alojamientos") else 'false'} && !window.parent.document.body.classList.contains('gw-panel'))
           p.closest('[data-testid="stTabs"]').scrollIntoView({{ behavior: 'smooth', block: 'start' }});
         return;
       }}

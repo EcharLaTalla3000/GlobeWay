@@ -163,10 +163,11 @@ function docPadre() { try { return window.parent.document; } catch (e) { return 
   st.textContent = `
     @keyframes gwFoco { from { opacity: .4; transform: scale(.985); } to { opacity: 1; transform: none; } }
     body.gw-foco iframe[src*="globo_globeway"] { position: fixed !important; inset: 0 !important;
-      width: 100vw !important; height: 100vh !important; z-index: 999990 !important; border: 0;
+      width: 100vw !important; height: 100vh !important; z-index: 2147483000 !important; border: 0;
       animation: gwFoco .35s ease-out; }
     body.gw-foco section[data-testid="stSidebar"], body.gw-foco [data-testid="stSidebarCollapsedControl"],
-    body.gw-foco header[data-testid="stHeader"] { visibility: hidden !important; }
+    body.gw-foco header[data-testid="stHeader"], body.gw-foco [data-testid="stToastContainer"] {
+      opacity: 0 !important; pointer-events: none !important; }
     body.gw-foco { overflow: hidden !important; }
     #gw-cerrar-panel { display: none; }
     body.gw-panel #gw-cerrar-panel { display: flex; }`;
@@ -193,7 +194,7 @@ function abrirPanel(pestana) {
   }
   d.body.classList.add('gw-panel');
   const ir = () => {
-    const pestanas = [...d.querySelectorAll('button[role="tab"]')];
+    const pestanas = [...d.querySelectorAll('[role="tab"]')];
     const p = pestana ? pestanas.find(x => x.innerText.trim() === pestana) : null;
     if (p && p.getAttribute('aria-selected') !== 'true') p.click();
     const lista = d.querySelector('[data-testid="stTabs"]');
@@ -754,6 +755,7 @@ function mostrarDestino(d, avisar = true) {
     <div class="acciones">
       ${d.vuelo_link ? `<a class="accion primaria" href="${d.vuelo_link}" target="_blank" rel="noopener">✈ Ver vuelos disponibles</a>` : ''}
       <button class="accion" type="button" onclick="verActividades('${d.id}')">🎟 Ver actividades</button>
+      <button class="accion" type="button" onclick="verHoteles('${d.id}')">🏨 Ver hoteles</button>
       ${esMovil() ? `<button class="accion" type="button" onclick="abrirPanel('Explorar destino')">Ver detalle completo</button>` : ''}
     </div>
     ${d.aeropuerto_txt ? `<div class="det" style="margin-top:8px">${d.aeropuerto_txt}</div>` : ''}
@@ -763,6 +765,11 @@ function mostrarDestino(d, avisar = true) {
   document.body.classList.add('ficha-abierta');
   if (avisar) modoFoco(true);   // computador: al tocar un destino, el globo pasa a pantalla completa
 }
+window.verHoteles = id => {
+  enviarAStreamlit({ tipo: 'hoteles', id });
+  modoFoco(false);
+  if (esMovil()) abrirPanel('Alojamientos');
+};
 window.verActividades = id => {
   enviarAStreamlit({ tipo: 'actividades', id });
   modoFoco(false);
