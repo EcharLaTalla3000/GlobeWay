@@ -83,6 +83,9 @@
   .accion.primaria { background: #F5A524; border-color: #F5A524; color: #0B1E3F; }
   .accion:hover { filter: brightness(1.08); }
   #buscarMovil { display: none; }
+  /* Modo rendimiento: paneles sin desenfoque (el desenfoque exige mucho a la tarjeta gráfica) */
+  body.sin-vidrio .panel { backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+    background: rgba(13,18,32,.95) !important; }
   #ficha .asa { display: none; }
   @media (max-width: 700px) {
     /* Ficha: hoja que sube desde abajo, a todo el ancho */
@@ -194,6 +197,44 @@ function modoFoco(activo) {
 }
 window.addEventListener('keydown', e => { if (e.key === 'Escape' && window.cerrarFicha) window.cerrarFicha(); });
 
+// Celular: deslizar desde el borde izquierdo hacia la derecha abre el panel lateral,
+// y deslizar el panel hacia la izquierda lo cierra (como en las apps de celular).
+function botonPanel(abrir) {
+  const d = docPadre(); if (!d) return null;
+  return abrir ? d.querySelector('[data-testid="stExpandSidebarButton"]')
+               : d.querySelector('[data-testid="stSidebarCollapseButton"] button, section[data-testid="stSidebar"] [data-testid="stSidebarCollapseButton"]');
+}
+function panelAbierto() {
+  const d = docPadre(); const sb = d && d.querySelector('section[data-testid="stSidebar"]');
+  return !!sb && sb.getAttribute('aria-expanded') !== 'false' && sb.getBoundingClientRect().right > 40;
+}
+function instalarDeslizar(doc, sobreGlobo) {
+  if (!doc || doc.__gwDeslizar) return;
+  doc.__gwDeslizar = true;
+  let ini = null;
+  doc.addEventListener('touchstart', e => {
+    if (!esMovil() || e.touches.length !== 1) { ini = null; return; }
+    const t = e.touches[0];
+    const enPanel = !sobreGlobo && !!(e.target.closest && e.target.closest('section[data-testid="stSidebar"]'));
+    ini = (t.clientX < 26 || enPanel) ? { x: t.clientX, y: t.clientY, enPanel } : null;
+  }, { passive: true, capture: true });
+  doc.addEventListener('touchend', e => {
+    if (!ini) return;
+    const t = e.changedTouches[0], dx = t.clientX - ini.x, dy = Math.abs(t.clientY - ini.y);
+    if (dy < 70) {
+      if (!ini.enPanel && dx > 60 && !panelAbierto()) { const b = botonPanel(true); b && b.click(); }
+      else if (ini.enPanel && dx < -60) { const b = botonPanel(false); b && b.click(); }
+    }
+    ini = null;
+  }, { passive: true, capture: true });
+}
+instalarDeslizar(docPadre(), false);
+instalarDeslizar(document, true);
+// Que el gesto del borde no haga girar el globo
+window.addEventListener('pointerdown', e => {
+  if (esMovil() && e.pointerType === 'touch' && e.clientX < 26) e.stopPropagation();
+}, true);
+
 // Celular: el panel "Buscar destinos" muestra las pestañas de abajo sobre el globo
 function abrirPanel(pestana) {
   const d = docPadre();
@@ -230,6 +271,7 @@ function arrancar(args) {
   altoPedido = args.alto || 640;
   avisarStreamlit('streamlit:setFrameHeight', { height: altoGlobo(altoPedido) });
   iniciar(args.datos);
+  if (window.aplicarRendimiento) window.aplicarRendimiento(args.rendimiento);
   revisarEnfoque(args);
 }
 // "Sorpréndeme": Python pide volar a un destino (sin volver a avisar a Python)
@@ -244,6 +286,7 @@ window.addEventListener('message', ev => {
   if (!m || m.type !== 'streamlit:render' || !m.args || !m.args.datos) return;
   if (textoDatos === null) { arrancar(m.args); return; }
   clearTimeout(window.__gwRecarga);
+  if (window.aplicarRendimiento) window.aplicarRendimiento(m.args.rendimiento);
   if (JSON.stringify(m.args.datos) === textoDatos) { revisarEnfoque(m.args); return; }
   // Si la persona cambia algo varias veces seguidas (por ejemplo, aprieta "+" muchas
   // veces), se espera a que termine y se recarga UNA sola vez con lo último.
@@ -324,6 +367,7 @@ function destinosVisibles() {
 }
 const conAnillo = d => DATOS.modo === 'presupuesto' && ['economico', 'intermedio', 'costoso'].includes(d.estado);
 function actualizarPuntos() {
+  if (window.despertarGlobo) window.despertarGlobo(1600);   // los palos crecen o se encogen
   const vis = destinosVisibles();
   const visSet = new Set(vis);
   const salen = reducirMovimiento ? [] : enPantalla.filter(d => !visSet.has(d));
@@ -679,6 +723,64 @@ if (vistaGuardada) { ctl.autoRotate = false; globo.pointOfView(vistaGuardada, 0)
 else globo.pointOfView({ lat: DATOS.origen.lat, lng: DATOS.origen.lon, altitude: esMovil() ? alturaGloboEntero() : 2.3 }, 0);
 window.vistaActual = () => globo.pointOfView();
 
+// ==========================================================================
+// Modo rendimiento (interruptor "⚡ Modo rendimiento" del panel lateral)
+// ==========================================================================
+const motor = { fps: false, pausa: false, despiertoHasta: 0, timer: null, visible: true };
+const relieveUrl = 'https://unpkg.com/three-globe/example/img/earth-topology.png';
+const pixelesNormal = esMovil() ? Math.min(window.devicePixelRatio || 1, 1.5) : (window.devicePixelRatio || 1);
+let rendActual = '', calorAntesRend = null;
+// Decide si el globo se dibuja: siempre, solo cuando se mueve, o a 30 cuadros por segundo
+function programarDibujo() {
+  clearTimeout(motor.timer);
+  const ahora = performance.now();
+  const despierto = motor.visible && (!motor.pausa || ahora < motor.despiertoHasta || ctl.autoRotate);
+  if (!despierto) { globo.pauseAnimation(); return; }
+  if (!motor.fps) {
+    globo.resumeAnimation();
+    if (motor.pausa) motor.timer = setTimeout(programarDibujo, Math.max(50, motor.despiertoHasta - ahora + 30));
+    return;
+  }
+  globo.resumeAnimation();   // 30 cuadros por segundo: dibuja uno y espera
+  requestAnimationFrame(() => requestAnimationFrame(() => { if (motor.fps) globo.pauseAnimation(); }));
+  motor.timer = setTimeout(programarDibujo, 33);
+}
+function despertar(ms) {
+  motor.despiertoHasta = Math.max(motor.despiertoHasta, performance.now() + (ms || 1500));
+  if (motor.pausa || motor.fps) programarDibujo();
+}
+window.despertarGlobo = despertar;
+['pointerdown', 'wheel', 'touchstart'].forEach(ev => contenedor.addEventListener(ev, () => despertar(2500), { passive: true }));
+contenedor.addEventListener('pointermove', e => despertar(e.buttons ? 2500 : 700), { passive: true });
+ctl.addEventListener('change', () => { if (motor.pausa) despertar(900); });
+document.addEventListener('visibilitychange', () => { motor.visible = !document.hidden; if (motor.pausa) programarDibujo(); });
+try {   // si el globo queda fuera de la pantalla (bajaste a las pestañas), no se dibuja
+  new IntersectionObserver(es => { motor.visible = es[0].isIntersecting && !document.hidden; if (motor.pausa) programarDibujo(); })
+    .observe(contenedor);
+} catch (e) {}
+window.aplicarRendimiento = r => {
+  r = r || {};
+  const clave = JSON.stringify(r);
+  if (clave === rendActual) return;
+  rendActual = clave;
+  // Calor vivo
+  if (r.calor) { if (calorAntesRend === null) calorAntesRend = calorVivo; calorVivo = false; }
+  else if (calorAntesRend !== null) { calorVivo = calorAntesRend; calorAntesRend = null; }
+  aplicarCalor();
+  // Resolución
+  try { globo.renderer().setPixelRatio(r.resolucion ? 1 : pixelesNormal); } catch (e) {}
+  // Vidrio
+  document.body.classList.toggle('sin-vidrio', !!r.vidrio);
+  // Atmósfera y relieve
+  try { globo.showAtmosphere(!r.efectos); globo.bumpImageUrl(r.efectos ? null : relieveUrl); } catch (e) {}
+  // Dibujo a demanda y 30 cuadros por segundo
+  motor.pausa = !!r.pausa; motor.fps = !!r.fps;
+  if (motor.pausa) ctl.autoRotate = false;   // girar solo impediría que el globo descanse
+  if (!motor.pausa && !motor.fps) globo.resumeAnimation();
+  despertar(2000);
+  programarDibujo();
+};
+
 // Altura de cámara para que el globo completo quepa a lo ancho de la pantalla, con ~12 % de margen
 function alturaGloboEntero() {
   const cam = globo.camera();
@@ -690,6 +792,7 @@ function alturaGloboEntero() {
 }
 function volarA(lat, lng, alt) {
   ctl.autoRotate = false;
+  if (window.despertarGlobo) window.despertarGlobo(1800);
   // En el celular la ficha tapa la mitad de abajo: el destino se deja en la parte de arriba
   const corrimiento = esMovil() ? 12 * alt : 0;
   globo.pointOfView({ lat: Math.max(-85, lat - corrimiento), lng, altitude: alt * (esMovil() ? 1.25 : 1) }, 1200);
@@ -811,6 +914,7 @@ window.verActividades = id => {
   if (esMovil()) abrirPanel('Actividades');
 };
 window.acercar = factor => {
+  if (window.despertarGlobo) window.despertarGlobo(1200);
   const v = globo.pointOfView();
   ctl.autoRotate = false;
   globo.pointOfView({ lat: v.lat, lng: v.lng, altitude: Math.min(4.5, Math.max(0.15, v.altitude * factor)) }, 450);

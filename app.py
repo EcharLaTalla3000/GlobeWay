@@ -239,8 +239,26 @@ def _cargar_desde_url() -> None:
     if qp.get("aloj") in TIPOS_ALOJAMIENTO:
         ss["cfg_aloj"] = qp["aloj"]
     ss["favoritos"] = [x for x in qp.get("fav", "").split(",") if x][:20]
+    if qp.get("rend") == "1":
+        ss["cfg_rend"] = True
+        apagadas = set(qp.get("rendno", "").split(","))
+        for k in OPCIONES_RENDIMIENTO:
+            ss[f"rend_{k}"] = k not in apagadas
     if qp.get("dest"):
         ss["_dest_url"] = qp["dest"]
+
+
+# Opciones del "⚡ Modo rendimiento": (texto, ayuda)
+OPCIONES_RENDIMIENTO = {
+    "pausa": ("Dibujar el globo solo cuando se mueve",
+              "Cuando el globo está quieto o no se ve en pantalla, deja de dibujarse. Es lo que más ahorra."),
+    "calor": ("Apagar «Calor vivo»", "El efecto de cámara térmica es lo más pesado del globo."),
+    "fps": ("Animación a 30 cuadros por segundo", "Se ve casi igual de fluido y gasta la mitad."),
+    "resolucion": ("Resolución normal en el globo",
+                   "En pantallas de alta definición dibuja menos puntos (casi no se nota)."),
+    "vidrio": ("Quitar el desenfoque del vidrio", "Los paneles quedan semitransparentes, sin desenfoque."),
+    "efectos": ("Sin atmósfera ni relieve", "Quita el brillo azul alrededor del globo y el relieve de la Tierra."),
+}
 
 
 def _defecto(clave: str, valor) -> None:
@@ -398,6 +416,29 @@ with st.sidebar:
     else:
         st.caption(" · ".join(f"1 USD = {tipos_cambio.formatear(tasas.por_usd[m], m)}"
                               for m in tipos_cambio.MONEDAS if m != "USD"))
+
+    # ---- Modo rendimiento (para computadores menos potentes) ----
+    st.divider()
+    _defecto("cfg_rend", False)
+    for _k in OPCIONES_RENDIMIENTO:
+        _defecto(f"rend_{_k}", True)
+    col_rend, col_conf = st.columns([4, 1], vertical_alignment="center")
+    modo_rend = col_rend.toggle("⚡ Modo rendimiento", key="cfg_rend",
+                                help="Hace que la app corra más fluida y caliente menos el equipo. "
+                                     "Con el engranaje eliges qué se activa.")
+    with col_conf.popover("⚙️", help="Elegir qué activa el modo rendimiento"):
+        st.markdown("**¿Qué activa el modo rendimiento?**")
+        for _k, (_texto, _ayuda) in OPCIONES_RENDIMIENTO.items():
+            st.checkbox(_texto, key=f"rend_{_k}", help=_ayuda)
+        if not modo_rend:
+            st.caption("Estas opciones se aplican cuando el interruptor está encendido.")
+rendimiento = {k: bool(modo_rend and st.session_state[f"rend_{k}"]) for k in OPCIONES_RENDIMIENTO}
+if rendimiento["vidrio"]:
+    st.markdown("<style>section[data-testid='stSidebar']{backdrop-filter:none !important;"
+                "-webkit-backdrop-filter:none !important;"
+                + ("background:rgba(246,247,251,.97) !important;}" if MODO_CLARO
+                   else "background:rgba(10,14,24,.97) !important;}")
+                + "</style>", unsafe_allow_html=True)
 
 
 # --------------------------------------------------------------------------
@@ -712,7 +753,7 @@ if sorpresa:
         st.toast("No hay destinos que te alcancen con este presupuesto. Prueba subiéndolo "
                  "o cambiando la duración del viaje.")
 
-clic = mostrar_globo(datos_globo, alto=640, enfoque=enfoque)
+clic = mostrar_globo(datos_globo, alto=640, enfoque=enfoque, rendimiento=rendimiento)
 
 # ---- El clic en el globo actualiza las pestañas de abajo ----
 # El globo devuelve el último clic con su hora ("t"); se procesa una sola vez.
@@ -1422,6 +1463,11 @@ else:
 favs_url = [i for i in st.session_state.get("favoritos", []) if not i.startswith("gn")]
 if favs_url:
     params_url["fav"] = ",".join(favs_url)
+if modo_rend:
+    params_url["rend"] = "1"
+    apagadas = [k for k in OPCIONES_RENDIMIENTO if not st.session_state.get(f"rend_{k}")]
+    if apagadas:
+        params_url["rendno"] = ",".join(apagadas)
 dest_url = st.session_state.get("dest_explorar")
 if dest_url and not str(dest_url).startswith("gn"):
     params_url["dest"] = dest_url

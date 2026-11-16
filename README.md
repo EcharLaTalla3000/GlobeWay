@@ -33,6 +33,8 @@ Se abre solo en el navegador, en `http://localhost:8501`.
 - **Hoteles reales** (con `LITEAPI_KEY`): en *Alojamientos*, hasta 10 hoteles por cada nivel de estrellas con su precio para tus fechas.
 - **Destinos sin aeropuerto**: se usa el precio real del aeropuerto más cercano (hasta 300 km) y la tabla muestra a qué distancia queda.
 - **Celular**: el globo ocupa toda la pantalla; arriba hay una barra «Buscar destinos» que se expande y muestra las pestañas; «Calor vivo» siempre activo; el panel lateral parte cerrado.
+- **⚡ Modo rendimiento** (al final del panel lateral): para computadores menos potentes. Con el engranaje ⚙️ se elige qué activa: dibujar el globo solo cuando se mueve, apagar Calor vivo, 30 cuadros por segundo, resolución normal, quitar el desenfoque del vidrio y quitar atmósfera y relieve. Se guarda en el enlace de la página.
+- **Celular**: deslizar desde el borde izquierdo hacia la derecha abre el panel lateral; deslizarlo hacia la izquierda lo cierra.
 - **🎲 Sorpréndeme** (en el panel lateral): elige al azar un destino que te alcanza (≤85 % del presupuesto, sin advertencias de seguridad), vuela hasta él en el globo y abre su detalle.
 - **Comparar**: pestaña para poner 2 o 3 destinos lado a lado (tabla y gráfico de barras con vuelos, alojamiento, comida, transporte y actividades).
 - **Favoritos y enlace para compartir**: ☆ en *Explorar destino* guarda favoritos. La búsqueda completa (moneda, presupuesto, origen, fechas o duración, viajeros, alojamiento, favoritos y destino) queda en la dirección de la página; el panel lateral muestra el enlace listo para copiar.

@@ -23,8 +23,10 @@ _globo = components.declare_component(
 
 
 def mostrar_globo(datos: dict, alto: int = 640, enfoque: dict | None = None,
-                  key: str = "globo") -> dict | None:
+                  rendimiento: dict | None = None, key: str = "globo") -> dict | None:
     """Dibuja el globo con los datos ya calculados y devuelve el último clic.
     `enfoque` = {"id": destino, "t": hora}: el globo vuela a ese destino y abre su ficha
     (lo usa el botón "Sorpréndeme")."""
-    return _globo(datos=datos, alto=alto, enfoque=enfoque, key=key, default=None)
+    # `rendimiento`: opciones del "Modo rendimiento" (se aplican sin recargar el globo)
+    return _globo(datos=datos, alto=alto, enfoque=enfoque, rendimiento=rendimiento or {},
+                  key=key, default=None)
