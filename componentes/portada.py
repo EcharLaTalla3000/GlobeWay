@@ -28,11 +28,13 @@ LOGO_SVG = f"""
 """
 
 
-def logo_mini(alto: int = 30) -> str:
-    """Logo pequeño (sin animación) para el encabezado de la app."""
+def logo_mini(alto: int = 30, claro: bool = False) -> str:
+    """Logo pequeño (sin animación) para el encabezado de la app.
+    En modo claro la G va en azul noche, para que no se pierda en el fondo blanco."""
+    color_g = AZUL if claro else BLANCO
     return (f'<svg viewBox="0 0 120 120" width="{alto}" height="{alto}" aria-hidden="true" '
             f'style="vertical-align:-0.22em;margin-right:.45rem">'
-            f'<path d="M82 21.9 A44 44 0 1 0 104 60 H90" fill="none" stroke="{BLANCO}" stroke-width="12"/>'
+            f'<path d="M82 21.9 A44 44 0 1 0 104 60 H90" fill="none" stroke="{color_g}" stroke-width="12"/>'
             f'<polyline points="32,46 44,80 60,56 76,80 88,46" fill="none" stroke="{AMBAR}" '
             f'stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>'
             f'<circle cx="95" cy="31" r="7" fill="{AMBAR}"/></svg>')
