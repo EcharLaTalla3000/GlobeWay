@@ -333,19 +333,12 @@ with st.sidebar:
     sorpresa = st.button("🎲 Sorpréndeme", type="primary", width="stretch",
                          help="Elige al azar un destino que te alcanza (o uno de los más "
                               "turísticos, en ese modo) y te lo muestra en el globo.")
-    # ---- Interruptor principal ----
+    # Los modos del mapa viven dentro de «Más opciones» (más abajo); aquí solo se leen,
+    # porque el presupuesto depende de ellos.
     _defecto("cfg_generales", False)
     _defecto("cfg_turisticos", False)
-    generales = st.toggle(
-        "Precios generales", key="cfg_generales",
-        help="Colorea el mapa según lo caro o barato de cada destino comparado con el "
-             "resto del mundo, sin necesidad de ingresar un presupuesto.")
-    turisticos = st.toggle(
-        "Más turísticos", key="cfg_turisticos",
-        help="Muestra un mapa de calor de las zonas más visitadas del mundo. Con conexión, "
-             "el ranking se actualiza con las visitas recientes a cada destino en Wikipedia.")
-    if turisticos and generales:
-        st.caption("El mapa muestra «Más turísticos»; «Precios generales» se aplica a las tablas.")
+    generales = bool(st.session_state["cfg_generales"])
+    turisticos = bool(st.session_state["cfg_turisticos"])
 
     st.markdown("### Tu viaje")
     _defecto("cfg_moneda", next(iter(tipos_cambio.MONEDAS)))
@@ -354,6 +347,8 @@ with st.sidebar:
     paso = 50_000 if moneda == "CLP" else 50
     if generales or turisticos:
         presupuesto = 0
+        st.caption("El mapa está en modo «" + ("Más turísticos" if turisticos else "Precios generales")
+                   + "» y no usa presupuesto. Cámbialo en «Más opciones».")
     else:
         por_defecto = {"CLP": 2_000_000, "USD": 2_000, "EUR": 1_900}.get(moneda, 2000)
         _defecto(f"cfg_presupuesto_{moneda}", por_defecto)
@@ -383,39 +378,55 @@ with st.sidebar:
         _defecto("cfg_dias", 8)
         dias = st.slider("Duración (días)", 2, 30, key="cfg_dias")
 
-    _defecto("cfg_viajeros", 2)
-    viajeros = numero_con_espera("Viajeros", "cfg_viajeros", min_value=1, max_value=10)
-    _defecto("cfg_aloj", list(TIPOS_ALOJAMIENTO)[1])
-    tipo_aloj = st.selectbox("Alojamiento", list(TIPOS_ALOJAMIENTO), key="cfg_aloj",
-                             format_func=lambda t: TIPOS_ALOJAMIENTO[t])
+    with st.expander("➕ Más opciones"):
+        st.markdown("**Modo del mapa**")
+        st.toggle(
+            "Precios generales", key="cfg_generales",
+            help="Colorea el mapa según lo caro o barato de cada destino comparado con el "
+                 "resto del mundo, sin necesidad de ingresar un presupuesto.")
+        st.toggle(
+            "Más turísticos", key="cfg_turisticos",
+            help="Muestra un mapa de calor de las zonas más visitadas del mundo. Con conexión, "
+                 "el ranking se actualiza con las visitas recientes a cada destino en Wikipedia.")
+        if turisticos and generales:
+            st.caption("El mapa muestra «Más turísticos»; «Precios generales» se aplica a las tablas.")
 
-    st.markdown("### Vista del mapa")
-    if generales:
-        base_general = st.radio(
-            "Comparar según", ["total", "vida"],
-            format_func=lambda m: "Costo total del viaje (con vuelos desde tu origen)"
-            if m == "total" else "Costo de vida en destino (sin vuelos)")
-    else:
-        base_general = "total"
-    filtro_tipo = st.multiselect("Tipo de turismo", TIPOS_TURISMO,
-                                 format_func=str.capitalize, placeholder="Todos")
-    ocultar_fuera = (not generales and not turisticos) and st.checkbox(
-        "Ocultar destinos fuera de presupuesto", value=False)
-    ocultar_riesgo = st.checkbox("Ocultar países con advertencias de seguridad", value=False)
+        st.markdown("**Tu grupo y alojamiento**")
+        _defecto("cfg_viajeros", 2)
+        viajeros = numero_con_espera("Viajeros", "cfg_viajeros", min_value=1, max_value=10)
+        _defecto("cfg_aloj", list(TIPOS_ALOJAMIENTO)[1])
+        tipo_aloj = st.selectbox("Alojamiento", list(TIPOS_ALOJAMIENTO), key="cfg_aloj",
+                                 format_func=lambda t: TIPOS_ALOJAMIENTO[t])
+
+        st.markdown("**Filtros del mapa**")
+        if generales:
+            base_general = st.radio(
+                "Comparar según", ["total", "vida"],
+                format_func=lambda m: "Costo total del viaje (con vuelos desde tu origen)"
+                if m == "total" else "Costo de vida en destino (sin vuelos)")
+        else:
+            base_general = "total"
+        filtro_tipo = st.multiselect("Tipo de turismo", TIPOS_TURISMO,
+                                     format_func=str.capitalize, placeholder="Todos")
+        ocultar_fuera = (not generales and not turisticos) and st.checkbox(
+            "Ocultar destinos fuera de presupuesto", value=False)
+        ocultar_riesgo = st.checkbox("Ocultar países con advertencias de seguridad", value=False)
+
+        st.markdown("**Tipo de cambio**")
+        st.caption(tasas.fuente +
+                   (f" · actualizado {tasas.actualizado.astimezone().strftime('%d/%m/%Y %H:%M')}"
+                    if tasas.actualizado else ""))
+        if not tasas.es_respaldo:
+            st.caption(" · ".join(f"1 USD = {tipos_cambio.formatear(tasas.por_usd[m], m)}"
+                                  for m in tipos_cambio.MONEDAS if m != "USD"))
 
     st.divider()
     zona_compartir = st.container()   # se llena al final, con el enlace de esta búsqueda
-    st.caption("**Tipo de cambio:** " + tasas.fuente +
-               (f" · actualizado {tasas.actualizado.astimezone().strftime('%d/%m/%Y %H:%M')}"
-                if tasas.actualizado else ""))
     if tasas.es_respaldo:
         st.warning("No se pudo obtener el tipo de cambio en línea; se usan tasas fijas "
                    "aproximadas. Detalle: " + tasas.fuente.split("Motivo: ")[-1], icon="⚠️")
         if st.button("Reintentar tipo de cambio"):
             st.rerun()
-    else:
-        st.caption(" · ".join(f"1 USD = {tipos_cambio.formatear(tasas.por_usd[m], m)}"
-                              for m in tipos_cambio.MONEDAS if m != "USD"))
 
     # ---- Modo rendimiento (para computadores menos potentes) ----
     st.divider()
@@ -809,8 +820,8 @@ def alternar_favorito(dest: str) -> None:
         favs.append(dest)
 
 
-tab_lista, tab_explorar, tab_activ, tab_comparar, tab_aloj, tab_fuentes = st.tabs(
-    ["Destinos", "Explorar destino", "Actividades", "Comparar", "Alojamientos", "Datos y fuentes"])
+tab_lista, tab_explorar, tab_activ, tab_aloj, tab_comparar, tab_fuentes = st.tabs(
+    ["Destinos", "Explorar destino", "Actividades", "Alojamientos", "Comparar", "Fuentes"])
 
 opciones_ids = [f["id"] for f in filas]
 por_id = {f["id"]: f for f in filas}
@@ -936,14 +947,15 @@ with tab_lista:
                 "Población": st.column_config.NumberColumn(format="localized"),
             },
         )
-        st.caption(("Los vuelos marcados ✈ son precios reales de búsquedas recientes en Aviasales "
-                    "(pueden cambiar); todo lo demás es estimado. " if n_reales else
-                    "Todos los valores son estimados. ")
-                   + "El total incluye vuelos ida y vuelta, alojamiento, alimentación, transporte "
-                     "local y actividades para todo el grupo."
-                   + (" En los lugares que no están en el globo, el costo de vida es el promedio de "
-                      "su país (o de su región, si el país no tiene destinos en el globo)."
-                      if any(f.get("extra") for f in resultado) else ""))
+        with st.expander("ℹ️ Cómo leer estos precios"):
+            st.caption(("Los vuelos marcados ✈ son precios reales de búsquedas recientes en Aviasales "
+                        "(pueden cambiar); todo lo demás es estimado. " if n_reales else
+                        "Todos los valores son estimados. ")
+                       + "El total incluye vuelos ida y vuelta, alojamiento, alimentación, transporte "
+                         "local y actividades para todo el grupo."
+                       + (" En los lugares que no están en el globo, el costo de vida es el promedio de "
+                          "su país (o de su región, si el país no tiene destinos en el globo)."
+                          if any(f.get("extra") for f in resultado) else ""))
 
 # ---- Detalle de un destino ----
 with tab_explorar:
@@ -985,7 +997,14 @@ with tab_explorar:
             st.markdown(f"<span class='etq' style='color:{colores[f['estado']]}'>"
                         f"{textos[f['estado']]}</span>", unsafe_allow_html=True)
             if wiki and wiki.get("extracto"):
-                st.write(wiki["extracto"])
+                _ext = wiki["extracto"]
+                if len(_ext) > 320:
+                    _corte = _ext.rfind(" ", 0, 320)
+                    st.write(_ext[:_corte if _corte > 0 else 320] + "…")
+                    with st.expander("Leer más"):
+                        st.write(_ext)
+                else:
+                    st.write(_ext)
                 if wiki.get("url"):
                     st.caption(f"Fuente: [Wikipedia]({wiki['url']})")
             else:
@@ -993,8 +1012,8 @@ with tab_explorar:
                 st.caption("No se pudo cargar la información de Wikipedia"
                            + (f": {motivo}." if motivo else "."))
             if f["atractivos"]:
-                st.markdown("**Atractivos y actividades**")
-                st.markdown("\n".join(f"- {a}" for a in f["atractivos"]))
+                with st.expander("Atractivos y actividades"):
+                    st.markdown("\n".join(f"- {a}" for a in f["atractivos"]))
 
         with der:
             st.markdown("#### Costo total estimado del viaje")
