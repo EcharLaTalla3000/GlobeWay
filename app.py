@@ -80,6 +80,8 @@ st.markdown("""
                        to { opacity: 1; transform: none; clip-path: inset(0 0 0 0); } }
   [data-testid="stSidebarContent"] { animation: gwBajar .8s cubic-bezier(.2,.8,.2,1) both; }
   @media (prefers-reduced-motion: reduce) { [data-testid="stSidebarContent"] { animation: none; } }
+  /* El globo nunca se atenúa mientras la app recalcula (evita que se mezcle con la página) */
+  .st-key-globo, .st-key-globo > div, iframe[src*="globo_globeway"] { opacity: 1 !important; transition: none !important; }
   #gw-cerrar-panel { position: fixed; top: 10px; right: 10px; z-index: 1000001; align-items: center;
     padding: 9px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.18);
     background: rgba(13,18,32,.85); color: #e5e9f0; font: 600 13px Inter, system-ui, sans-serif; cursor: pointer; }
@@ -104,8 +106,10 @@ st.markdown("""
     header[data-testid="stHeader"], header[data-testid="stHeader"] * { pointer-events: none !important; }
     header[data-testid="stHeader"] button, header[data-testid="stHeader"] a,
     header[data-testid="stHeader"] [role="button"] { pointer-events: auto !important; }
-    div[data-testid="stElementContainer"]:has(iframe[src*="globo_globeway"]) {
+    .st-key-globo, div[data-testid="stElementContainer"]:has(iframe[src*="globo_globeway"]) {
       position: fixed !important; inset: 0 !important; z-index: 5; margin: 0 !important; visibility: visible; }
+    body:not(.gw-panel) [data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] > :not(.st-key-globo) {
+      visibility: hidden !important; }
     iframe[src*="globo_globeway"] { position: fixed; inset: 0; width: 100vw !important; height: 100dvh !important; }
     /* El resto de la página queda escondido hasta tocar "Buscar destinos" */
     body:not(.gw-panel) .block-container { visibility: hidden; }
@@ -115,7 +119,8 @@ st.markdown("""
     body.gw-panel .block-container { visibility: visible; position: fixed; inset: 0; z-index: 1000000;
       overflow-y: auto; max-width: none; padding: 60px .8rem 2rem; background: #05070d;
       animation: gwExpandir .45s cubic-bezier(.2,.8,.2,1); }
-    body.gw-panel div[data-testid="stElementContainer"]:has(iframe[src*="globo_globeway"]) { visibility: hidden; }
+    body.gw-panel .st-key-globo, body.gw-panel div[data-testid="stElementContainer"]:has(iframe[src*="globo_globeway"]) {
+      visibility: hidden !important; }
   }
 </style>
 """, unsafe_allow_html=True)

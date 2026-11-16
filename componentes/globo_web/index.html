@@ -167,10 +167,16 @@ function docPadre() { try { return window.parent.document; } catch (e) { return 
   const st = d.createElement('style');
   st.id = 'gw-estilos-globo';
   st.textContent = `
-    @keyframes gwFoco { from { opacity: .4; transform: scale(.985); } to { opacity: 1; transform: none; } }
+    /* El globo y su contenedor nunca se vuelven semitransparentes (Streamlit atenúa los
+       elementos mientras recalcula y eso hacía que la página se "mezclara" con el globo) */
+    .st-key-globo, .st-key-globo > div, iframe[src*="globo_globeway"] { opacity: 1 !important;
+      transition: none !important; filter: none !important; }
+    iframe[src*="globo_globeway"] { background: #05070d; }
+    body.gw-foco .st-key-globo { position: relative; z-index: 2147483000 !important; }
     body.gw-foco iframe[src*="globo_globeway"] { position: fixed !important; inset: 0 !important;
-      width: 100vw !important; height: 100vh !important; z-index: 2147483000 !important; border: 0;
-      animation: gwFoco .35s ease-out; }
+      width: 100vw !important; height: 100vh !important; z-index: 2147483000 !important; border: 0; }
+    body.gw-foco [data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] > :not(.st-key-globo) {
+      visibility: hidden !important; }
     body.gw-foco section[data-testid="stSidebar"], body.gw-foco [data-testid="stSidebarCollapsedControl"],
     body.gw-foco header[data-testid="stHeader"], body.gw-foco [data-testid="stToastContainer"] {
       opacity: 0 !important; pointer-events: none !important; }
@@ -373,7 +379,9 @@ function seleccionarPais(iso, feature) {
   actualizarPuntos();
 }
 
-const globo = Globe()(contenedor)
+// logarithmicDepthBuffer: en celulares la "profundidad" tiene menos precisión y la superficie
+// del globo se mezclaba con los países (manchas negras). Así cada capa queda bien separada.
+const globo = Globe({ rendererConfig: { antialias: true, alpha: true, logarithmicDepthBuffer: true } })(contenedor)
   .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg')
   .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
   .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
@@ -446,7 +454,7 @@ fetch('https://raw.githubusercontent.com/vasturiano/globe.gl/master/example/data
     if (paisSel && !seleccionado) seleccionado = paises.find(f => codigoPais(f) === paisSel) || null;
     globo
       .polygonsData(paises)
-      .polygonAltitude(f => f === seleccionado ? 0.03 : 0.008)
+      .polygonAltitude(f => f === seleccionado ? 0.03 : (esMovil() ? 0.014 : 0.008))
       .polygonCapColor(colorCap)
       .polygonCapMaterial(f => calorVivo ? materialCalor(f) : null)
       .polygonSideColor(colorCostado)
@@ -659,6 +667,8 @@ function indiceMin(lista) {
 
 // En celulares se dibuja con menos resolución: se ve casi igual y va mucho más fluido
 try { if (esMovil()) globo.renderer().setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5)); } catch (e) {}
+// Plano cercano de la cámara un poco más lejos: mejora la precisión de profundidad (sin efecto visible)
+try { const cam = globo.camera(); cam.near = 1.5; cam.updateProjectionMatrix(); } catch (e) {}
 
 // Rotación automática suave hasta que el usuario interactúa
 const ctl = globo.controls();
@@ -666,9 +676,18 @@ ctl.autoRotate = true; ctl.autoRotateSpeed = 0.35; ctl.enableDamping = true;
 contenedor.addEventListener('pointerdown', () => { ctl.autoRotate = false; });
 const vistaGuardada = memoria.leer('gw_vista');
 if (vistaGuardada) { ctl.autoRotate = false; globo.pointOfView(vistaGuardada, 0); }
-else globo.pointOfView({ lat: DATOS.origen.lat, lng: DATOS.origen.lon, altitude: esMovil() ? 1.75 : 2.3 }, 0);
+else globo.pointOfView({ lat: DATOS.origen.lat, lng: DATOS.origen.lon, altitude: esMovil() ? alturaGloboEntero() : 2.3 }, 0);
 window.vistaActual = () => globo.pointOfView();
 
+// Altura de cámara para que el globo completo quepa a lo ancho de la pantalla, con ~12 % de margen
+function alturaGloboEntero() {
+  const cam = globo.camera();
+  const aspecto = Math.max(0.3, window.innerWidth / Math.max(1, window.innerHeight));
+  const medioV = (cam.fov || 50) * Math.PI / 360;
+  const medioH = Math.atan(Math.tan(medioV) * aspecto);
+  const medio = Math.min(medioV, medioH) * 0.86;
+  return Math.max(2.3, 1 / Math.sin(medio) - 1);
+}
 function volarA(lat, lng, alt) {
   ctl.autoRotate = false;
   // En el celular la ficha tapa la mitad de abajo: el destino se deja en la parte de arriba
