@@ -197,42 +197,77 @@ function modoFoco(activo) {
 }
 window.addEventListener('keydown', e => { if (e.key === 'Escape' && window.cerrarFicha) window.cerrarFicha(); });
 
-// Celular: deslizar desde el borde izquierdo hacia la derecha abre el panel lateral,
-// y deslizar el panel hacia la izquierda lo cierra (como en las apps de celular).
-function botonPanel(abrir) {
-  const d = docPadre(); if (!d) return null;
-  return abrir ? d.querySelector('[data-testid="stExpandSidebarButton"]')
-               : d.querySelector('[data-testid="stSidebarCollapseButton"] button, section[data-testid="stSidebar"] [data-testid="stSidebarCollapseButton"]');
-}
-function panelAbierto() {
-  const d = docPadre(); const sb = d && d.querySelector('section[data-testid="stSidebar"]');
-  return !!sb && sb.getAttribute('aria-expanded') !== 'false' && sb.getBoundingClientRect().right > 40;
-}
-function instalarDeslizar(doc, sobreGlobo) {
-  if (!doc || doc.__gwDeslizar) return;
+// Celular: el panel lateral sigue al dedo. Desde el borde izquierdo se arrastra hacia la
+// derecha para abrirlo; arrastrándolo hacia la izquierda se cierra. Basta un gesto corto o rápido.
+function instalarDeslizar(doc, padre, esMovilFn) {
+  if (!doc || !padre || doc.__gwDeslizar) return;
   doc.__gwDeslizar = true;
-  let ini = null;
+  const BORDE = 34;
+  let g = null;
+  const panel = () => padre.querySelector('section[data-testid="stSidebar"]');
+  const abierto = sb => !!sb && sb.getBoundingClientRect().right > 40;
+  const fijar = (sb, prop, val) => sb.style.setProperty(prop, val, 'important');
+  const soltar = sb => ['transform', 'transition', 'min-width', 'max-width', 'z-index', 'box-shadow']
+    .forEach(p => sb.style.removeProperty(p));
   doc.addEventListener('touchstart', e => {
-    if (!esMovil() || e.touches.length !== 1) { ini = null; return; }
+    g = null;
+    if (!esMovilFn() || e.touches.length !== 1) return;
+    const sb = panel(); if (!sb) return;
     const t = e.touches[0];
-    const enPanel = !sobreGlobo && !!(e.target.closest && e.target.closest('section[data-testid="stSidebar"]'));
-    ini = (t.clientX < 26 || enPanel) ? { x: t.clientX, y: t.clientY, enPanel } : null;
+    const estaAbierto = abierto(sb);
+    const ancho = Math.round(parseFloat(sb.style.width) || sb.offsetWidth || 300) || 300;
+    const enPanel = !!(e.target.closest && e.target.closest('section[data-testid="stSidebar"]'));
+    if (!estaAbierto && t.clientX <= BORDE) g = { modo: 'abrir', sb, ancho };
+    else if (estaAbierto && (enPanel || t.clientX > ancho)) g = { modo: 'cerrar', sb, ancho };
+    if (g) Object.assign(g, { x: t.clientX, y: t.clientY, t0: performance.now(), arrastrando: false, dx: 0 });
   }, { passive: true, capture: true });
-  doc.addEventListener('touchend', e => {
-    if (!ini) return;
-    const t = e.changedTouches[0], dx = t.clientX - ini.x, dy = Math.abs(t.clientY - ini.y);
-    if (dy < 70) {
-      if (!ini.enPanel && dx > 60 && !panelAbierto()) { const b = botonPanel(true); b && b.click(); }
-      else if (ini.enPanel && dx < -60) { const b = botonPanel(false); b && b.click(); }
+  doc.addEventListener('touchmove', e => {
+    if (!g) return;
+    const t = e.touches[0], dx = t.clientX - g.x, dy = t.clientY - g.y;
+    if (!g.arrastrando) {
+      if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { g = null; return; }   // era un desplazamiento vertical
+      if (Math.abs(dx) < 6) return;
+      g.arrastrando = true;
+      fijar(g.sb, 'transition', 'none');
+      fijar(g.sb, 'min-width', g.ancho + 'px'); fijar(g.sb, 'max-width', g.ancho + 'px');
+      fijar(g.sb, 'z-index', '1000003'); fijar(g.sb, 'box-shadow', '12px 0 40px rgba(0,0,0,.45)');
     }
-    ini = null;
-  }, { passive: true, capture: true });
+    g.dx = dx;
+    const pos = g.modo === 'abrir' ? Math.min(0, -g.ancho + Math.max(0, dx)) : Math.min(0, Math.max(-g.ancho, dx));
+    fijar(g.sb, 'transform', `translateX(${pos}px)`);
+    if (e.cancelable) e.preventDefault();
+  }, { passive: false, capture: true });
+  const terminar = () => {
+    if (!g) return;
+    const { sb, modo, ancho, dx, arrastrando } = g;
+    const vel = dx / Math.max(1, performance.now() - g.t0);   // px por ms
+    g = null;
+    if (!arrastrando) return;
+    const completar = modo === 'abrir' ? (dx > ancho * 0.28 || vel > 0.35) : (dx < -ancho * 0.28 || vel < -0.35);
+    // Termina la animación suavemente desde donde quedó el dedo
+    fijar(sb, 'transition', 'transform .22s cubic-bezier(.2,.8,.2,1)');
+    const destino = (modo === 'abrir') === completar ? 0 : -ancho;
+    fijar(sb, 'transform', `translateX(${destino}px)`);
+    setTimeout(() => {
+      if (completar) {
+        const b = modo === 'abrir'
+          ? padre.querySelector('[data-testid="stExpandSidebarButton"]')
+          : padre.querySelector('[data-testid="stSidebarCollapseButton"] button');
+        if (b) b.click();
+      }
+      setTimeout(() => soltar(sb), 60);
+    }, 230);
+  };
+  doc.addEventListener('touchend', terminar, { capture: true });
+  doc.addEventListener('touchcancel', terminar, { capture: true });
 }
-instalarDeslizar(docPadre(), false);
-instalarDeslizar(document, true);
+setTimeout(() => {   // después de que todo el script esté listo
+  instalarDeslizar(docPadre(), docPadre(), esMovil);
+  instalarDeslizar(document, docPadre(), esMovil);
+}, 0);
 // Que el gesto del borde no haga girar el globo
 window.addEventListener('pointerdown', e => {
-  if (esMovil() && e.pointerType === 'touch' && e.clientX < 26) e.stopPropagation();
+  if (esMovil() && e.pointerType === 'touch' && e.clientX <= 34) e.stopPropagation();
 }, true);
 
 // Celular: el panel "Buscar destinos" muestra las pestañas de abajo sobre el globo
@@ -726,7 +761,7 @@ window.vistaActual = () => globo.pointOfView();
 // ==========================================================================
 // Modo rendimiento (interruptor "⚡ Modo rendimiento" del panel lateral)
 // ==========================================================================
-const motor = { fps: false, pausa: false, despiertoHasta: 0, timer: null, visible: true };
+const motor = { fps: false, pausa: false, despiertoHasta: 0, timer: null, visible: true, dormido: false, pendiente: false };
 const relieveUrl = 'https://unpkg.com/three-globe/example/img/earth-topology.png';
 const pixelesNormal = esMovil() ? Math.min(window.devicePixelRatio || 1, 1.5) : (window.devicePixelRatio || 1);
 let rendActual = '', calorAntesRend = null;
@@ -735,7 +770,8 @@ function programarDibujo() {
   clearTimeout(motor.timer);
   const ahora = performance.now();
   const despierto = motor.visible && (!motor.pausa || ahora < motor.despiertoHasta || ctl.autoRotate);
-  if (!despierto) { globo.pauseAnimation(); return; }
+  if (!despierto) { motor.dormido = true; globo.pauseAnimation(); return; }
+  motor.dormido = false;
   if (!motor.fps) {
     globo.resumeAnimation();
     if (motor.pausa) motor.timer = setTimeout(programarDibujo, Math.max(50, motor.despiertoHasta - ahora + 30));
@@ -747,12 +783,17 @@ function programarDibujo() {
 }
 function despertar(ms) {
   motor.despiertoHasta = Math.max(motor.despiertoHasta, performance.now() + (ms || 1500));
-  if (motor.pausa || motor.fps) programarDibujo();
+  // Si el globo está dormido, se despierta en el próximo instante (nunca dentro de un dibujo)
+  if ((motor.pausa || motor.fps) && motor.dormido && !motor.pendiente) {
+    motor.pendiente = true;
+    setTimeout(() => { motor.pendiente = false; programarDibujo(); }, 0);
+  }
 }
 window.despertarGlobo = despertar;
 ['pointerdown', 'wheel', 'touchstart'].forEach(ev => contenedor.addEventListener(ev, () => despertar(2500), { passive: true }));
 contenedor.addEventListener('pointermove', e => despertar(e.buttons ? 2500 : 700), { passive: true });
-ctl.addEventListener('change', () => { if (motor.pausa) despertar(900); });
+// Mientras los controles siguen moviéndose (inercia), se mantiene despierto un poco más
+ctl.addEventListener('change', () => { motor.despiertoHasta = Math.max(motor.despiertoHasta, performance.now() + 900); });
 document.addEventListener('visibilitychange', () => { motor.visible = !document.hidden; if (motor.pausa) programarDibujo(); });
 try {   // si el globo queda fuera de la pantalla (bajaste a las pestañas), no se dibuja
   new IntersectionObserver(es => { motor.visible = es[0].isIntersecting && !document.hidden; if (motor.pausa) programarDibujo(); })
@@ -776,9 +817,8 @@ window.aplicarRendimiento = r => {
   // Dibujo a demanda y 30 cuadros por segundo
   motor.pausa = !!r.pausa; motor.fps = !!r.fps;
   if (motor.pausa) ctl.autoRotate = false;   // girar solo impediría que el globo descanse
-  if (!motor.pausa && !motor.fps) globo.resumeAnimation();
-  despertar(2000);
-  programarDibujo();
+  motor.despiertoHasta = performance.now() + 2000;
+  setTimeout(programarDibujo, 0);
 };
 
 // Altura de cámara para que el globo completo quepa a lo ancho de la pantalla, con ~12 % de margen
