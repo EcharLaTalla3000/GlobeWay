@@ -105,7 +105,8 @@ iframe {{ border: 0; }}
   opacity: 0; visibility: hidden; animation: gw-boton 0.6s ease-out 3.6s forwards; }}
 .st-key-iniciar > div, .st-key-iniciar [data-testid="stButton"] {{ display: flex !important;
   justify-content: center !important; width: 100% !important; }}
-.st-key-iniciar button {{ margin: 0 auto !important; }}
+.st-key-iniciar button {{ margin: 0 auto !important; width: auto !important; flex: 0 0 auto !important;
+  min-width: 200px; }}
 .st-key-iniciar button {{ background: {AMBAR} !important; color: {AZUL} !important; border: 0 !important;
   border-radius: 999px !important; padding: 0.7rem 2.8rem !important; min-height: 48px;
   box-shadow: 0 10px 30px rgba(245,165,36,.25); transition: transform .15s, box-shadow .15s; }}

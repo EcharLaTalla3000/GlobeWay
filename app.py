@@ -1102,7 +1102,7 @@ with tab_explorar:
                                         axis=alt.Axis(format="~s", gridOpacity=0.15)),
                                 tooltip=["Mes", alt.Tooltip("Precio:Q", format=",.0f"), "Estado", "Fechas",
                                          "Noches", "Escalas", "Duración"])
-                            barras = base.mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4,
+                            barras = base.mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4, size=46,
                                                    stroke=FONDO_GRAFICO, strokeWidth=2).encode(
                                 color=alt.Color("Estado:N", title=None,
                                                 scale=alt.Scale(domain=list(dict.fromkeys(tabla_mes["Estado"])),
