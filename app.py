@@ -67,7 +67,7 @@ st.markdown("""
       radial-gradient(520px 420px at 4% 18%, rgba(56,189,248,.30), transparent 70%),
       radial-gradient(460px 380px at 12% 82%, rgba(245,165,36,.22), transparent 70%),
       linear-gradient(rgba(5,7,13,.35), rgba(5,7,13,.35)),
-      url("https://unpkg.com/three-globe/example/img/night-sky.png") center / 1400px auto repeat,
+      url("https://unpkg.com/three-globe/example/img/night-sky.png") center / cover no-repeat,
       #05070d !important; background-attachment: scroll, scroll, scroll, fixed, scroll !important; }
   /* Panel lateral: vidrio esmerilado (deja ver, difuminados, los brillos de color de atrás) */
   section[data-testid="stSidebar"] {
@@ -76,6 +76,17 @@ st.markdown("""
     border-right: 1px solid rgba(255,255,255,.14);
     box-shadow: inset -1px 0 0 rgba(255,255,255,.05), 8px 0 32px rgba(0,0,0,.35); }
   section[data-testid="stSidebar"] > div { background: transparent !important; }
+  /* Rueda del modo rendimiento: solo el ícono, centrado (sin la flechita que lo aplastaba) */
+  .st-key-rend_conf [data-testid="stPopoverButton"] { padding: 0 !important; min-width: 42px; height: 38px;
+    justify-content: center !important; }
+  .st-key-rend_conf [data-testid="stPopoverButton"] > div { justify-content: center; gap: 0 !important; }
+  .st-key-rend_conf [data-testid="stPopoverButton"] > div > div:first-child { width: auto !important; flex: none !important;
+    overflow: visible !important; }
+  .st-key-rend_conf [data-testid="stPopoverButton"] > div > div:nth-child(2) { display: none !important; }
+  .st-key-rend_conf [data-testid="stPopoverButton"] p { margin: 0; font-size: 1.15rem; line-height: 1; }
+  /* El panel lateral nunca se mueve hacia los lados al usar sus controles */
+  [data-testid="stSidebarContent"] { overflow-x: hidden !important; overscroll-behavior: contain; }
+  [data-testid="stSidebar"] [data-testid="stSlider"] { touch-action: pan-y; }
   @keyframes gwBajar { from { opacity: 0; transform: translateY(-28px); clip-path: inset(0 0 100% 0); }
                        to { opacity: 1; transform: none; clip-path: inset(0 0 0 0); } }
   [data-testid="stSidebarContent"] { animation: gwBajar .8s cubic-bezier(.2,.8,.2,1) both; }
@@ -344,13 +355,22 @@ with st.sidebar:
     _defecto("cfg_moneda", next(iter(tipos_cambio.MONEDAS)))
     moneda = st.selectbox("Moneda", list(tipos_cambio.MONEDAS), key="cfg_moneda",
                           format_func=lambda m: f"{m} · {tipos_cambio.MONEDAS[m]['nombre']}")
-    paso = 50_000 if moneda == "CLP" else 50
+    def _redondo(x: float) -> int:
+        """Redondea a un número «bonito» (1, 2 o 5 seguido de ceros)."""
+        import math
+        if x <= 1:
+            return 1
+        e = 10 ** int(math.floor(math.log10(x)))
+        return int(min((1, 2, 5, 10), key=lambda k: abs(k * e - x)) * e)
+    _tasa = tipos_cambio.tasa(moneda, tasas)
+    paso = _redondo(50 * _tasa)                 # el «+» sube unos 50 dólares
     if generales or turisticos:
         presupuesto = 0
         st.caption("El mapa está en modo «" + ("Más turísticos" if turisticos else "Precios generales")
                    + "» y no usa presupuesto. Cámbialo en «Más opciones».")
     else:
-        por_defecto = {"CLP": 2_000_000, "USD": 2_000, "EUR": 1_900}.get(moneda, 2000)
+        por_defecto = {"CLP": 2_000_000, "USD": 2_000, "EUR": 1_900}.get(moneda) \
+            or round(2_000 * _tasa / paso) * paso   # unos 2.000 dólares en esa moneda
         _defecto(f"cfg_presupuesto_{moneda}", por_defecto)
         presupuesto = numero_con_espera(f"Presupuesto total ({moneda})", f"cfg_presupuesto_{moneda}",
                                         min_value=0, step=paso)
@@ -417,8 +437,10 @@ with st.sidebar:
                    (f" · actualizado {tasas.actualizado.astimezone().strftime('%d/%m/%Y %H:%M')}"
                     if tasas.actualizado else ""))
         if not tasas.es_respaldo:
-            st.caption(" · ".join(f"1 USD = {tipos_cambio.formatear(tasas.por_usd[m], m)}"
-                                  for m in tipos_cambio.MONEDAS if m != "USD"))
+            if moneda != "USD":
+                _t = (f"{_tasa:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+                      if _tasa < 100 else f"{_tasa:,.0f}".replace(",", "."))
+                st.caption(f"1 USD = {_t} {moneda}")
 
     st.divider()
     zona_compartir = st.container()   # se llena al final, con el enlace de esta búsqueda
@@ -437,7 +459,7 @@ with st.sidebar:
     modo_rend = col_rend.toggle("⚡ Modo rendimiento", key="cfg_rend",
                                 help="Hace que la app corra más fluida y caliente menos el equipo. "
                                      "Con el engranaje eliges qué se activa.")
-    with col_conf.popover("⚙️", help="Elegir qué activa el modo rendimiento"):
+    with col_conf.container(key="rend_conf"), st.popover("⚙️", help="Elegir qué activa el modo rendimiento"):
         st.markdown("**¿Qué activa el modo rendimiento?**")
         for _k, (_texto, _ayuda) in OPCIONES_RENDIMIENTO.items():
             st.checkbox(_texto, key=f"rend_{_k}", help=_ayuda)
@@ -656,7 +678,7 @@ datos_globo = {
 # Encabezado e indicadores
 # --------------------------------------------------------------------------
 col_marca, col_tema = st.columns([5, 1], vertical_alignment="center")
-col_marca.markdown(f'<p class="marca">{logo_mini(30)}Globe<span>Way</span></p>', unsafe_allow_html=True)
+col_marca.markdown(f'<p class="marca">{logo_mini(30, claro=MODO_CLARO)}Globe<span>Way</span></p>', unsafe_allow_html=True)
 if col_tema.button("🌙 Modo oscuro" if MODO_CLARO else "☀️ Modo claro", key="boton_tema", width="stretch",
                    help="Cambia los colores de la página. Se recuerda en este navegador."):
     # Streamlit guarda el tema elegido en el navegador; se cambia y se recarga la página
@@ -764,7 +786,8 @@ if sorpresa:
         st.toast("No hay destinos que te alcancen con este presupuesto. Prueba subiéndolo "
                  "o cambiando la duración del viaje.")
 
-clic = mostrar_globo(datos_globo, alto=640, enfoque=enfoque, rendimiento=rendimiento)
+clic = mostrar_globo(datos_globo, alto=640, enfoque=enfoque, rendimiento=rendimiento,
+                    claro=MODO_CLARO)
 
 # ---- El clic en el globo actualiza las pestañas de abajo ----
 # El globo devuelve el último clic con su hora ("t"); se procesa una sola vez.
