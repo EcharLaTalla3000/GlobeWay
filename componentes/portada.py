@@ -98,6 +98,9 @@ section[data-testid="stSidebar"], div[data-testid="stSidebarCollapsedControl"],
 button[data-testid="stExpandSidebarButton"] {{ display: none !important; }}
 header[data-testid="stHeader"] {{ background: transparent !important; }}
 .block-container {{ padding-top: 8vh !important; visibility: visible !important; position: static !important; }}
+/* En el celular la app esconde todo menos el globo; en la portada todo debe verse */
+html body:not(.gw-zz) [data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] > :not(.gw-zz) {{
+  visibility: visible !important; }}
 iframe {{ border: 0; }}
 
 /* Botón "Iniciar": aparece 1 segundo después de terminar la animación */
