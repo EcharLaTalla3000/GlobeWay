@@ -47,7 +47,7 @@ Se abre solo en el navegador, en `http://localhost:8501`.
   - *Destinos*: ranking.
   - *Explorar destino*: foto e información de Wikipedia, desglose y verificación de vuelo.
   - *Alojamientos*: opciones con comparador.
-  - *Datos y fuentes*: qué es real y qué es estimado.
+  - *Fuentes*: qué es real y qué es estimado.
 
 ## Qué es real y qué es demostración
 
