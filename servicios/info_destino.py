@@ -113,7 +113,7 @@ MAX_FOTOS = 6
 def fotos(titulo: str, principal: str | None = None) -> list[str]:
     """Hasta 6 fotos del artículo (URL de 960 px de ancho). La foto principal va primero.
     Nunca lanza errores: si algo falla devuelve solo la principal (o nada)."""
-    lista = [principal] if principal else []
+    lista = [_liviana(principal)] if principal else []
     try:
         r = requests.get(URL_ACTION, headers=_cabeceras(), timeout=10, params={
             "action": "parse", "format": "json", "page": titulo, "redirects": 1, "prop": "images"})
@@ -146,6 +146,14 @@ def fotos(titulo: str, principal: str | None = None) -> list[str]:
     except Exception:
         pass
     return lista
+
+
+def _liviana(url: str) -> str:
+    """Si la foto principal es una miniatura enorme ("/thumb/.../3840px-..."), la pide a 960 px."""
+    m = re.search(r"/(\d+)px-[^/]+$", url or "")
+    if m and "/thumb/" in url and int(m.group(1)) > 960:
+        return url[:m.start(1)] + "960" + url[m.end(1):]
+    return url
 
 
 def _nombre_archivo(url: str | None) -> str:
