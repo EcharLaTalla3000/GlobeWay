@@ -584,6 +584,8 @@ def texto_vuelo_real(r) -> str:
               r.escalas_txt()]
     if r.aerolinea:
         partes.append(f"aerolínea {r.aerolinea}")
+    if getattr(r, "visto", ""):
+        partes.append(f"precio visto el {date.fromisoformat(r.visto):%d/%m}")
     return " · ".join(partes)
 
 
@@ -1066,12 +1068,18 @@ with tab_explorar:
                 st.write(f"✈ **Precio real de búsquedas recientes:** **{fmt(r.precio_pp)}** ida y vuelta "
                          f"por persona")
                 st.write(f"**{r.aeropuerto_origen} → {r.aeropuerto_destino}** · {texto_vuelo_real(r)}")
-                st.caption("Es el pasaje más barato que personas usuarias de Aviasales encontraron en "
-                           "sus búsquedas de los últimos días"
-                           + ("" if usar_fechas else " para un viaje de duración parecida")
-                           + ". Puede haber cambiado o agotarse: confírmalo antes de comprar."
-                           + (f" Consultado {precios_tp.consultado.astimezone().strftime('%d/%m/%Y %H:%M')}."
-                              if precios_tp.consultado else ""))
+                if getattr(r, "visto", ""):
+                    st.caption("Es un precio real que GlobeWay guardó de las búsquedas en Aviasales del "
+                               f"{date.fromisoformat(r.visto):%d/%m/%Y}"
+                               + ("" if usar_fechas else " para un viaje de duración parecida")
+                               + ". Puede haber cambiado o agotarse: confírmalo antes de comprar.")
+                else:
+                    st.caption("Es el pasaje más barato que personas usuarias de Aviasales encontraron en "
+                               "sus búsquedas de los últimos días"
+                               + ("" if usar_fechas else " para un viaje de duración parecida")
+                               + ". Puede haber cambiado o agotarse: confírmalo antes de comprar."
+                               + (f" Consultado {precios_tp.consultado.astimezone().strftime('%d/%m/%Y %H:%M')}."
+                                  if precios_tp.consultado else ""))
                 if texto_aeropuerto(f, largo=True):
                     st.caption(texto_aeropuerto(f, largo=True))
                 st.link_button("✈ Ver vuelos disponibles ↗", r.enlace(int(viajeros)), type="primary",
@@ -1173,7 +1181,9 @@ with tab_explorar:
                             "Mes": m.mes_txt, "orden": m.mes,
                             "Precio": round(tipos_cambio.convertir(m.precio.precio_pp, moneda, tasas)),
                             "Fechas": m.precio.fechas_txt(), "Noches": m.noches,
-                            "Escalas": m.precio.escalas_txt(),
+                            "Escalas": m.precio.escalas_txt()
+                                       + (f" · visto el {date.fromisoformat(m.precio.visto):%d/%m}"
+                                          if m.precio.visto else ""),
                             "Duración": "Otra duración" if m.otra_duracion else "Parecida a la tuya",
                             "Destacado": "Más barato" if m is barato else "",
                             "Estado": textos.get(estado_mes(m), estado_mes(m)),
@@ -1451,11 +1461,17 @@ with tab_fuentes:
     if precios_tp is not None:
         if precios_tp.error:
             st.caption(f"Precios reales de vuelos no disponibles: {precios_tp.error}.")
-        elif precios_tp.consultado:
-            st.caption(f"Precios reales de vuelos ({precios_tp.periodo}): consultados "
-                       f"{precios_tp.consultado.astimezone().strftime('%d/%m/%Y %H:%M')}"
-                       + (" (desde caché)" if precios_tp.desde_cache else "")
-                       + f" · {precios_tp.cantidad} ciudad{'es' if precios_tp.cantidad != 1 else ''} con precio desde {origen} · "
+        elif precios_tp.consultado or precios_tp.guardados:
+            st.caption(f"Precios reales de vuelos ({precios_tp.periodo}): "
+                       + (f"consultados {precios_tp.consultado.astimezone().strftime('%d/%m/%Y %H:%M')}"
+                          + (" (desde caché)" if precios_tp.desde_cache else "")
+                          if precios_tp.consultado else "consulta en vivo sin datos")
+                       + f" · {precios_tp.cantidad} ciudad{'es' if precios_tp.cantidad != 1 else ''} con precio desde {origen}"
+                       + (f" ({precios_tp.guardados} de precios guardados"
+                          + (f", actualizados el {date.fromisoformat(precios_tp.guardado_fecha):%d/%m}"
+                             if precios_tp.guardado_fecha else "") + ")"
+                          if precios_tp.guardados else "")
+                       + " · "
                          f"consultas a Travelpayouts hoy: {vuelos.cache.llamadas_hoy('travelpayouts')}"
                        + ("" if travelpayouts.marker() else
                           " · falta TRAVELPAYOUTS_MARKER: los enlaces no son de afiliado") + ".")

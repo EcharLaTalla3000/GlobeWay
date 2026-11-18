@@ -147,3 +147,16 @@ globeway/
 ## Limitación conocida de Streamlit
 
 El globo es un componente bidireccional de Streamlit hecho sin React (`componentes/globo_web/index.html`): recibe los datos por mensajes y devuelve a Python el último clic (destino, país o cierre de la ficha). Como Streamlit no permite cambiar de pestaña desde Python, un script mínimo hace clic en la pestaña que corresponde.
+
+## Precios guardados de vuelos (robot diario)
+
+Travelpayouts solo entrega precios de búsquedas de los últimos días. Para tener más
+destinos con precio real, un robot de GitHub Actions (`.github/workflows/precios.yml`)
+corre cada día `scripts/recolectar_precios.py`, junta los precios de los 14 orígenes
+y los guarda en la rama **`precios`** del repo (no en `main`, así la app no se reinicia).
+La app los descarga y los usa solo para los destinos sin precio en vivo, mostrando
+"precio visto el dd/mm". Se borran a las 3 semanas o cuando la fecha del viaje ya pasó.
+
+- Requiere el secreto `TRAVELPAYOUTS_TOKEN` en GitHub: Settings → Secrets and variables → Actions.
+- Correrlo a mano: pestaña Actions → "Guardar precios de vuelos" → Run workflow.
+- GitHub pausa los robots programados si el repo pasa 60 días sin cambios: se reactiva en la pestaña Actions.
