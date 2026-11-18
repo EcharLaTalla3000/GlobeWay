@@ -1,0 +1,51 @@
+# Robot diario de GlobeWay: junta precios reales de vuelos y los guarda en la rama "precios".
+# Necesita el secreto TRAVELPAYOUTS_TOKEN en: Settings → Secrets and variables → Actions.
+# Para correrlo a mano: pestaña Actions → "Guardar precios de vuelos" → Run workflow.
+name: Guardar precios de vuelos
+
+on:
+  schedule:
+    - cron: "17 9 * * *"     # todos los días a las 09:17 UTC (06:17 en Chile en verano)
+  workflow_dispatch:          # botón "Run workflow"
+
+permissions:
+  contents: write             # para poder publicar la rama "precios"
+
+jobs:
+  precios:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar lo necesario
+        run: pip install requests
+
+      - name: Traer los precios guardados de días anteriores
+        run: |
+          mkdir -p salida
+          if git fetch --depth=1 origin precios; then
+            git archive FETCH_HEAD | tar -x -C salida
+          else
+            echo "Primera vez: todavía no hay precios guardados."
+          fi
+
+      - name: Consultar Travelpayouts y sumar los precios nuevos
+        env:
+          TRAVELPAYOUTS_TOKEN: ${{ secrets.TRAVELPAYOUTS_TOKEN }}
+        run: python scripts/recolectar_precios.py salida
+
+      - name: Publicar en la rama "precios" (solo la última versión, sin historial)
+        run: |
+          cd salida
+          echo "Precios guardados por el robot de GlobeWay. No editar a mano." > README.md
+          git init -q -b precios
+          git config user.name "GlobeWay robot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -qm "Precios del $(date -u +%F)"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" precios
