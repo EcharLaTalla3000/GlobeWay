@@ -160,3 +160,12 @@ La app los descarga y los usa solo para los destinos sin precio en vivo, mostran
 - Requiere el secreto `TRAVELPAYOUTS_TOKEN` en GitHub: Settings → Secrets and variables → Actions.
 - Correrlo a mano: pestaña Actions → "Guardar precios de vuelos" → Run workflow.
 - GitHub pausa los robots programados si el repo pasa 60 días sin cambios: se reactiva en la pestaña Actions.
+
+## Cambios v18
+- Íconos sobrios (Material de Streamlit y SVG propios en el globo) en vez de emojis.
+- «Explorar destino» muestra de 3 a 5 fotos de Wikipedia según la relevancia del destino en su país
+  (se descartan mapas, banderas, escudos y fotos antiguas).
+- 209 destinos nuevos en países que tenían menos de 10 (títulos y coordenadas verificados en Wikipedia).
+  Para agregar más: editar `datos/ranking/*.txt`, correr `python scripts/generar_destinos.py` y
+  `python scripts/precalcular_red.py`.
+- Con la pantalla completa activada, «Ver hoteles» y «Ver actividades» ahora salen de ella y muestran la pestaña.

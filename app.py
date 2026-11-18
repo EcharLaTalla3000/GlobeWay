@@ -9,6 +9,7 @@ Ejecutar:  streamlit run app.py
 from __future__ import annotations
 
 import os
+import html
 import random
 import time
 from datetime import date, timedelta
@@ -32,7 +33,7 @@ from servicios.costos import (ESTADOS, ESTADOS_GENERALES, TIPOS_ALOJAMIENTO, cal
 secretos.cargar()  # claves desde variables de entorno, .env o Secrets de Streamlit Cloud
 
 _ICONO = Path(__file__).parent / "componentes" / "logo_gw.png"
-st.set_page_config(page_title="GlobeWay", page_icon=str(_ICONO) if _ICONO.exists() else "🌍",
+st.set_page_config(page_title="GlobeWay", page_icon=str(_ICONO) if _ICONO.exists() else ":material/public:",
                    layout="wide", initial_sidebar_state="auto")
 
 # Modo claro u oscuro: lo elige la persona con el botón de arriba (Streamlit lo recuerda)
@@ -178,7 +179,7 @@ try {
 </script>""", height=0)
 
 # Tema por defecto: oscuro. La primera vez (o si el navegador seguía "el del sistema"),
-# se deja guardado "oscuro"; el botón "☀️ Modo claro" lo cambia después.
+# se deja guardado "oscuro"; el botón "Modo claro" lo cambia después.
 components.html("""<script>
 try {
   const w = window.parent, k = 'stActiveTheme-' + w.location.pathname + '-v2', v = w.localStorage.getItem(k);
@@ -259,7 +260,7 @@ def _cargar_desde_url() -> None:
         ss["_dest_url"] = qp["dest"]
 
 
-# Opciones del "⚡ Modo rendimiento": (texto, ayuda)
+# Opciones del "Modo rendimiento": (texto, ayuda)
 OPCIONES_RENDIMIENTO = {
     "pausa": ("Dibujar el globo solo cuando se mueve",
               "Cuando el globo está quieto o no se ve en pantalla, deja de dibujarse. Es lo que más ahorra."),
@@ -332,6 +333,12 @@ def _wiki(titulo: str):
     return info_destino.resumen(titulo)
 
 
+# Ícono de alerta para avisos en HTML (los íconos :material/...: no funcionan dentro de HTML)
+ICO_ALERTA = ('<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" '
+              'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" '
+              'style="vertical-align:-2px;margin-right:2px"><path d="M12 3.5 2.5 20h19L12 3.5z"/>'
+              '<path d="M12 10v4.5M12 17.3v.2"/></svg>')
+
 tasas = _tasas()
 DESTINOS = _destinos()
 TIPOS_TURISMO = sorted({t for d in DESTINOS for t in d["tipo"]})
@@ -341,7 +348,7 @@ TIPOS_TURISMO = sorted({t for d in DESTINOS for t in d["tipo"]})
 # Panel lateral: parámetros del viaje
 # --------------------------------------------------------------------------
 with st.sidebar:
-    sorpresa = st.button("🎲 Sorpréndeme", type="primary", width="stretch",
+    sorpresa = st.button("Sorpréndeme", icon=":material/casino:", type="primary", width="stretch",
                          help="Elige al azar un destino que te alcanza (o uno de los más "
                               "turísticos, en ese modo) y te lo muestra en el globo.")
     # Los modos del mapa viven dentro de «Más opciones» (más abajo); aquí solo se leen,
@@ -398,7 +405,7 @@ with st.sidebar:
         _defecto("cfg_dias", 8)
         dias = st.slider("Duración (días)", 2, 30, key="cfg_dias")
 
-    with st.expander("➕ Más opciones"):
+    with st.expander("Más opciones", icon=":material/tune:"):
         st.markdown("**Modo del mapa**")
         st.toggle(
             "Precios generales", key="cfg_generales",
@@ -446,7 +453,7 @@ with st.sidebar:
     zona_compartir = st.container()   # se llena al final, con el enlace de esta búsqueda
     if tasas.es_respaldo:
         st.warning("No se pudo obtener el tipo de cambio en línea; se usan tasas fijas "
-                   "aproximadas. Detalle: " + tasas.fuente.split("Motivo: ")[-1], icon="⚠️")
+                   "aproximadas. Detalle: " + tasas.fuente.split("Motivo: ")[-1], icon=":material/warning:")
         if st.button("Reintentar tipo de cambio"):
             st.rerun()
 
@@ -456,10 +463,10 @@ with st.sidebar:
     for _k in OPCIONES_RENDIMIENTO:
         _defecto(f"rend_{_k}", True)
     col_rend, col_conf = st.columns([4, 1], vertical_alignment="center")
-    modo_rend = col_rend.toggle("⚡ Modo rendimiento", key="cfg_rend",
+    modo_rend = col_rend.toggle(":material/bolt: Modo rendimiento", key="cfg_rend",
                                 help="Hace que la app corra más fluida y caliente menos el equipo. "
                                      "Con el engranaje eliges qué se activa.")
-    with col_conf.container(key="rend_conf"), st.popover("⚙️", help="Elegir qué activa el modo rendimiento"):
+    with col_conf.container(key="rend_conf"), st.popover(":material/settings:", help="Elegir qué activa el modo rendimiento"):
         st.markdown("**¿Qué activa el modo rendimiento?**")
         for _k, (_texto, _ayuda) in OPCIONES_RENDIMIENTO.items():
             st.checkbox(_texto, key=f"rend_{_k}", help=_ayuda)
@@ -681,7 +688,8 @@ datos_globo = {
 # --------------------------------------------------------------------------
 col_marca, col_tema = st.columns([5, 1], vertical_alignment="center")
 col_marca.markdown(f'<p class="marca">{logo_mini(30, claro=MODO_CLARO)}Globe<span>Way</span></p>', unsafe_allow_html=True)
-if col_tema.button("🌙 Modo oscuro" if MODO_CLARO else "☀️ Modo claro", key="boton_tema", width="stretch",
+if col_tema.button("Modo oscuro" if MODO_CLARO else "Modo claro", key="boton_tema", width="stretch",
+                   icon=":material/dark_mode:" if MODO_CLARO else ":material/light_mode:",
                    help="Cambia los colores de la página. Se recuerda en este navegador."):
     # Streamlit guarda el tema elegido en el navegador; se cambia y se recarga la página
     components.html(f"""<script>
@@ -711,13 +719,13 @@ else:
                 unsafe_allow_html=True)
 n_reales = sum(1 for f in filas if f["calc"].vuelo_real)
 if precios_tp is not None and n_reales:
-    st.markdown('<div class="aviso-demo">⚠ <b>Modo demostración parcial.</b> '
+    st.markdown('<div class="aviso-demo">' + ICO_ALERTA + ' <b>Modo demostración parcial.</b> '
                 f'<b>{n_reales} de {len(filas)} destinos</b> usan el <b>precio real de búsquedas '
-                'recientes</b> del vuelo (Aviasales, ✈). El resto de los vuelos, el costo de vida y '
+                'recientes</b> del vuelo (Aviasales). El resto de los vuelos, el costo de vida y '
                 'los alojamientos son <b>estimaciones de ejemplo</b>. El tipo de cambio sí es real.</div>',
                 unsafe_allow_html=True)
 else:
-    st.markdown('<div class="aviso-demo">⚠ <b>Modo demostración.</b> Los costos de vida, vuelos y '
+    st.markdown('<div class="aviso-demo">' + ICO_ALERTA + ' <b>Modo demostración.</b> Los costos de vida, vuelos y '
                 'alojamientos son <b>estimaciones de ejemplo</b>, no tarifas reales. '
                 'El tipo de cambio sí es real cuando hay conexión.</div>', unsafe_allow_html=True)
     if precios_tp is not None and precios_tp.error:
@@ -782,8 +790,8 @@ if sorpresa:
         st.session_state["pais_globo"] = elegido["iso3"]
         enfoque = {"id": elegido["id"], "t": time.time()}
         ir_a_pestana = "Explorar destino"
-        st.toast(f"🎲 ¡Te tocó **{elegido['ciudad']}** ({elegido['pais']})! "
-                 "Mira el detalle en «Explorar destino».")
+        st.toast(f"¡Te tocó **{elegido['ciudad']}** ({elegido['pais']})! "
+                 "Mira el detalle en «Explorar destino».", icon=":material/casino:")
     else:
         st.toast("No hay destinos que te alcancen con este presupuesto. Prueba subiéndolo "
                  "o cambiando la duración del viaje.")
@@ -801,7 +809,8 @@ if clic and clic.get("t") != st.session_state.get("_ultimo_clic"):
         st.session_state["dest_explorar"] = clic["id"]
         st.session_state["pais_globo"] = f_clic["iso3"]
         ir_a_pestana = "Explorar destino"
-        st.toast(f"📍 {f_clic['ciudad']}: mira el detalle en «Explorar destino», bajo el globo.")
+        st.toast(f"{f_clic['ciudad']}: mira el detalle en «Explorar destino», bajo el globo.",
+                 icon=":material/location_on:")
     elif clic.get("tipo") == "actividades" and clic.get("id") in ids_globo:
         st.session_state["dest_explorar"] = clic["id"]
         st.session_state["pais_globo"] = ids_globo[clic["id"]]["iso3"]
@@ -868,7 +877,7 @@ def fila_tabla(f: dict) -> dict:
         "Estado": textos[f["estado"]],
         f"Total viaje ({moneda})": round(tipos_cambio.convertir(c.total, moneda, tasas)),
         f"Vuelo p/p ({moneda})": round(tipos_cambio.convertir(c.vuelo_pp, moneda, tasas)),
-        "Precio del vuelo": "✈ Real (búsquedas recientes)" if r else "Estimado",
+        "Precio del vuelo": "Real (búsquedas recientes)" if r else "Estimado",
         "Ruta": (f"{r.aeropuerto_origen} → {r.aeropuerto_destino} · {r.fechas_txt()}"
                  + (" (fechas cercanas)" if getattr(r, "fechas_cercanas", False) else "")) if r
                 else c.ruta.recorrido() + (f" + {round(c.ruta.traslado_km)} km de traslado"
@@ -877,7 +886,7 @@ def fila_tabla(f: dict) -> dict:
         "Aeropuerto más cercano": texto_aeropuerto(f),
         f"Costo de vida p/p/día ({moneda})": round(tipos_cambio.convertir(c.diario_pp, moneda, tasas)),
         "% del presupuesto": (c.total / presupuesto_usd * 100) if presupuesto_usd else None,
-        "Alerta": "⚠️" if f.get("riesgo") else "",
+        "Alerta": "Sí" if f.get("riesgo") else "",
     }
 
 
@@ -896,7 +905,7 @@ def destino_extra(d: dict) -> dict:
 
 with tab_lista:
     busqueda = st.text_input(
-        "🔎 Buscar ciudad o pueblo", key="busqueda",
+        ":material/search: Buscar ciudad o pueblo", key="busqueda",
         placeholder="Ej.: Pucón, Cusco, Hallstatt, Chiloé…",
         help="Busca en los destinos del globo y en todas las ciudades y pueblos del mundo con "
              "más de 1.000 habitantes (base abierta GeoNames). Para los lugares que no están en "
@@ -972,8 +981,8 @@ with tab_lista:
                 "Población": st.column_config.NumberColumn(format="localized"),
             },
         )
-        with st.expander("ℹ️ Cómo leer estos precios"):
-            st.caption(("Los vuelos marcados ✈ son precios reales de búsquedas recientes en Aviasales "
+        with st.expander("Cómo leer estos precios", icon=":material/info:"):
+            st.caption(("Los vuelos marcados como «Real» son precios reales de búsquedas recientes en Aviasales "
                         "(pueden cambiar); todo lo demás es estimado. " if n_reales else
                         "Todos los valores son estimados. ")
                        + "El total incluye vuelos ida y vuelta, alojamiento, alimentación, transporte "
@@ -981,6 +990,21 @@ with tab_lista:
                        + (" En los lugares que no están en el globo, el costo de vida es el promedio de "
                           "su país (o de su región, si el país no tiene destinos en el globo)."
                           if any(f.get("extra") for f in resultado) else ""))
+
+def galeria_html(urls: list[str], nombre: str) -> str:
+    """Foto principal grande y, debajo, miniaturas del mismo alto (se abren en grande al tocarlas)."""
+    def img(u, estilo):
+        u = html.escape(u, quote=True)
+        return (f'<a href="{u}" target="_blank" rel="noopener" style="display:block;{estilo}">'
+                f'<img src="{u}" alt="{html.escape(nombre)}" loading="lazy" '
+                f'style="width:100%;height:100%;object-fit:cover;display:block;border-radius:10px"></a>')
+    partes = [img(urls[0], "aspect-ratio:16/10")]
+    if len(urls) > 1:
+        partes.append(f'<div style="display:grid;grid-template-columns:repeat({len(urls) - 1},1fr);'
+                      'gap:6px;margin-top:6px">'
+                      + "".join(img(u, "aspect-ratio:4/3") for u in urls[1:]) + "</div>")
+    return '<div class="gw-galeria" style="margin-bottom:10px">' + "".join(partes) + "</div>"
+
 
 # ---- Detalle de un destino ----
 with tab_explorar:
@@ -994,17 +1018,22 @@ with tab_explorar:
 
         with izq:
             wiki = _wiki(f["wiki"])
-            if wiki and wiki.get("imagen"):
-                st.image(wiki["imagen"], width="stretch")
+            fotos_dest = [u for u in ((wiki or {}).get("fotos") or [(wiki or {}).get("imagen")]) if u]
+            if fotos_dest:
+                # Más fotos para los destinos más relevantes de su país: 5, 4 o 3
+                rk = f.get("rank") or 99
+                fotos_dest = fotos_dest[:5 if rk <= 3 else 4 if rk <= 6 else 3]
+                st.markdown(galeria_html(fotos_dest, f["ciudad"]), unsafe_allow_html=True)
             st.markdown(f"## {f['ciudad']}")
             if not f.get("extra"):
                 es_fav = dest_id in st.session_state.get("favoritos", [])
-                st.button("★ Quitar de favoritos" if es_fav else "☆ Guardar en favoritos",
+                st.button("Quitar de favoritos" if es_fav else "Guardar en favoritos",
+                          icon=":material/bookmark_remove:" if es_fav else ":material/bookmark_add:",
                           key=f"fav_{dest_id}", on_click=alternar_favorito, args=(dest_id,),
                           help="Tus favoritos quedan en el enlace de la página: guárdalo o "
                                "compártelo para no perderlos. También puedes compararlos "
                                "en la pestaña «Comparar».")
-            if st.button("🎟 Ver actividades", key=f"act_{dest_id}",
+            if st.button("Ver actividades", icon=":material/local_activity:", key=f"act_{dest_id}",
                          help="Lugares para visitar y cosas para hacer en este destino"):
                 ir_a_pestana = "Actividades"
             if f.get("extra"):
@@ -1018,7 +1047,7 @@ with tab_explorar:
             if f.get("riesgo"):
                 st.warning("Este país tiene advertencias de seguridad relevantes para viajeros "
                            "(dato referencial). Revisa las recomendaciones de viaje de la "
-                           "cancillería de tu país antes de planificar.", icon="⚠️")
+                           "cancillería de tu país antes de planificar.", icon=":material/warning:")
             st.markdown(f"<span class='etq' style='color:{colores[f['estado']]}'>"
                         f"{textos[f['estado']]}</span>", unsafe_allow_html=True)
             if wiki and wiki.get("extracto"):
@@ -1052,7 +1081,7 @@ with tab_explorar:
                              "Alimentación", "Transporte local", "Actividades"],
                 "Monto": [fmt(c.vuelos), fmt(c.alojamiento), fmt(c.comida),
                           fmt(c.transporte), fmt(c.actividades)],
-                "Tipo": ["✈ Real (búsquedas recientes)" if c.vuelo_real else "Estimado"]
+                "Tipo": ["Real (búsquedas recientes)" if c.vuelo_real else "Estimado"]
                         + ["Estimado"] * 4,
             }), hide_index=True, width="stretch")
 
@@ -1065,7 +1094,7 @@ with tab_explorar:
                 st.write("El destino está muy cerca de tu origen: se asume viaje por tierra (sin vuelo).")
             elif c.vuelo_real:
                 r = c.vuelo_real
-                st.write(f"✈ **Precio real de búsquedas recientes:** **{fmt(r.precio_pp)}** ida y vuelta "
+                st.write(f":material/flight: **Precio real de búsquedas recientes:** **{fmt(r.precio_pp)}** ida y vuelta "
                          f"por persona")
                 st.write(f"**{r.aeropuerto_origen} → {r.aeropuerto_destino}** · {texto_vuelo_real(r)}")
                 if getattr(r, "visto", ""):
@@ -1082,7 +1111,7 @@ with tab_explorar:
                                   if precios_tp.consultado else ""))
                 if texto_aeropuerto(f, largo=True):
                     st.caption(texto_aeropuerto(f, largo=True))
-                st.link_button("✈ Ver vuelos disponibles ↗", r.enlace(int(viajeros)), type="primary",
+                st.link_button("Ver vuelos disponibles ↗", r.enlace(int(viajeros)), icon=":material/flight:", type="primary",
                                width="stretch")
             else:
                 st.write(f"Estimado: **{fmt(c.vuelo_pp)}** ida y vuelta por persona · "
@@ -1098,7 +1127,7 @@ with tab_explorar:
                 if texto_aeropuerto(f, largo=True):
                     st.caption(texto_aeropuerto(f, largo=True))
                 if enlace_vuelos(f):
-                    st.link_button("✈ Ver vuelos disponibles ↗", enlace_vuelos(f), type="primary",
+                    st.link_button("Ver vuelos disponibles ↗", enlace_vuelos(f), icon=":material/flight:", type="primary",
                                    width="stretch",
                                    help="Abre la búsqueda en Aviasales"
                                         + ("" if usar_fechas else " con fechas de ejemplo (en un mes más)")
@@ -1140,7 +1169,7 @@ with tab_explorar:
 
         # ---- ¿Cuándo es más barato ir? ----
         if not c.ruta.por_tierra:
-            st.markdown("#### 📅 ¿Cuándo es más barato ir?")
+            st.markdown("#### :material/calendar_month: ¿Cuándo es más barato ir?")
             codigo_dest = ((c.vuelo_real.aeropuerto_destino if c.vuelo_real else None)
                            or f.get("iata") or c.ruta.aeropuerto_final)
             if not travelpayouts.configurado():
@@ -1238,7 +1267,7 @@ with tab_activ:
     else:
         fa = por_id[dest_act]
         ca1, ca2 = st.columns([3, 1], vertical_alignment="center")
-        ca1.markdown(f"### 🎟 Actividades en {fa['ciudad']}")
+        ca1.markdown(f"### :material/local_activity: Actividades en {fa['ciudad']}")
         ca1.caption("Para ver otro destino, elígelo en «Explorar destino» o tócalo en el globo.")
         ca2.link_button("Tours y entradas ↗", actividades.enlace_tours(fa["ciudad"].split(" (")[0], fa["pais"]),
                         width="stretch", help="Busca tours, excursiones y entradas en GetYourGuide")
@@ -1286,11 +1315,11 @@ with tab_comparar:
     favs = [i for i in st.session_state.get("favoritos", []) if i in por_id]
     if favs:
         cf1, cf2 = st.columns([3, 1])
-        cf1.caption("⭐ Tus favoritos: " + ", ".join(por_id[i]["ciudad"] for i in favs))
+        cf1.caption(":material/bookmark: Tus favoritos: " + ", ".join(por_id[i]["ciudad"] for i in favs))
         cf2.button("Comparar mis favoritos", width="stretch", key="cmp_favs",
                    on_click=lambda: st.session_state.update(cmp_sel=favs[:3]))
     else:
-        st.caption("Consejo: guarda destinos con ☆ en «Explorar destino» y aparecerán aquí.")
+        st.caption("Consejo: guarda destinos con «Guardar en favoritos» en «Explorar destino» y aparecerán aquí.")
     if "cmp_sel" not in st.session_state:
         actual = st.session_state.get("dest_explorar")
         st.session_state["cmp_sel"] = favs[:3] or ([actual] if actual in por_id else [])
@@ -1305,9 +1334,9 @@ with tab_comparar:
         mas_barato = min(elegidos, key=lambda x: x["calc"].total)
         mas_caro = max(elegidos, key=lambda x: x["calc"].total)
         if mas_barato is not mas_caro:
-            st.success(f"💡 **{mas_barato['ciudad']}** es el más barato: ahorras "
+            st.success(f"**{mas_barato['ciudad']}** es el más barato: ahorras "
                        f"**{fmt(mas_caro['calc'].total - mas_barato['calc'].total)}** frente a "
-                       f"{mas_caro['ciudad']}.")
+                       f"{mas_caro['ciudad']}.", icon=":material/savings:")
 
         def fila_cmp(x):
             c = x["calc"]
@@ -1315,7 +1344,7 @@ with tab_comparar:
                 "Total del viaje": fmt(c.total),
                 "% del presupuesto": f"{c.total / presupuesto_usd * 100:.0f} %" if presupuesto_usd else "—",
                 "Estado": textos[x["estado"]],
-                "Vuelo por persona": fmt(c.vuelo_pp) + (" ✈ real" if c.vuelo_real else " (estimado)"),
+                "Vuelo por persona": fmt(c.vuelo_pp) + (" · real" if c.vuelo_real else " (estimado)"),
                 f"Vuelos ({viajeros} pers.)": fmt(c.vuelos),
                 f"Alojamiento ({noches} noches)": fmt(c.alojamiento),
                 "Alimentación": fmt(c.comida),
@@ -1325,7 +1354,7 @@ with tab_comparar:
                 "Escalas": str(c.vuelo_real.escalas_ida if c.vuelo_real else c.ruta.escalas),
                 "Distancia volada": f"{c.distancia_km:,.0f} km".replace(",", "."),
                 "Ranking en su país": f"#{x['rank']}" if x.get("rank") else "—",
-                "Advertencias de seguridad": "⚠️ Sí" if x.get("riesgo") else "No",
+                "Advertencias de seguridad": "Sí" if x.get("riesgo") else "No",
             }
 
         tabla_cmp = pd.DataFrame({f"{x['ciudad']} ({x['pais']})": fila_cmp(x) for x in elegidos})
@@ -1352,7 +1381,7 @@ with tab_comparar:
             grafico(chart_cmp)
         except Exception:
             pass   # si el gráfico falla, igual queda la tabla
-        st.caption("Vuelos marcados ✈: precio real de búsquedas recientes; el resto de los montos son "
+        st.caption("Vuelos marcados «real»: precio real de búsquedas recientes; el resto de los montos son "
                    "estimados de demostración.")
 
 # ---- Alojamientos ----
@@ -1373,7 +1402,7 @@ with tab_aloj:
 
         if hoteles.configurado():
             clave_h = f"{dest_a}:{ida_h}:{vuelta_h}:{int(viajeros)}"
-            if (a2.button("🏨 Buscar hoteles reales", type="primary", width="stretch", key=f"hot_{clave_h}")
+            if (a2.button("Buscar hoteles reales", icon=":material/hotel:", type="primary", width="stretch", key=f"hot_{clave_h}")
                     or st.session_state.pop("hoteles_auto", None) == dest_a):
                 st.session_state["hoteles_ver"] = clave_h
             if not usar_fechas:
@@ -1386,7 +1415,7 @@ with tab_aloj:
                 if res_h.prueba:
                     st.warning("Estás usando una clave de **prueba** de LiteAPI (sandbox): los hoteles son "
                                "reales, pero **los precios son de prueba**. Con una clave de producción "
-                               "serán los precios reales.", icon="🧪")
+                               "serán los precios reales.", icon=":material/science:")
                 if not res_h.cantidad:
                     st.info(f"No se encontraron hoteles con precio: {res_h.error or 'sin resultados'}.")
                 else:
@@ -1404,7 +1433,7 @@ with tab_aloj:
                                     st.image(h.foto, width="stretch")
                                 st.markdown(f"**{h.nombre}**")
                                 if h.nota:
-                                    st.caption(f"⭐ {h.nota:.1f}"
+                                    st.caption(f":material/star: {h.nota:.1f}"
                                                + (f" · {h.resenas:,} reseñas".replace(",", ".") if h.resenas else ""))
                                 st.markdown(f"**{fmt(h.precio_total)}** total")
                                 st.caption(f"{fmt(h.precio_total / max(noches, 1))} por noche")
@@ -1437,21 +1466,21 @@ with tab_fuentes:
                      "fórmula por distancia" if n_reales else "Fórmula por distancia")
     if vuelos.duffel_configurado():
         fuente_vuelos += " + Duffel bajo demanda"
-    estado_vuelos = ("✅ Real de búsquedas recientes (✈) + 🟡 estimado" if n_reales
-                     else "✅ Verificación real disponible" if vuelos.duffel_configurado()
-                     else "🟡 Estimado (demostración)")
+    estado_vuelos = (":green[:material/check_circle:] Real de búsquedas recientes + :orange[:material/pending:] estimado" if n_reales
+                     else ":green[:material/check_circle:] Verificación real disponible" if vuelos.duffel_configurado()
+                     else ":orange[:material/pending:] Estimado (demostración)")
     st.markdown(f"""
 | Dato | Fuente actual | Estado |
 |---|---|---|
-| Tipo de cambio | {tasas.fuente} | {"⚠️ Respaldo fijo" if tasas.es_respaldo else "✅ Real, actualizado cada ~24 h"} |
+| Tipo de cambio | {tasas.fuente} | {":orange[:material/warning:] Respaldo fijo" if tasas.es_respaldo else ":green[:material/check_circle:] Real, actualizado cada ~24 h"} |
 | Vuelos | {fuente_vuelos} | {estado_vuelos} |
-| Alojamientos | {"LiteAPI: hoteles cercanos, 10 por nivel de estrellas" if hoteles.configurado() else "Ejemplos ficticios"} | {("🧪 Hoteles reales, precios de prueba (clave sandbox)" if hoteles.es_prueba() else "✅ Real (precio mínimo disponible)") if hoteles.configurado() else "🟡 Ejemplos ficticios + enlace a búsqueda real"} |
-| Actividades | Wikivoyage (secciones «Ver» y «Hacer») + búsqueda de tours en GetYourGuide | ✅ Real (guía de viajes libre, CC BY-SA) |
-| Costo de vida (comida, transporte, actividades) | `datos/destinos.json` | 🟡 Estimado manual (demostración) |
-| Fotos e información general | Wikipedia en español | ✅ Real |
-| Ranking de destinos por país | {"Visitas a Wikipedia en los últimos 30 días" if popularidad.en_vivo else "Lista base compilada manualmente"} | {"✅ Real, actualizado cada 3 días" if popularidad.en_vivo else "🟡 Base (sin conexión)"} |
-| Ciudades y pueblos del buscador | GeoNames (CC BY 4.0): ciudades y pueblos con más de 1.000 habitantes | ✅ Real (nombre, ubicación y población) · 🟡 costos estimados con el promedio del país |
-| Llegadas de turistas por país | Cifras aproximadas 2023–2024 (ONU Turismo y fuentes nacionales) | 🟡 Referencial, fijo |
+| Alojamientos | {"LiteAPI: hoteles cercanos, 10 por nivel de estrellas" if hoteles.configurado() else "Ejemplos ficticios"} | {(":blue[:material/science:] Hoteles reales, precios de prueba (clave sandbox)" if hoteles.es_prueba() else ":green[:material/check_circle:] Real (precio mínimo disponible)") if hoteles.configurado() else ":orange[:material/pending:] Ejemplos ficticios + enlace a búsqueda real"} |
+| Actividades | Wikivoyage (secciones «Ver» y «Hacer») + búsqueda de tours en GetYourGuide | :green[:material/check_circle:] Real (guía de viajes libre, CC BY-SA) |
+| Costo de vida (comida, transporte, actividades) | `datos/destinos.json` | :orange[:material/pending:] Estimado manual (demostración) |
+| Fotos e información general | Wikipedia en español | :green[:material/check_circle:] Real |
+| Ranking de destinos por país | {"Visitas a Wikipedia en los últimos 30 días" if popularidad.en_vivo else "Lista base compilada manualmente"} | {":green[:material/check_circle:] Real, actualizado cada 3 días" if popularidad.en_vivo else ":orange[:material/pending:] Base (sin conexión)"} |
+| Ciudades y pueblos del buscador | GeoNames (CC BY 4.0): ciudades y pueblos con más de 1.000 habitantes | :green[:material/check_circle:] Real (nombre, ubicación y población) · :orange[:material/pending:] costos estimados con el promedio del país |
+| Llegadas de turistas por país | Cifras aproximadas 2023–2024 (ONU Turismo y fuentes nacionales) | :orange[:material/pending:] Referencial, fijo |
 """)
     if popularidad.error and not popularidad.en_vivo:
         st.caption(f"Ranking en vivo no disponible: {popularidad.error}.")
@@ -1533,8 +1562,9 @@ if dict(st.query_params) != params_url:
     st.query_params.from_dict(params_url)   # la dirección de la página siempre refleja la búsqueda
 enlace_compartir = f"{APP_URL}/?{urlencode(params_url)}"
 with zona_compartir:
-    with st.expander("🔗 Compartir esta búsqueda"
-                     + (f" · ⭐ {len(favs_url)}" if favs_url else "")):
+    with st.expander("Compartir esta búsqueda"
+                     + (f" · {len(favs_url)} favorito{'s' if len(favs_url) != 1 else ''}" if favs_url else ""),
+                     icon=":material/link:"):
         st.code(enlace_compartir, language=None, wrap_lines=True)
         st.caption("Copia el enlace con el botón de la esquina. Quien lo abra verá tu misma "
                    "búsqueda, tus favoritos y el destino que estás mirando. Guárdalo también "
