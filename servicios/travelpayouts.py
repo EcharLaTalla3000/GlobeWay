@@ -8,6 +8,10 @@ Qué entrega:
   origen y fechas, guardadas 6 horas) para cubrir la mayor cantidad de destinos.
 - Es un precio real pero "de búsquedas recientes": puede haber cambiado o
   agotarse. La app siempre lo muestra con esa etiqueta.
+- PRECIOS GUARDADOS: un proceso diario en GitHub (scripts/recolectar_precios.py,
+  .github/workflows/precios.yml) junta los precios de varias semanas en la rama
+  "precios" del repo. Si un destino no tiene precio en vivo, se usa el guardado,
+  con la fecha en que se vio (campo `visto`).
 - Los destinos sin dato siguen usando la fórmula estimada (servicios/rutas.py).
 
 Claves (en Settings → Secrets de Streamlit Cloud, Secretos de Colab o .env):
@@ -65,6 +69,7 @@ class PrecioReal:
     ruta_link: str            # enlace relativo que entrega Aviasales
     fechas_cercanas: bool = False   # True si no hubo precio para tus fechas exactas
     km_destino: float = 0.0         # distancia del aeropuerto al destino (si no tiene aeropuerto propio)
+    visto: str = ""                 # "AAAA-MM-DD" si viene de los precios guardados (no de la consulta en vivo)
 
     def enlace(self, viajeros: int = 1) -> str:
         """Enlace a la búsqueda en Aviasales (con tu marker de afiliado si existe)."""
@@ -97,6 +102,8 @@ class TablaPrecios:
     desde_cache: bool = False
     error: str | None = None
     periodo: str = ""
+    guardados: int = 0          # ciudades cuyo precio viene de los precios guardados
+    guardado_fecha: str = ""    # día en que se actualizaron los precios guardados
 
     @property
     def cantidad(self) -> int:
@@ -223,6 +230,54 @@ def _pedir(url: str, params: dict, token: str) -> list[dict]:
 
 
 # --------------------------------------------------------------------------
+# Precios guardados (los junta cada día scripts/recolectar_precios.py)
+# --------------------------------------------------------------------------
+# El robot de GitHub los publica en la rama "precios" del repo (público), así la
+# app los lee sin que cambie la rama main ni haya que hacer Reboot.
+REPO_PRECIOS = os.getenv("GLOBEWAY_REPO", "EcharLaTalla3000/GlobeWay")
+URL_GUARDADOS = "https://raw.githubusercontent.com/{repo}/precios/precios/{origen}.json.gz"
+CARPETA_LOCAL = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                             "datos", "precios")   # para probar en el computador (opcional)
+TTL_GUARDADOS = 6 * 3600
+MAX_DIAS_VISTO = 21   # un precio visto hace más de 3 semanas ya no se usa
+
+
+def precios_guardados(origen_tp: str) -> tuple[list[dict], str]:
+    """Ofertas guardadas desde `origen_tp` (código de ciudad) y fecha de actualización.
+    Nunca lanza errores: si no hay archivo o internet, devuelve ([], "")."""
+    import gzip
+    import json
+    clave = f"tp:guardados:{origen_tp}"
+    en_cache = cache.obtener(clave, TTL_GUARDADOS)
+    if en_cache:
+        d = en_cache[0]
+        return d.get("ofertas", []), d.get("actualizado", "")
+    datos = None
+    local = os.path.join(CARPETA_LOCAL, f"{origen_tp}.json.gz")
+    try:
+        if os.path.exists(local):
+            with open(local, "rb") as f:
+                datos = json.loads(gzip.decompress(f.read()))
+        else:
+            r = requests.get(URL_GUARDADOS.format(repo=REPO_PRECIOS, origen=origen_tp), timeout=15)
+            if r.status_code == 200:
+                datos = json.loads(gzip.decompress(r.content))
+    except Exception:
+        datos = None
+    if not isinstance(datos, dict):
+        datos = {"ofertas": [], "actualizado": ""}
+    cache.guardar(clave, datos)   # también se guarda vacío, para no reintentar en cada clic
+    return datos.get("ofertas", []), datos.get("actualizado", "")
+
+
+def _vigente(o: dict, hoy: date) -> bool:
+    try:
+        return (hoy - date.fromisoformat(o.get("visto", "")[:10])).days <= MAX_DIAS_VISTO
+    except ValueError:
+        return False
+
+
+# --------------------------------------------------------------------------
 # Consulta principal
 # --------------------------------------------------------------------------
 def _mes(d: date, n: int = 0) -> str:
@@ -306,6 +361,7 @@ def obtener_precios(origen: str, llegada: date | None, salida: date | None,
         clave = f"tp2:{origen_tp}:{_mes(hoy + timedelta(days=30))}"
 
     en_cache = cache.obtener(clave, TTL_PRECIOS)
+    error_vivo = None
     if en_cache:
         ofertas, tabla.consultado = en_cache
         tabla.desde_cache = True
@@ -336,52 +392,74 @@ def obtener_precios(origen: str, llegada: date | None, salida: date | None,
                 if err:
                     errores.append(err)
         errores.sort(key=lambda e: ("token" not in e, "límite" not in e))   # el error más claro primero
-        if not ofertas:
-            tabla.error = errores[0] if errores else "Travelpayouts no tiene precios recientes desde este origen"
-            return tabla
-        tabla.consultado = cache.guardar(clave, ofertas)   # solo se guarda si la consulta salió bien
+        if ofertas:
+            tabla.consultado = cache.guardar(clave, ofertas)   # solo se guarda si la consulta salió bien
+        else:
+            error_vivo = errores[0] if errores else "Travelpayouts no tiene precios recientes desde este origen"
 
     tol = tolerancia(noches)
-    mejor_aero: dict[str, tuple] = {}
-    mejor_ciudad: dict[str, tuple] = {}
-    for o in ofertas:
-        try:
-            ida = date.fromisoformat((o.get("departure_at") or "")[:10])
-            vuelta = date.fromisoformat((o.get("return_at") or "")[:10])
-        except ValueError:
-            continue
-        n = (vuelta - ida).days
-        if n < 1 or abs(n - noches) > tol:
-            continue
-        if exactas:
-            if ida == llegada and vuelta == salida:
-                nivel = 0
-            elif abs((ida - llegada).days) <= 7:
-                nivel = 1
+
+    def elegir(lista: list[dict], guardado: bool) -> tuple[dict, dict]:
+        """La mejor oferta por aeropuerto y por ciudad (primero fechas exactas, luego precio)."""
+        mejor_aero: dict[str, tuple] = {}
+        mejor_ciudad: dict[str, tuple] = {}
+        for o in lista:
+            if guardado and not _vigente(o, hoy):
+                continue
+            try:
+                ida = date.fromisoformat((o.get("departure_at") or "")[:10])
+                vuelta = date.fromisoformat((o.get("return_at") or "")[:10])
+            except ValueError:
+                continue
+            n = (vuelta - ida).days
+            if n < 1 or abs(n - noches) > tol:
+                continue
+            if exactas:
+                if ida == llegada and vuelta == salida:
+                    nivel = 0
+                elif abs((ida - llegada).days) <= 7:
+                    nivel = 1
+                else:
+                    continue
             else:
+                if not (hoy + timedelta(days=3) <= ida <= hoy + timedelta(days=120)):
+                    continue
+                nivel = 0
+            destino = o.get("destination")
+            if not destino or not o.get("price"):
                 continue
-        else:
-            if not (hoy + timedelta(days=3) <= ida <= hoy + timedelta(days=120)):
-                continue
-            nivel = 0
-        destino = o.get("destination")
-        if not destino:
-            continue
-        p = PrecioReal(
-            precio_pp=float(o["price"]), aerolinea=o.get("airline") or "",
-            ida=ida.isoformat(), vuelta=vuelta.isoformat(),
-            escalas_ida=int(o.get("transfers") or 0),
-            escalas_vuelta=int(o.get("return_transfers") or 0),
-            aeropuerto_origen=o.get("origin_airport") or origen_tp,
-            aeropuerto_destino=o.get("destination_airport") or destino,
-            ruta_link=o.get("link") or "", fechas_cercanas=bool(nivel),
-        )
-        # Se guarda la mejor oferta por aeropuerto y por ciudad (primero fechas exactas, luego precio)
-        for dic, k in ((mejor_aero, o.get("destination_airport")), (mejor_ciudad, destino)):
-            if k and (k not in dic or (nivel, p.precio_pp) < dic[k][0]):
-                dic[k] = ((nivel, p.precio_pp), p)
-    tabla.por_aeropuerto = {k: v[1] for k, v in mejor_aero.items()}
-    tabla.por_ciudad = {k: v[1] for k, v in mejor_ciudad.items()}
+            p = PrecioReal(
+                precio_pp=float(o["price"]), aerolinea=o.get("airline") or "",
+                ida=ida.isoformat(), vuelta=vuelta.isoformat(),
+                escalas_ida=int(o.get("transfers") or 0),
+                escalas_vuelta=int(o.get("return_transfers") or 0),
+                aeropuerto_origen=o.get("origin_airport") or origen_tp,
+                aeropuerto_destino=o.get("destination_airport") or destino,
+                ruta_link=o.get("link") or "", fechas_cercanas=bool(nivel),
+                visto=(o.get("visto") or "")[:10] if guardado else "",
+            )
+            for dic, k in ((mejor_aero, o.get("destination_airport")), (mejor_ciudad, destino)):
+                if k and (k not in dic or (nivel, p.precio_pp) < dic[k][0]):
+                    dic[k] = ((nivel, p.precio_pp), p)
+        return ({k: v[1] for k, v in mejor_aero.items()}, {k: v[1] for k, v in mejor_ciudad.items()})
+
+    tabla.por_aeropuerto, tabla.por_ciudad = elegir(ofertas, guardado=False)
+
+    # Los precios guardados solo rellenan los destinos que la consulta en vivo no trajo
+    guardadas, tabla.guardado_fecha = precios_guardados(origen_tp)
+    if guardadas:
+        g_aero, g_ciudad = elegir(guardadas, guardado=True)
+        for k, p in g_ciudad.items():
+            if k not in tabla.por_ciudad:
+                tabla.por_ciudad[k] = p
+                tabla.guardados += 1
+        for k, p in g_aero.items():
+            # un aeropuerto guardado no reemplaza el precio en vivo de su ciudad
+            if k not in tabla.por_aeropuerto and tabla.por_ciudad.get(tabla.ciudad_de.get(k, k), p).visto:
+                tabla.por_aeropuerto[k] = p
+
+    if not tabla.por_ciudad:
+        tabla.error = error_vivo or "no hay precios recientes para estas fechas desde este origen"
     return tabla
 
 
@@ -420,6 +498,7 @@ def precios_por_mes(origen: str, destino: str, noches: int, meses: int = 12
     if o == d:
         return [], "el destino está en la misma ciudad que el origen"
     clave = f"tp:meses:{o}:{d}"
+    error_vivo = None
     en_cache = cache.obtener(clave, TTL_MESES)
     if en_cache:
         ofertas = en_cache[0]
@@ -463,13 +542,19 @@ def precios_por_mes(origen: str, destino: str, noches: int, meses: int = 12
                 errores.append(str(e))
                 if "token" in str(e) or "límite" in str(e):
                     break
-        if not ofertas:
-            return [], (errores[0] if errores else "no hay precios recientes para esta ruta")
-        cache.guardar(clave, ofertas)
+        if ofertas:
+            cache.guardar(clave, ofertas)
+        else:
+            error_vivo = errores[0] if errores else "no hay precios recientes para esta ruta"
 
     tol, hoy = tolerancia(noches), date.today()
+    # Se suman los precios guardados de esta ruta (marcados con la fecha en que se vieron)
+    guardadas = [{**x, "_guardado": True} for x in precios_guardados(o)[0]
+                 if x.get("destination") == d and _vigente(x, hoy)]
+    if not ofertas and not guardadas:
+        return [], error_vivo
     por_mes: dict[str, tuple] = {}
-    for x in ofertas:
+    for x in ofertas + guardadas:
         try:
             ida = date.fromisoformat((x.get("departure_at") or "")[:10])
             vuelta = date.fromisoformat((x.get("return_at") or "")[:10])
@@ -488,7 +573,8 @@ def precios_por_mes(origen: str, destino: str, noches: int, meses: int = 12
                        escalas_vuelta=int(x.get("return_transfers") or 0),
                        aeropuerto_origen=x.get("origin_airport") or o,
                        aeropuerto_destino=x.get("destination_airport") or d,
-                       ruta_link=x.get("link") or "")
+                       ruta_link=x.get("link") or "",
+                       visto=(x.get("visto") or "")[:10] if x.get("_guardado") else "")
         if mes not in por_mes or (otra, p.precio_pp) < por_mes[mes][0]:
             por_mes[mes] = ((otra, p.precio_pp), PrecioMes(mes, p, n, otra))
     return [v[1] for _, v in sorted(por_mes.items())], None
