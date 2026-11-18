@@ -98,6 +98,8 @@
     font: 600 12.5px "Inter", system-ui, sans-serif; cursor: pointer; border: 1px solid var(--borde); color: var(--texto); background: rgba(255,255,255,.04); }
   .accion.primaria { background: #F5A524; border-color: #F5A524; color: #0B1E3F; }
   .accion:hover { filter: brightness(1.08); }
+  .ico { width: 1.1em; height: 1.1em; vertical-align: -0.18em; margin-right: 5px; flex: none; }
+  .accion .ico { margin-right: 6px; }
   #buscarMovil { display: none; }
   /* Modo rendimiento: paneles sin desenfoque (el desenfoque exige mucho a la tarjeta gráfica) */
   body.sin-vidrio .panel { backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
@@ -153,10 +155,18 @@
 <div id="leyenda" class="panel"></div>
 <div id="ficha" class="panel"><div class="asa" onclick="this.parentElement.classList.toggle('expandida')" title="Ver más / ver menos"></div><button class="cerrar" onclick="cerrarFicha()" aria-label="Cerrar">×</button><div id="contenido"></div></div>
 <div id="zoom" class="panel"><button type="button" onclick="acercar(0.65)" aria-label="Acercar" title="Acercar">+</button><button type="button" onclick="acercar(1.5)" aria-label="Alejar" title="Alejar">−</button></div>
-<button id="buscarMovil" class="panel" type="button" onclick="abrirPanel()"><span class="lupa">⌕</span>Buscar destinos</button>
+<button id="buscarMovil" class="panel" type="button" onclick="abrirPanel()"><span class="lupa"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.6-4.6"/></svg></span>Buscar destinos</button>
 
 <script src="https://unpkg.com/globe.gl@2/dist/globe.gl.min.js"></script>
 <script>
+// Íconos minimalistas (trazo fino, toman el color del texto). Reemplazan a los emojis.
+const _svg = (cuerpo, relleno) => `<svg class="ico" viewBox="0 0 24 24" ${relleno ? 'fill="currentColor" stroke="none"' : 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"'} aria-hidden="true">${cuerpo}</svg>`;
+const ICO = {
+  avion: _svg('<path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/>', true),
+  alerta: _svg('<path d="M12 3.5 2.5 20h19L12 3.5z"/><path d="M12 10v4.5M12 17.3v.2"/>'),
+  entrada: _svg('<path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h15A1.5 1.5 0 0 1 21 7.5V10a2 2 0 0 0 0 4v2.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 16.5V14a2 2 0 0 0 0-4z"/><path d="M14 6v12" stroke-dasharray="2 2.2"/>'),
+  cama: _svg('<path d="M3 5v14M3 15h18v4M21 15v-3a3 3 0 0 0-3-3h-7v6"/><circle cx="7" cy="11.5" r="1.8"/>'),
+};
 // ==========================================================================
 // Puente con Streamlit (componente bidireccional, sin React)
 // - Streamlit manda los datos con el mensaje "streamlit:render".
@@ -520,8 +530,8 @@ const globo = Globe({ rendererConfig: { antialias: true, alpha: true, logarithmi
       <b>${d.ciudad}</b><br><span style="color:#94a3b8">${d.pais}</span><br>
       <span style="color:#e2e8f0">#${d.rank} más turístico del país</span>${d.visitas ? ` · ${fmtNum(d.visitas)} visitas/30 días` : ''}<br>
       <span style="color:${colorEstado(d.estado)};font-weight:700">${d.total_fmt}</span> viaje total<br>
-      ${d.vuelo_real ? `<span style="color:#F5A524">✈ Vuelo ${d.vuelo_pp_fmt} p/p · precio real de búsquedas recientes</span><br>` : `<span style="color:#94a3b8">Vuelo ${d.vuelo_pp_fmt} p/p (estimado)</span><br>`}
-      <span style="color:#94a3b8">${d.ruta_txt}</span>${d.riesgo ? '<br><span style="color:#fbbf24">⚠ Advertencias de seguridad</span>' : ''}</div>`)
+      ${d.vuelo_real ? `<span style="color:#F5A524">${ICO.avion}Vuelo ${d.vuelo_pp_fmt} p/p · precio real de búsquedas recientes</span><br>` : `<span style="color:#94a3b8">Vuelo ${d.vuelo_pp_fmt} p/p (estimado)</span><br>`}
+      <span style="color:#94a3b8">${d.ruta_txt}</span>${d.riesgo ? '<br><span style="color:#fbbf24">' + ICO.alerta + 'Advertencias de seguridad</span>' : ''}</div>`)
   .onPointClick(d => { mostrarDestino(d); volarA(d.lat, d.lon, 1.2); })
   // Anillos pulsantes en destinos dentro del presupuesto
   .ringsData([])
@@ -827,7 +837,7 @@ else globo.pointOfView({ lat: DATOS.origen.lat, lng: DATOS.origen.lon, altitude:
 window.vistaActual = () => globo.pointOfView();
 
 // ==========================================================================
-// Modo rendimiento (interruptor "⚡ Modo rendimiento" del panel lateral)
+// Modo rendimiento (interruptor "Modo rendimiento" del panel lateral)
 // ==========================================================================
 const motor = { fps: false, pausa: false, despiertoHasta: 0, timer: null, visible: true, dormido: false, pendiente: false };
 const relieveUrl = 'https://unpkg.com/three-globe/example/img/earth-topology.png';
@@ -944,8 +954,8 @@ function tarjeta(d) {
   return `<div class="destino" onclick="seleccionarPorId('${d.id}')">
     <div class="cab"><span class="nom"><span style="color:var(--acento);font-variant-numeric:tabular-nums">#${d.rank}</span> ${d.ciudad}</span><span class="tot" style="color:${c}">${d.total_fmt}</span></div>
     ${d.visitas ? `<div class="det">${fmtNum(d.visitas)} visitas en Wikipedia (30 días)</div>` : ''}
-    <div class="det">${d.vuelo_real ? `<span style="color:#F5A524">✈ Vuelo ${d.vuelo_pp_fmt} p/p real</span>` : `Vuelo ${d.vuelo_pp_fmt} p/p estimado (${d.ruta_txt.toLowerCase()})`} · ${d.diario_fmt}/día p/p en destino</div>
-    ${d.riesgo ? '<div class="det" style="color:#fbbf24">⚠ Advertencias de seguridad</div>' : ''}
+    <div class="det">${d.vuelo_real ? `<span style="color:#F5A524">${ICO.avion}Vuelo ${d.vuelo_pp_fmt} p/p real</span>` : `Vuelo ${d.vuelo_pp_fmt} p/p estimado (${d.ruta_txt.toLowerCase()})`} · ${d.diario_fmt}/día p/p en destino</div>
+    ${d.riesgo ? '<div class="det" style="color:#fbbf24">' + ICO.alerta + 'Advertencias de seguridad</div>' : ''}
     <span class="chip" style="color:${c}">${d.estado_txt}</span></div>`;
 }
 window.enfocar = id => {
@@ -982,11 +992,11 @@ function mostrarDestino(d, avisar = true) {
     <div class="sub">${d.pais} · ${d.continente} · ${d.distancia_km ? Math.round(d.distancia_km).toLocaleString('es-CL') + ' km volados desde ' + DATOS.origen.codigo : 'cerca de ' + DATOS.origen.codigo}</div>
     <span class="chip" style="color:${c}">${d.estado_txt}</span>
     <div class="det" style="margin-top:8px;font-size:12.5px"><b>#${d.rank}</b> más turístico de ${d.pais}${d.visitas ? ` · ${fmtNum(d.visitas)} visitas en Wikipedia (30 días)` : ''}</div>
-    ${d.riesgo ? '<div class="nota" style="color:#fbbf24;margin-top:8px">⚠ País con advertencias de seguridad para viajeros. Revisa las recomendaciones de tu cancillería.</div>' : ''}
+    ${d.riesgo ? '<div class="nota" style="color:#fbbf24;margin-top:8px">' + ICO.alerta + 'País con advertencias de seguridad para viajeros. Revisa las recomendaciones de tu cancillería.</div>' : ''}
     <div class="det" style="margin-top:10px;font-size:12.5px"><b>${d.vuelo_real ? 'Ruta aproximada (dibujo del mapa)' : 'Ruta'}:</b> ${d.ruta.length > 1 ? d.ruta.map(r => r.c).join(' → ') : 'por tierra'} <span style="color:var(--suave)">· ${d.ruta_txt}</span></div>
-    ${d.vuelo_real ? `<div class="det" style="margin-top:8px;font-size:12.5px;color:#F5A524">✈ <b>Precio real de búsquedas recientes</b> (Aviasales): ${d.vuelo_pp_fmt} p/p · ${d.vuelo_real_txt}<br><a href="${d.vuelo_link}" target="_blank" rel="noopener" style="color:#F5A524">Ver este vuelo en Aviasales ↗</a></div>` : ''}
+    ${d.vuelo_real ? `<div class="det" style="margin-top:8px;font-size:12.5px;color:#F5A524">${ICO.avion}<b>Precio real de búsquedas recientes</b> (Aviasales): ${d.vuelo_pp_fmt} p/p · ${d.vuelo_real_txt}<br><a href="${d.vuelo_link}" target="_blank" rel="noopener" style="color:#F5A524">Ver este vuelo en Aviasales ↗</a></div>` : ''}
     <table class="desg">
-      <tr><td>Vuelos ida y vuelta (${DATOS.viajeros} pers.)${d.vuelo_real ? ' ✈ real' : ''}</td><td>${f.vuelos}</td></tr>
+      <tr><td>Vuelos ida y vuelta (${DATOS.viajeros} pers.)${d.vuelo_real ? ' · real' : ''}</td><td>${f.vuelos}</td></tr>
       <tr><td>Alojamiento (${DATOS.noches} noches)</td><td>${f.alojamiento}</td></tr>
       <tr><td>Alimentación</td><td>${f.comida}</td></tr>
       <tr><td>Transporte local</td><td>${f.transporte}</td></tr>
@@ -997,9 +1007,9 @@ function mostrarDestino(d, avisar = true) {
     ${d.atractivos.length ? `<div style="margin-top:12px;font-size:12px;color:var(--suave);text-transform:uppercase;letter-spacing:.06em">Atractivos</div>
     <ul class="atr">${d.atractivos.map(a => `<li>${a}</li>`).join('')}</ul>` : ''}
     <div class="acciones">
-      ${d.vuelo_link ? `<a class="accion primaria" href="${d.vuelo_link}" target="_blank" rel="noopener">✈ Ver vuelos disponibles</a>` : ''}
-      <button class="accion" type="button" onclick="verActividades('${d.id}')">🎟 Ver actividades</button>
-      <button class="accion" type="button" onclick="verHoteles('${d.id}')">🏨 Ver hoteles</button>
+      ${d.vuelo_link ? `<a class="accion primaria" href="${d.vuelo_link}" target="_blank" rel="noopener">${ICO.avion}Ver vuelos disponibles</a>` : ''}
+      <button class="accion" type="button" onclick="verActividades('${d.id}')">${ICO.entrada}Ver actividades</button>
+      <button class="accion" type="button" onclick="verHoteles('${d.id}')">${ICO.cama}Ver hoteles</button>
       ${esMovil() ? `<button class="accion" type="button" onclick="abrirPanel('Explorar destino')">Ver detalle completo</button>` : ''}
     </div>
     ${d.aeropuerto_txt ? `<div class="det" style="margin-top:8px">${d.aeropuerto_txt}</div>` : ''}
@@ -1011,14 +1021,17 @@ function mostrarDestino(d, avisar = true) {
   document.body.classList.add('ficha-abierta');
   if (avisar) modoFoco(true);   // computador: al tocar un destino, el globo pasa a pantalla completa
 }
+// "Ver hoteles" / "Ver actividades": siempre se sale de la pantalla completa (también si la
+// persona la activó con el botón), porque esas pestañas están debajo del globo.
+function salirParaVer() { focoManual = false; modoFoco(false); }
 window.verHoteles = id => {
   enviarAStreamlit({ tipo: 'hoteles', id });
-  modoFoco(false);
+  salirParaVer();
   if (esMovil()) abrirPanel('Alojamientos');
 };
 window.verActividades = id => {
   enviarAStreamlit({ tipo: 'actividades', id });
-  modoFoco(false);
+  salirParaVer();
   if (esMovil()) abrirPanel('Actividades');
 };
 window.acercar = factor => {
