@@ -379,3 +379,129 @@ SWZ|Lobamba|-26.45|31.20
 
 SAH|Dajla|23.70|-15.94
 SAH|El Aaiún|27.15|-13.20
+
+# Agregados en v18 (títulos y coordenadas verificados en Wikipedia)
+SAH|Esmara|26.739|-11.670
+CAF|Berbérati|4.267|15.783
+CAF|Parque Nacional Manovo-Gounda St. Floris|9.000|21.500|Parque nacional del Manovo-Gounda St. Floris
+SOL|Zeila|11.354|43.474
+SOL|Burao|9.528|45.535
+SDS|Bor|6.217|31.550|Bor (Sudán del Sur)
+SOM|Garowe|8.400|48.483
+SOM|Hobyo|5.351|48.526
+TCD|Lagos de Unianga|18.980|20.670
+TCD|Macizo del Tibesti|20.781|18.050|Tibesti
+TCD|Abéché|13.833|20.835
+TCD|Faya-Largeau|17.930|19.103
+TCD|Sarh|9.150|18.383
+TCD|Moundou|8.567|16.083
+TGO|Aného|6.229|1.593
+TGO|Parque Nacional Fazao-Malfakassa|9.000|1.000|Parque nacional de Fazao Malfakassa
+TGO|Kara|9.549|1.191|Kara (Togo)
+TGO|Atakpamé|7.527|1.127
+TGO|Sokodé|8.983|1.133
+TGO|Dapaong|10.867|0.200
+GIN|Dalaba|10.692|-12.250
+GIN|Kindia|10.050|-12.850|Kindia (ciudad)
+GIN|Kankan|10.383|-9.300|Kankan (ciudad)
+GIN|Boké|10.931|-14.289|Boké (ciudad)
+GIN|Nzérékoré|7.752|-8.822|Nzérékoré (ciudad)
+GNB|Bubaque|11.283|-15.833
+GNB|Isla de Orango|11.250|-16.220|Orango
+GNB|Bolama|11.564|-15.530
+GNB|Bafatá|12.172|-14.658
+LBR|Harper|4.367|-7.717|Harper (Liberia)
+LBR|Lago Piso|6.735|-11.251
+LBR|Gbarnga|7.002|-9.467
+COG|Parque Nacional Conkouati-Douli|-3.900|11.470|Parque nacional de Conkouati-Douli
+COG|Dolisie|-4.201|12.679
+COG|Ouesso|1.611|16.051
+COG|Owando|-0.483|15.898
+COG|Djambala|-2.540|14.752
+GNQ|Luba|3.450|8.550|Luba (Guinea Ecuatorial)
+GNQ|Pico Basilé|3.583|8.767
+GNQ|Moca|3.330|8.670|Moca (Guinea Ecuatorial)
+GNQ|Isla de Corisco|0.920|9.330|Isla Corisco (Guinea Ecuatorial)
+GNQ|Ebebiyín|2.150|11.317|Ebibeyin
+GNQ|Mongomo|1.629|11.317
+BDI|Parque Nacional Ruvubu|-3.110|30.370|Parque nacional de Ruvubu
+BDI|Parque Nacional Rusizi|-3.250|29.230|Parque nacional de Rusizi
+BDI|Bururi|-3.933|29.617
+BDI|Ngozi|-2.900|29.817
+BDI|Rutana|-3.924|30.006
+NER|Bilma|18.687|12.919
+NER|Tahoua|14.890|5.264
+NER|Maradi|13.500|7.100
+SLE|Bo|7.956|-11.740|Bo (Sierra Leona)
+SLE|Kenema|7.883|-11.183
+SLE|Isla Sherbro|7.550|-12.700
+SLE|Parque Nacional Outamba-Kilimi|9.770|-12.000|Parque nacional de Outamba-Kilimi
+SLE|Makeni|8.882|-12.044
+BFA|Ruinas de Loropéni|10.299|-3.530|Loropéni
+BFA|Gorom-Gorom|14.445|-0.235
+BFA|Parque Nacional de Arly|11.584|1.468|Parque nacional de Arli
+BFA|Koudougou|12.250|-2.367
+BFA|Ouahigouya|13.583|-2.417
+GAB|Parque Nacional de Ivindo|0.088|12.630|Parque nacional de Ivindo
+GAB|Parque Nacional de Pongara|0.125|9.539|Parque nacional de Pongara
+GAB|Franceville|-1.633|13.583
+GAB|Mayumba|-3.417|10.650|Mayoumba
+GAB|Oyem|1.600|11.574
+GMB|Círculos de piedra de Wassu|13.690|-14.880|Círculos megalíticos de Senegambia
+GMB|Janjanbureh|13.530|-14.770|Isla de Janjanbureh
+GMB|Bakau|13.480|-16.674
+ERI|Matara|14.675|39.425|Matara (Eritrea)
+ERI|Monasterio de Debre Bizen|15.330|39.080
+ERI|Assab|13.010|42.744|Asab
+DJI|Bosque del Day|11.800|42.650|Parque nacional del Bosque de Day
+DJI|Obock|11.967|43.283
+COD|Bukavu|-2.500|28.867
+COD|Kisangani|0.515|25.191
+COD|Matadi|-5.817|13.483
+SDN|Naqa|16.269|33.275
+SDN|Musawwarat es-Sufra|16.416|33.324|Massawarat es-Sufra
+SDN|Vieja Dongola|18.220|30.740
+SDN|Kassala|15.450|36.400|Kasala
+LSO|Presa de Katse|-29.337|28.506
+LSO|Roma|-29.447|27.708|Roma (Lesoto)
+LSO|Teyateyaneng|-29.150|27.733
+MLI|Hombori|15.279|-1.698
+MLI|Gao|16.267|-0.050
+MLI|Sikasso|11.317|-5.667
+MRT|Atar|20.520|-13.050|Atar (Mauritania)
+MRT|Oualata|17.298|-7.024|Ualata
+MRT|Tichitt|18.440|-9.494|Tichit
+BEN|Grand-Popo|6.283|1.833
+BEN|Natitingou|10.300|1.367
+BEN|Parakou|9.350|2.617
+CIV|Man|7.412|-7.554|Man (Costa de Marfil)
+CIV|Sassandra|4.950|-6.083
+CIV|Korhogo|9.458|-5.629
+ZMB|Parque Nacional Kasanka|-12.500|30.500|Parque nacional de Kasanka
+ZMB|Parque Nacional Liuwa Plain|-14.667|22.500|Parque nacional Liuwa Plain
+ZMB|Lago Bangweulu|-11.083|29.750
+ZMB|Ndola|-12.969|28.633
+SWZ|Manzini|-26.483|31.367
+SWZ|Piggs Peak|-25.967|31.250
+AGO|Parque Nacional de Quiçama|-9.750|13.583|Parque nacional de Quissama
+AGO|Lobito|-12.350|13.546
+AGO|Mbanza Kongo|-6.267|14.250
+RWA|Musanze|-1.490|29.640|Ruhengeri
+RWA|Karongi (Kibuye)|-2.060|29.350|Kibuye (Ruanda)
+RWA|Nyanza|-2.352|29.751|Nyanza (Ruanda)
+MWI|Monte Mulanje|-15.900|35.650
+MWI|Meseta de Nyika|-10.350|33.600|Meseta Nyika
+LBY|Desierto de Ubari|27.330|12.000|Idehan Ubari
+LBY|Ghat|24.961|10.175|Ghat (Libia)
+LBY|Tobruk|32.083|23.950
+ZWE|Bulawayo|-20.167|28.567
+ZWE|Montañas Chimanimani|-19.870|33.100
+BWA|Reserva de Moremi|-19.170|23.170|Reserva de caza Moremi
+BWA|Francistown|-21.174|27.512
+SEN|Joal-Fadiouth|14.153|-16.832
+SEN|Ziguinchor|12.586|-16.271
+CMR|Reserva de fauna del Dja|3.020|12.980|Reserva de fauna de Dja
+CMR|Maroua|10.591|14.316|Maroua I
+MOZ|Pemba|-12.967|40.517|Pemba (Mozambique)
+NGA|Ciudad de Benín|6.318|5.614
+UGA|Parque Nacional del Lago Mburo|-0.600|30.950|Parque nacional del Lago Mburo

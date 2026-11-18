@@ -498,3 +498,57 @@ NCL|Hienghène|-20.68|164.93
 SLB|Honiara|-9.43|159.95
 SLB|Laguna de Marovo|-8.50|158.00
 SLB|Gizo|-8.10|156.84
+
+# Agregados en v18 (títulos y coordenadas verificados en Wikipedia)
+SLB|Auki (Malaita)|-8.768|160.697|Auki
+SLB|Tulagi|-9.100|160.150
+SLB|Rennell Este (Lago Tegano)|-11.680|160.330|Rennell Este
+KWT|Isla Bubiyán|29.783|48.183|Bubiyan
+VUT|Luganville|-15.513|167.173
+VUT|Ambrym|-16.250|168.117
+VUT|Malekula|-16.500|167.833|Malakula
+VUT|Erromango|-18.800|169.067
+VUT|Aneityum|-20.200|169.820|Anatom
+VUT|Ambae|-15.400|167.833
+NCL|Ouvéa|-20.450|166.600
+NCL|Maré|-21.550|167.883
+NCL|Bourail|-21.567|165.483
+NCL|La Foa|-21.717|165.817
+NCL|Poum|-20.233|164.017
+BRN|Kuala Belait|4.583|114.192
+BRN|Seria|4.614|114.330
+PSX|Herodión|31.666|35.241
+PSX|Monasterio de Mar Saba|31.705|35.331|Mar Saba
+PSX|Sebastia|32.267|35.183
+PSX|Yenín|32.461|35.300
+QAT|Lusail|25.418|51.508
+QAT|Mesaieed|24.980|51.550
+YEM|Zabid|14.200|43.317
+YEM|Tarim|16.050|49.000
+YEM|Marib|15.463|45.326
+TLS|Lospalos|-8.517|127.033
+TLS|Oecusse|-9.350|124.300|Región administrativa especial de Oecusse-Ambeno
+TLS|Liquiçá|-8.594|125.327
+TLS|Suai|-9.300|125.250
+PRK|Rason|42.344|130.384|Rasŏn
+PRK|Hamhung|39.917|127.533
+PRK|Nampo|38.733|125.400|Namp'o
+PRK|Chongjin|41.783|129.783|Ch'ŏngjin
+TKM|Turkmenbashi|40.006|52.993
+TKM|Mary|37.600|61.833|Mary (Turkmenistán)
+TKM|Dashoguz|41.817|59.983|Daşoguz
+FJI|Isla Kadavu|-19.050|178.250|Isla de Kadavu
+FJI|Levuka|-17.684|178.840
+BTN|Trongsa|27.517|90.500
+BTN|Valle de Haa|27.383|89.285|Haa
+BTN|Wangdue Phodrang|27.467|89.900
+AFG|Kandahar|31.621|65.716
+AFG|Ghazni|33.549|68.423|Gazni
+AFG|Corredor de Wakhan|37.000|73.000|Corredor de Vaján
+SYR|Apamea|35.417|36.400|Apamea (Siria)
+SYR|Tartus|34.883|35.883|Tartús
+AZE|Khinalug|41.179|48.126
+AZE|Shamakhi|40.634|48.639|Shamaji
+TJK|Panjakent|39.500|67.617
+ARE|Umm al-Qaywayn|25.550|55.550
+PNG|Islas Trobriand|-8.638|150.852

@@ -360,3 +360,22 @@ BRA|Ilha Grande|-23.15|-44.23|Ilha Grande (Río de Janeiro)
 BRA|Chapada Diamantina|-12.60|-41.40|Parque nacional de Chapada Diamantina
 BRA|Pantanal|-18.00|-56.70
 BRA|Brasilia|-15.79|-47.88
+
+# Agregados en v18 (títulos y coordenadas verificados en Wikipedia)
+FLK|Isla Carcass|-51.251|-60.528|Isla del Rosario
+FLK|Prado del Ganso (Goose Green)|-51.829|-58.969|Pradera del Ganso
+FLK|Isla Borbón (Pebble)|-51.303|-59.629|Isla Borbón
+SUR|Nieuw Nickerie|5.926|-56.973
+SUR|Jodensavanne|5.431|-54.982
+SUR|Albina|5.500|-54.050|Albina (Surinam)
+GUY|Cataratas Orinduik|4.717|-60.017
+GUY|Shell Beach|8.290|-59.560|Playa Shell
+GUY|Linden|6.000|-58.300|Linden (Guyana)
+HTI|Port-Salut|18.094|-73.926
+HTI|Isla de la Tortuga|20.040|-72.790|Isla de la Tortuga (Haití)
+HTI|Jérémie|18.647|-74.114
+TTO|San Fernando|10.283|-61.467|San Fernando (Trinidad y Tobago)
+TTO|Arima|10.630|-61.280|Arima (Trinidad y Tobago)
+GRL|Uummannaq|70.675|-52.126
+GRL|Ittoqqortoormiit|70.485|-21.967
+GUF|Sinnamary|5.378|-52.959

@@ -452,3 +452,21 @@ RUS|Volgogrado|48.71|44.51
 RUS|Kizhi|62.07|35.22
 RUS|Monte Elbrús|43.35|42.44
 RUS|Yakutsk|62.03|129.73
+
+# Agregados en v18 (títulos y coordenadas verificados en Wikipedia)
+CYN|Nicosia del Norte|35.190|33.364
+CYN|Güzelyurt (Morfou)|35.198|32.993|Morfou
+CYN|Vouni|34.823|32.834
+MDA|Monasterio de Țipova|47.600|28.980|Monasterio de Ţipova
+MDA|Monasterio de Căpriana|47.117|28.511
+MDA|Bălți|47.762|27.929
+LUX|Diekirch|49.868|6.157
+LUX|Wiltz|49.966|5.933
+BLR|Lagos de Braslau|55.600|27.050
+BLR|Gómel|52.442|30.983
+LTU|Kernavė|54.883|24.850
+LTU|Šiauliai|55.928|23.317
+LVA|Ventspils|57.390|21.564
+EST|Viljandi|58.363|25.596
+EST|Hiiumaa|58.884|22.644
+KOS|Mitrovica|42.883|20.867|Mitrovica (Kosovo)
