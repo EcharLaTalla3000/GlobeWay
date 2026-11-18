@@ -1466,21 +1466,21 @@ with tab_fuentes:
                      "fórmula por distancia" if n_reales else "Fórmula por distancia")
     if vuelos.duffel_configurado():
         fuente_vuelos += " + Duffel bajo demanda"
-    estado_vuelos = (":green[:material/check_circle:] Real de búsquedas recientes + :orange[:material/pending:] estimado" if n_reales
+    estado_vuelos = (":green[:material/check_circle:] Real de búsquedas recientes + :orange[:material/circle:] estimado" if n_reales
                      else ":green[:material/check_circle:] Verificación real disponible" if vuelos.duffel_configurado()
-                     else ":orange[:material/pending:] Estimado (demostración)")
+                     else ":orange[:material/circle:] Estimado (demostración)")
     st.markdown(f"""
 | Dato | Fuente actual | Estado |
 |---|---|---|
 | Tipo de cambio | {tasas.fuente} | {":orange[:material/warning:] Respaldo fijo" if tasas.es_respaldo else ":green[:material/check_circle:] Real, actualizado cada ~24 h"} |
 | Vuelos | {fuente_vuelos} | {estado_vuelos} |
-| Alojamientos | {"LiteAPI: hoteles cercanos, 10 por nivel de estrellas" if hoteles.configurado() else "Ejemplos ficticios"} | {(":blue[:material/science:] Hoteles reales, precios de prueba (clave sandbox)" if hoteles.es_prueba() else ":green[:material/check_circle:] Real (precio mínimo disponible)") if hoteles.configurado() else ":orange[:material/pending:] Ejemplos ficticios + enlace a búsqueda real"} |
+| Alojamientos | {"LiteAPI: hoteles cercanos, 10 por nivel de estrellas" if hoteles.configurado() else "Ejemplos ficticios"} | {(":blue[:material/science:] Hoteles reales, precios de prueba (clave sandbox)" if hoteles.es_prueba() else ":green[:material/check_circle:] Real (precio mínimo disponible)") if hoteles.configurado() else ":orange[:material/circle:] Ejemplos ficticios + enlace a búsqueda real"} |
 | Actividades | Wikivoyage (secciones «Ver» y «Hacer») + búsqueda de tours en GetYourGuide | :green[:material/check_circle:] Real (guía de viajes libre, CC BY-SA) |
-| Costo de vida (comida, transporte, actividades) | `datos/destinos.json` | :orange[:material/pending:] Estimado manual (demostración) |
+| Costo de vida (comida, transporte, actividades) | `datos/destinos.json` | :orange[:material/circle:] Estimado manual (demostración) |
 | Fotos e información general | Wikipedia en español | :green[:material/check_circle:] Real |
-| Ranking de destinos por país | {"Visitas a Wikipedia en los últimos 30 días" if popularidad.en_vivo else "Lista base compilada manualmente"} | {":green[:material/check_circle:] Real, actualizado cada 3 días" if popularidad.en_vivo else ":orange[:material/pending:] Base (sin conexión)"} |
-| Ciudades y pueblos del buscador | GeoNames (CC BY 4.0): ciudades y pueblos con más de 1.000 habitantes | :green[:material/check_circle:] Real (nombre, ubicación y población) · :orange[:material/pending:] costos estimados con el promedio del país |
-| Llegadas de turistas por país | Cifras aproximadas 2023–2024 (ONU Turismo y fuentes nacionales) | :orange[:material/pending:] Referencial, fijo |
+| Ranking de destinos por país | {"Visitas a Wikipedia en los últimos 30 días" if popularidad.en_vivo else "Lista base compilada manualmente"} | {":green[:material/check_circle:] Real, actualizado cada 3 días" if popularidad.en_vivo else ":orange[:material/circle:] Base (sin conexión)"} |
+| Ciudades y pueblos del buscador | GeoNames (CC BY 4.0): ciudades y pueblos con más de 1.000 habitantes | :green[:material/check_circle:] Real (nombre, ubicación y población) · :orange[:material/circle:] costos estimados con el promedio del país |
+| Llegadas de turistas por país | Cifras aproximadas 2023–2024 (ONU Turismo y fuentes nacionales) | :orange[:material/circle:] Referencial, fijo |
 """)
     if popularidad.error and not popularidad.en_vivo:
         st.caption(f"Ranking en vivo no disponible: {popularidad.error}.")
