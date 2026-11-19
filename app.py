@@ -773,8 +773,8 @@ _JS_TEMA = """
     await esperar(60);
     if (abierto()) { const b = d.querySelector('[data-testid="stMainMenuButton"]'); b && b.click(); await esperar(60); }
   }
-  function temaGlobo(claro) {
-    try { const f = d.querySelector('iframe[src*="globo_globeway"]'); f && f.contentWindow.aplicarTema(claro); } catch (e) {}
+  function temaGlobo(claro, forzar) {
+    try { const f = d.querySelector('iframe[src*="globo_globeway"]'); f && f.contentWindow.aplicarTema(claro, forzar); } catch (e) {}
   }
   function recargar(claro) {
     try { w.localStorage.setItem('stActiveTheme-' + w.location.pathname + '-v2', JSON.stringify(claro ? 'Light' : 'Dark')); } catch (e) {}
@@ -815,6 +815,7 @@ _JS_TEMA = """
     } catch (e) { ok = false; }
     w.__gwCambiando = false;
     if (!ok) { recargar(claro); return; }
+    temaGlobo(claro, true);   /* durante la animación el globo no alcanza a redibujarse */
     avisarPython(claro);
   }
   d.addEventListener('click', ev => {
