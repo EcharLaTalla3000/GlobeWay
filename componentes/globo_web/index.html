@@ -105,6 +105,7 @@
   body.sin-vidrio .panel { backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
     background: rgba(13,18,32,.95) !important; }
   #ficha .asa { display: none; }
+  #temaMovil { display: none; }
   @media (max-width: 700px) {
     /* Ficha: hoja que sube desde abajo, a todo el ancho */
     #ficha { width: auto; left: 8px; right: 8px; top: auto; bottom: 8px; max-height: 44%;
@@ -142,6 +143,13 @@
       padding: 0 16px; border-radius: 999px; color: var(--suave); font: 500 15px "Inter", system-ui, sans-serif;
       cursor: pointer; text-align: left; }
     #buscarMovil .lupa { font-size: 20px; color: var(--texto); line-height: 1; }
+    /* Sol / luna al lado de la barra: cambia entre modo oscuro y claro */
+    #buscarMovil { right: 68px; }
+    #temaMovil { display: flex; align-items: center; justify-content: center; right: 12px; top: 62px;
+      width: 46px; height: 46px; padding: 0; border-radius: 50%; color: var(--texto); cursor: pointer; }
+    #temaMovil svg { width: 20px; height: 20px; }
+    #temaMovil .luna, body.claro #temaMovil .sol { display: none; }
+    body.claro #temaMovil .luna { display: block; color: #64748b; }
   }
 </style>
 </head>
@@ -155,6 +163,7 @@
 <div id="leyenda" class="panel"></div>
 <div id="ficha" class="panel"><div class="asa" onclick="this.parentElement.classList.toggle('expandida')" title="Ver más / ver menos"></div><button class="cerrar" onclick="cerrarFicha()" aria-label="Cerrar">×</button><div id="contenido"></div></div>
 <div id="zoom" class="panel"><button type="button" onclick="acercar(0.65)" aria-label="Acercar" title="Acercar">+</button><button type="button" onclick="acercar(1.5)" aria-label="Alejar" title="Alejar">−</button></div>
+<button id="temaMovil" class="panel" type="button" aria-label="Cambiar entre modo claro y modo oscuro" onclick="try { parent.gwCambiarTema(this); } catch (e) {}"><svg class="sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></svg><svg class="luna" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
 <button id="buscarMovil" class="panel" type="button" onclick="abrirPanel()"><span class="lupa"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.6-4.6"/></svg></span>Buscar destinos</button>
 
 <script src="https://unpkg.com/globe.gl@2/dist/globe.gl.min.js"></script>
@@ -838,9 +847,15 @@ try { const cam = globo.camera(); cam.near = 1.5; cam.updateProjectionMatrix(); 
 // Rotación automática suave hasta que el usuario interactúa
 const ctl = globo.controls();
 ctl.autoRotate = true; ctl.autoRotateSpeed = 0.35; ctl.enableDamping = true;
+// Límite de zoom: más cerca que esto, los países y la textura se ven pixelados
+const RADIO_GLOBO = (globo.getGlobeRadius && globo.getGlobeRadius()) || 100;
+const ALT_MIN = esMovil() ? 0.45 : 0.4, ALT_MAX = 5;
+ctl.minDistance = RADIO_GLOBO * (1 + ALT_MIN);
+ctl.maxDistance = RADIO_GLOBO * (1 + ALT_MAX);
+const altLimitada = a => Math.min(ALT_MAX, Math.max(ALT_MIN, a));
 contenedor.addEventListener('pointerdown', () => { ctl.autoRotate = false; });
 const vistaGuardada = memoria.leer('gw_vista');
-if (vistaGuardada) { ctl.autoRotate = false; globo.pointOfView(vistaGuardada, 0); }
+if (vistaGuardada) { ctl.autoRotate = false; globo.pointOfView({ ...vistaGuardada, altitude: altLimitada(vistaGuardada.altitude || 2.3) }, 0); }
 else globo.pointOfView({ lat: DATOS.origen.lat, lng: DATOS.origen.lon, altitude: esMovil() ? alturaGloboEntero() : 2.3 }, 0);
 window.vistaActual = () => globo.pointOfView();
 
@@ -1046,7 +1061,7 @@ window.acercar = factor => {
   if (window.despertarGlobo) window.despertarGlobo(1200);
   const v = globo.pointOfView();
   ctl.autoRotate = false;
-  globo.pointOfView({ lat: v.lat, lng: v.lng, altitude: Math.min(4.5, Math.max(0.15, v.altitude * factor)) }, 450);
+  globo.pointOfView({ lat: v.lat, lng: v.lng, altitude: altLimitada(v.altitude * factor) }, 450);
 };
 
 // Ajuste de tamaño
