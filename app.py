@@ -822,6 +822,29 @@ _JS_TEMA = """
     const b = ev.target && ev.target.closest && ev.target.closest('#gw-tema');
     if (b) { ev.preventDefault(); cambiar(b); }
   });
+  w.gwCambiarTema = b => cambiar(b);   /* lo usa el sol / la luna del globo en el celular */
+})();
+(function () {
+  /* Galería de «Explorar destino»: al tocar una miniatura, cambia de lugar con la foto grande */
+  if (window.__gwGaleriaLista) return;
+  window.__gwGaleriaLista = true;
+  document.addEventListener('click', ev => {
+    const mini = ev.target && ev.target.closest && ev.target.closest('.gw-galeria .gw-g-mini');
+    if (!mini) return;
+    ev.preventDefault();
+    const galeria = mini.closest('.gw-galeria');
+    const grande = galeria.querySelector('.gw-g-principal');
+    const imgG = grande.querySelector('img'), imgM = mini.querySelector('img');
+    const urlG = grande.getAttribute('href'), urlM = mini.getAttribute('href');
+    imgG.style.opacity = '0';
+    setTimeout(() => {
+      imgG.src = urlM; grande.setAttribute('href', urlM);
+      imgM.src = urlG; mini.setAttribute('href', urlG);
+      const ver = () => { imgG.style.opacity = '1'; };
+      if (imgG.complete) ver(); else imgG.addEventListener('load', ver, { once: true });
+      setTimeout(ver, 900);
+    }, 160);
+  });
 })();
 """
 # El código del clic se instala en la página principal (no en este marco invisible, que
@@ -830,7 +853,7 @@ components.html(f"""<script>
 try {{
   const w = window.parent, d = w.document;
   d.documentElement.classList.toggle('gw-claro', {str(MODO_CLARO).lower()});
-  if (!w.__gwTemaListo) {{
+  if (!w.__gwTemaListo || !w.__gwGaleriaLista) {{
     const sc = d.createElement('script');
     sc.textContent = {json.dumps(_JS_TEMA)};
     d.head.appendChild(sc);
@@ -1129,17 +1152,20 @@ with tab_lista:
                           if any(f.get("extra") for f in resultado) else ""))
 
 def galeria_html(urls: list[str], nombre: str) -> str:
-    """Foto principal grande y, debajo, miniaturas del mismo alto (se abren en grande al tocarlas)."""
-    def img(u, estilo):
+    """Foto principal grande y, debajo, miniaturas del mismo alto (al tocar una, pasa a ser la grande)."""
+    def img(u, estilo, clase, extra=""):
         u = html.escape(u, quote=True)
-        return (f'<a href="{u}" target="_blank" rel="noopener" style="display:block;{estilo}">'
+        return (f'<a class="{clase}" href="{u}" {extra} style="display:block;{estilo}">'
                 f'<img src="{u}" alt="{html.escape(nombre)}" loading="lazy" '
-                f'style="width:100%;height:100%;object-fit:cover;display:block;border-radius:10px"></a>')
-    partes = [img(urls[0], "aspect-ratio:16/10")]
+                f'style="width:100%;height:100%;object-fit:cover;display:block;border-radius:10px;'
+                f'transition:opacity .16s ease"></a>')
+    # La grande se abre en otra pestaña; las miniaturas pasan a ser la grande (script de la página)
+    partes = [img(urls[0], "aspect-ratio:16/10", "gw-g-principal", 'target="_blank" rel="noopener"')]
     if len(urls) > 1:
         partes.append(f'<div style="display:grid;grid-template-columns:repeat({len(urls) - 1},1fr);'
                       'gap:6px;margin-top:6px">'
-                      + "".join(img(u, "aspect-ratio:4/3") for u in urls[1:]) + "</div>")
+                      + "".join(img(u, "aspect-ratio:4/3;cursor:pointer", "gw-g-mini") for u in urls[1:])
+                      + "</div>")
     return '<div class="gw-galeria" style="margin-bottom:10px">' + "".join(partes) + "</div>"
 
 
