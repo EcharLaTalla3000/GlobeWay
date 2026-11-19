@@ -74,10 +74,10 @@
   #expandir:hover { border-color: rgba(56,189,248,.55); color: var(--acento); }
   #expandir svg { width: 15px; height: 15px; }
   body.ficha-abierta #expandir { display: none; }
-  /* Modo claro: océano celeste, cielo claro y paneles blancos */
-  body.claro { --fondo: #dcefff; --panel: rgba(255,255,255,.88); --borde: rgba(15,23,42,.12);
-    --texto: #0f172a; --suave: #475569; --acento: #0284c7;
-    background: radial-gradient(circle at 50% 45%, #f4faff 0%, #d6ecfb 55%, #bfe0f7 100%); }
+  /* Modo claro: océano azul profundo, tierra gris perla y un fondo suave (descansa la vista) */
+  body.claro { --fondo: #e7eef6; --panel: rgba(255,255,255,.9); --borde: rgba(15,23,42,.12);
+    --texto: #0f172a; --suave: #475569; --acento: #0369a1;
+    background: radial-gradient(circle at 50% 46%, #f8fafc 0%, #e9eff6 58%, #d9e3ee 100%); }
   body.claro .panel { box-shadow: 0 8px 28px rgba(15,23,42,.12); }
   body.claro #demo { color: #b45309; border-color: rgba(217,119,6,.35); }
   body.claro .destino:hover { background: rgba(2,132,199,.07); }
@@ -549,6 +549,7 @@ function texturaColor(color) {
   const x = c.getContext('2d'); x.fillStyle = color; x.fillRect(0, 0, 4, 2);
   return c.toDataURL('image/png');
 }
+const OCEANO_CLARO = '#24527f';   // azul profundo y sobrio: los colores de los países resaltan
 let temaClaro = false;
 window.aplicarTema = claro => {
   claro = !!claro;
@@ -556,13 +557,18 @@ window.aplicarTema = claro => {
   temaClaro = claro;
   document.body.classList.toggle('claro', claro);
   const d = docPadre(), marco = d && d.querySelector('iframe[src*="globo_globeway"]');
-  if (marco) marco.style.background = claro ? '#dcefff' : '#05070d';
+  if (marco) marco.style.background = claro ? '#e7eef6' : '#05070d';
   globo
-    .globeImageUrl(claro ? texturaColor('#7cc4ec') : TEXTURA_NOCHE)
+    .globeImageUrl(claro ? texturaColor(OCEANO_CLARO) : TEXTURA_NOCHE)
     .backgroundImageUrl(claro ? null : CIELO_NOCHE)
     .backgroundColor('rgba(0,0,0,0)')
-    .atmosphereColor(claro ? '#ffffff' : '#38bdf8')
-    .atmosphereAltitude(claro ? 0.22 : 0.18);
+    .atmosphereColor(claro ? '#93c5fd' : '#38bdf8')
+    .atmosphereAltitude(claro ? 0.2 : 0.18);
+  // Los países cambian de colores según el tema (tierra gris perla y bordes blancos en modo claro)
+  if (paisesGeo.length) {
+    globo.polygonCapColor(colorCap).polygonSideColor(colorCostado).polygonStrokeColor(colorBorde);
+    if (globo.polygonCapMaterial) globo.polygonCapMaterial(globo.polygonCapMaterial());
+  }
   if (window.despertarGlobo) window.despertarGlobo(1500);
 };
 
@@ -667,19 +673,21 @@ function separarTerritorios(features) {
 
 function colorCap(f) {
   const e = estadoPais(codigoPais(f));
-  if (!e) return 'rgba(51,65,85,0.25)';
+  if (!e) return temaClaro ? 'rgba(226,232,240,0.9)' : 'rgba(51,65,85,0.25)';
   // País seleccionado: terreno azul noche, para que los palos de colores resalten encima.
   // Su color de estado se mantiene en el borde y en los costados.
   if (f === seleccionado) return 'rgba(11,30,63,0.94)';
-  return hexA(colorEstado(e), TURISMO ? 0.28 : 0.55);
+  return hexA(colorEstado(e), TURISMO ? (temaClaro ? 0.45 : 0.28) : (temaClaro ? 0.82 : 0.55));
 }
 function colorBorde(f) {
   const e = estadoPais(codigoPais(f));
-  return f === seleccionado && e ? colorEstado(e) : 'rgba(148,163,184,0.25)';
+  if (f === seleccionado && e) return colorEstado(e);
+  return temaClaro ? 'rgba(255,255,255,0.55)' : 'rgba(148,163,184,0.25)';
 }
 function colorCostado(f) {
   const e = estadoPais(codigoPais(f));
-  return f === seleccionado && e ? hexA(colorEstado(e), 0.75) : 'rgba(15,23,42,0.4)';
+  if (f === seleccionado && e) return hexA(colorEstado(e), 0.75);
+  return temaClaro ? 'rgba(15,23,42,0.18)' : 'rgba(15,23,42,0.4)';
 }
 
 // ---------- "Calor vivo" (efecto de cámara térmica) ----------
