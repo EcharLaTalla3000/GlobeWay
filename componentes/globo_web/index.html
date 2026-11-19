@@ -849,7 +849,7 @@ const ctl = globo.controls();
 ctl.autoRotate = true; ctl.autoRotateSpeed = 0.35; ctl.enableDamping = true;
 // Límite de zoom: más cerca que esto, los países y la textura se ven pixelados
 const RADIO_GLOBO = (globo.getGlobeRadius && globo.getGlobeRadius()) || 100;
-const ALT_MIN = esMovil() ? 0.45 : 0.4, ALT_MAX = 5;
+const ALT_MIN = esMovil() ? 0.75 : 0.65, ALT_MAX = 5;
 ctl.minDistance = RADIO_GLOBO * (1 + ALT_MIN);
 ctl.maxDistance = RADIO_GLOBO * (1 + ALT_MAX);
 const altLimitada = a => Math.min(ALT_MAX, Math.max(ALT_MIN, a));
