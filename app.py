@@ -759,10 +759,19 @@ _JS_TEMA = """
         boton.click();
         for (let i = 0; i < 40 && !item; i++) { await esperar(25); item = d.querySelector(sel); }
       }
-      if (!item) { d.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); return false; }
+      if (!item) { await cerrarMenu(); return false; }
       item.click();
+      await esperar(30);
+      await cerrarMenu();   /* el menú de Streamlit queda abierto después de elegir: se cierra */
       return true;
-    } finally { setTimeout(() => raiz.classList.remove('gw-menu-oculto'), 400); }
+    } finally { setTimeout(() => raiz.classList.remove('gw-menu-oculto'), 150); }
+  }
+  async function cerrarMenu() {
+    const abierto = () => d.querySelector('[data-testid="stMainMenuPopover"]');
+    if (!abierto()) return;
+    d.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, bubbles: true }));
+    await esperar(60);
+    if (abierto()) { const b = d.querySelector('[data-testid="stMainMenuButton"]'); b && b.click(); await esperar(60); }
   }
   function temaGlobo(claro) {
     try { const f = d.querySelector('iframe[src*="globo_globeway"]'); f && f.contentWindow.aplicarTema(claro); } catch (e) {}
