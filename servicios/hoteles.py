@@ -29,6 +29,16 @@ from servicios import cache
 URL = "https://api.liteapi.travel/v3.0"
 TTL_HOTELES = 30 * 24 * 3600     # la lista de hoteles cambia poco
 TTL_PRECIOS = 6 * 3600
+# Tope de consultas a LiteAPI por día (protege de cobros si la clave es de producción).
+# Se puede cambiar con el secreto LITEAPI_MAX_DIARIO.
+MAX_DIARIO = 100
+
+
+def _contar_consulta() -> None:
+    limite = int(os.getenv("LITEAPI_MAX_DIARIO", str(MAX_DIARIO)))
+    if not cache.registrar_llamada("liteapi", limite):
+        raise RuntimeError(f"se alcanzó el límite diario de {limite} consultas de hoteles; "
+                           "vuelve a intentarlo mañana")
 POR_NIVEL = 10
 CANDIDATOS_POR_NIVEL = 20        # se piden más, porque no todos tienen disponibilidad
 
@@ -94,6 +104,7 @@ def _hoteles_cerca(lat: float, lon: float) -> list[dict]:
     en_cache = cache.obtener(clave, TTL_HOTELES)
     if en_cache:
         return en_cache[0]
+    _contar_consulta()
     r = requests.get(f"{URL}/data/hotels", headers=_cabeceras(), timeout=25,
                      params={"latitude": lat, "longitude": lon, "radius": 15000, "limit": 1000})
     if r.status_code == 401:
@@ -117,6 +128,7 @@ def _precios(ids: list[str], ida: date, vuelta: date, viajeros: int) -> dict[str
     cuerpo = {"hotelIds": ids, "occupancies": _habitaciones(viajeros),
               "checkin": ida.isoformat(), "checkout": vuelta.isoformat(),
               "currency": "USD", "guestNationality": "CL", "timeout": 10}
+    _contar_consulta()
     r = requests.post(f"{URL}/hotels/min-rates", headers=_cabeceras(), json=cuerpo, timeout=30)
     if r.status_code == 401:
         raise RuntimeError("la clave LITEAPI_KEY no es válida")
