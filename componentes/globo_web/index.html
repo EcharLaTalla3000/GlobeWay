@@ -551,9 +551,9 @@ function texturaColor(color) {
 }
 const OCEANO_CLARO = '#24527f';   // azul profundo y sobrio: los colores de los países resaltan
 let temaClaro = false;
-window.aplicarTema = claro => {
+window.aplicarTema = (claro, forzar) => {
   claro = !!claro;
-  if (claro === temaClaro) return;
+  if (claro === temaClaro && !forzar) return;   // forzar: vuelve a pintar (tras la transición de tema)
   temaClaro = claro;
   document.body.classList.toggle('claro', claro);
   const d = docPadre(), marco = d && d.querySelector('iframe[src*="globo_globeway"]');
