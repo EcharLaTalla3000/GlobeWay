@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import html
+import json
 import random
 import time
 from datetime import date, timedelta
@@ -36,11 +37,16 @@ _ICONO = Path(__file__).parent / "componentes" / "logo_gw.png"
 st.set_page_config(page_title="GlobeWay", page_icon=str(_ICONO) if _ICONO.exists() else ":material/public:",
                    layout="wide", initial_sidebar_state="auto")
 
-# Modo claro u oscuro: lo elige la persona con el botón de arriba (Streamlit lo recuerda)
+# Modo claro u oscuro: lo elige la persona con el sol / la luna de arriba (Streamlit lo recuerda).
+# El cambio se hace sin recargar la página: el navegador cambia los colores con una
+# transición y avisa a Python con un botón invisible, que deja la elección en _tema_elegido
+# (st.context.theme recién se actualiza al recargar la página).
 try:
     MODO_CLARO = st.context.theme.type == "light"
 except Exception:
     MODO_CLARO = False
+if st.session_state.get("_tema_elegido") in ("claro", "oscuro"):
+    MODO_CLARO = st.session_state["_tema_elegido"] == "claro"
 
 # --------------------------------------------------------------------------
 # Estilos
@@ -48,6 +54,30 @@ except Exception:
 st.markdown("""
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  /* ---- Tema: variables, sol/luna y transición al cambiar (sin líneas en blanco aquí) ---- */
+  :root { --gw-texto: #e5e9f0; --gw-logo-g: #f8fafc; }
+  html.gw-claro { --gw-texto: #0f172a; --gw-logo-g: #0b1e3f; }
+  .gw-tema-fila { display: flex; justify-content: flex-end; }
+  #gw-tema { width: 38px; height: 38px; border-radius: 50%; padding: 0; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(13,18,32,.85); border: 1px solid rgba(148,163,184,.22); color: #e5e9f0;
+    box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: border-color .2s, transform .2s, background .3s, color .3s; }
+  #gw-tema:hover { border-color: rgba(148,163,184,.5); transform: rotate(12deg); }
+  #gw-tema:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+  #gw-tema svg { width: 19px; height: 19px; }
+  #gw-tema .luna { display: none; }
+  html.gw-claro #gw-tema { background: #ffffff; border-color: rgba(15,23,42,.12); color: #64748b;
+    box-shadow: 0 1px 3px rgba(15,23,42,.08); }
+  html.gw-claro #gw-tema:hover { border-color: rgba(15,23,42,.28); transform: rotate(-12deg); }
+  html.gw-claro #gw-tema .sol { display: none; }
+  html.gw-claro #gw-tema .luna { display: block; }
+  .st-key-gw_tema_claro, .st-key-gw_tema_oscuro { display: none !important; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+  ::view-transition-new(root) { z-index: 2147483646; }
+  html.gw-transicion, html.gw-transicion * { transition: background-color .6s ease, color .6s ease,
+    border-color .6s ease, fill .6s ease, stroke .6s ease !important; }
+  html.gw-menu-oculto [data-testid="stMainMenuPopover"], html.gw-menu-oculto [data-baseweb="popover"] {
+    opacity: 0 !important; pointer-events: none !important; }
   html, body, [class*="css"], .stMarkdown, .stText { font-family: 'Inter', system-ui, sans-serif; }
   .block-container { padding-top: 1.4rem; padding-bottom: 2rem; max-width: 1400px; }
   section[data-testid="stSidebar"] { background: #0a0e18; border-right: 1px solid rgba(148,163,184,.12); }
@@ -136,23 +166,32 @@ st.markdown("""
   }
 </style>
 """, unsafe_allow_html=True)
-if MODO_CLARO:
-    st.markdown("""
+st.markdown("""
 <style>
-  .stApp { background:
+  html.gw-claro .stApp { background:
       radial-gradient(520px 420px at 4% 18%, rgba(56,189,248,.28), transparent 70%),
       radial-gradient(460px 380px at 12% 82%, rgba(245,165,36,.24), transparent 70%), #f6f7fb !important; }
-  section[data-testid="stSidebar"] { background: linear-gradient(160deg, rgba(255,255,255,.75), rgba(255,255,255,.45)) !important;
+  html.gw-claro section[data-testid="stSidebar"] { background: linear-gradient(160deg, rgba(255,255,255,.75), rgba(255,255,255,.45)) !important;
     border-right: 1px solid rgba(15,23,42,.10); box-shadow: 8px 0 32px rgba(15,23,42,.08); }
-  .bajada { color: #475569; }
-  .marca span { color: #d48806; }
-  .kpi { background: #ffffff; border-color: rgba(15,23,42,.10); box-shadow: 0 1px 2px rgba(15,23,42,.04); }
-  .kpi .t { color: #475569; }
-  .aviso-demo { background: #fffbeb; border-color: rgba(217,119,6,.35); color: #92400e; }
-  #gw-cerrar-panel { background: rgba(255,255,255,.92); color: #0f172a; border-color: rgba(15,23,42,.15); }
-  body.gw-panel .block-container { background: #f6f7fb !important; }
+  html.gw-claro .bajada { color: #475569; }
+  html.gw-claro .marca span { color: #d48806; }
+  html.gw-claro .kpi { background: #ffffff; border-color: rgba(15,23,42,.10); box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  html.gw-claro .kpi .t { color: #475569; }
+  html.gw-claro .aviso-demo { background: #fffbeb; border-color: rgba(217,119,6,.35); color: #92400e; }
+  html.gw-claro #gw-cerrar-panel { background: rgba(255,255,255,.92); color: #0f172a; border-color: rgba(15,23,42,.15); }
+  html.gw-claro body.gw-panel .block-container { background: #f6f7fb !important; }
 </style>
 """, unsafe_allow_html=True)
+
+
+# Botones invisibles: el sol / la luna los aprietan por código al terminar la transición,
+# para que Python sepa el tema nuevo sin recargar la página.
+def _elegir_tema(tema: str) -> None:
+    st.session_state["_tema_elegido"] = tema
+
+
+st.button("tema claro", key="gw_tema_claro", on_click=_elegir_tema, args=("claro",))
+st.button("tema oscuro", key="gw_tema_oscuro", on_click=_elegir_tema, args=("oscuro",))
 
 
 # --------------------------------------------------------------------------
@@ -348,9 +387,6 @@ TIPOS_TURISMO = sorted({t for d in DESTINOS for t in d["tipo"]})
 # Panel lateral: parámetros del viaje
 # --------------------------------------------------------------------------
 with st.sidebar:
-    sorpresa = st.button("Sorpréndeme", icon=":material/casino:", type="primary", width="stretch",
-                         help="Elige al azar un destino que te alcanza (o uno de los más "
-                              "turísticos, en ese modo) y te lo muestra en el globo.")
     # Los modos del mapa viven dentro de «Más opciones» (más abajo); aquí solo se leen,
     # porque el presupuesto depende de ellos.
     _defecto("cfg_generales", False)
@@ -449,6 +485,10 @@ with st.sidebar:
                       if _tasa < 100 else f"{_tasa:,.0f}".replace(",", "."))
                 st.caption(f"1 USD = {_t} {moneda}")
 
+    sorpresa = st.button("Sorpréndeme", icon=":material/casino:", type="primary", width="stretch",
+                         help="Elige al azar un destino que te alcanza (o uno de los más "
+                              "turísticos, en ese modo) y te lo muestra en el globo.")
+
     st.divider()
     zona_compartir = st.container()   # se llena al final, con el enlace de esta búsqueda
     if tasas.es_respaldo:
@@ -475,10 +515,9 @@ with st.sidebar:
 rendimiento = {k: bool(modo_rend and st.session_state[f"rend_{k}"]) for k in OPCIONES_RENDIMIENTO}
 if rendimiento["vidrio"]:
     st.markdown("<style>section[data-testid='stSidebar']{backdrop-filter:none !important;"
-                "-webkit-backdrop-filter:none !important;"
-                + ("background:rgba(246,247,251,.97) !important;}" if MODO_CLARO
-                   else "background:rgba(10,14,24,.97) !important;}")
-                + "</style>", unsafe_allow_html=True)
+                "-webkit-backdrop-filter:none !important;background:rgba(10,14,24,.97) !important;}"
+                "html.gw-claro section[data-testid='stSidebar']{background:rgba(246,247,251,.97) !important;}"
+                "</style>", unsafe_allow_html=True)
 
 
 # --------------------------------------------------------------------------
@@ -687,19 +726,107 @@ datos_globo = {
 # Encabezado e indicadores
 # --------------------------------------------------------------------------
 col_marca, col_tema = st.columns([5, 1], vertical_alignment="center")
-col_marca.markdown(f'<p class="marca">{logo_mini(30, claro=MODO_CLARO)}Globe<span>Way</span></p>', unsafe_allow_html=True)
-if col_tema.button("Modo oscuro" if MODO_CLARO else "Modo claro", key="boton_tema", width="stretch",
-                   icon=":material/dark_mode:" if MODO_CLARO else ":material/light_mode:",
-                   help="Cambia los colores de la página. Se recuerda en este navegador."):
-    # Streamlit guarda el tema elegido en el navegador; se cambia y se recarga la página
-    components.html(f"""<script>
-    try {{
-      const w = window.parent, k = 'stActiveTheme-' + w.location.pathname + '-v2';
-      w.localStorage.setItem(k, JSON.stringify({'"Dark"' if MODO_CLARO else '"Light"'}));
-      w.location.reload();
-    }} catch (e) {{}}
-    /* {time.time()} */
-    </script>""", height=0)
+_logo = logo_mini(30, claro=False).replace('stroke="#f8fafc"', 'style="stroke:var(--gw-logo-g)"', 1)
+col_marca.markdown(f'<p class="marca">{_logo}Globe<span>Way</span></p>', unsafe_allow_html=True)
+# Sol (en modo oscuro) o luna (en modo claro): sin texto ni forma de botón, solo el ícono en un círculo
+_SOL = ('<svg class="sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+        'stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4'
+        'M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></svg>')
+_LUNA = ('<svg class="luna" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" '
+         'stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>')
+col_tema.markdown(f'<div class="gw-tema-fila"><button id="gw-tema" type="button" '
+                  f'aria-label="Cambiar entre modo claro y modo oscuro" title="Cambiar modo claro / oscuro">'
+                  f'{_SOL}{_LUNA}</button></div>', unsafe_allow_html=True)
+# Marca el tema en la página y maneja el clic del sol / la luna:
+#  1) cambia los colores con una transición (círculo que se expande desde el ícono),
+#  2) cambia el tema de Streamlit desde su menú (sin recargar) y el del globo,
+#  3) al terminar, avisa a Python con un botón invisible (actualiza gráficos e indicadores).
+# Si algo falla, vuelve al método antiguo: guardar el tema y recargar la página.
+_JS_TEMA = """
+(function () {
+  if (window.__gwTemaListo) return;
+  window.__gwTemaListo = true;
+  const w = window, d = document, raiz = d.documentElement;
+  const esperar = ms => new Promise(r => setTimeout(r, ms));
+  async function temaStreamlit(nombre) {
+    raiz.classList.add('gw-menu-oculto');
+    try {
+      const sel = '[data-testid="stMainMenuItem-theme-' + nombre + '"]';
+      let item = d.querySelector(sel);
+      if (!item) {
+        const boton = d.querySelector('[data-testid="stMainMenuButton"]');
+        if (!boton) return false;
+        boton.click();
+        for (let i = 0; i < 40 && !item; i++) { await esperar(25); item = d.querySelector(sel); }
+      }
+      if (!item) { d.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); return false; }
+      item.click();
+      return true;
+    } finally { setTimeout(() => raiz.classList.remove('gw-menu-oculto'), 400); }
+  }
+  function temaGlobo(claro) {
+    try { const f = d.querySelector('iframe[src*="globo_globeway"]'); f && f.contentWindow.aplicarTema(claro); } catch (e) {}
+  }
+  function recargar(claro) {
+    try { w.localStorage.setItem('stActiveTheme-' + w.location.pathname + '-v2', JSON.stringify(claro ? 'Light' : 'Dark')); } catch (e) {}
+    w.location.reload();
+  }
+  function avisarPython(claro) {
+    const b = d.querySelector('.st-key-gw_tema_' + (claro ? 'claro' : 'oscuro') + ' button');
+    if (b) b.click();
+  }
+  async function cambiar(boton) {
+    if (w.__gwCambiando) return;
+    w.__gwCambiando = true;
+    const claro = !raiz.classList.contains('gw-claro');
+    let ok = true;
+    const aplicar = async () => {
+      raiz.classList.toggle('gw-claro', claro);
+      temaGlobo(claro);
+      ok = await temaStreamlit(claro ? 'Light' : 'Dark');
+      await esperar(180);   /* Streamlit vuelve a pintar sus colores */
+    };
+    const suave = !(w.matchMedia && w.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    try {
+      if (suave && d.startViewTransition) {
+        const r = boton.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+        const radio = Math.hypot(Math.max(x, w.innerWidth - x), Math.max(y, w.innerHeight - y));
+        const t = d.startViewTransition(aplicar);
+        t.ready.then(() => raiz.animate(
+          { clipPath: ['circle(0px at ' + x + 'px ' + y + 'px)', 'circle(' + radio + 'px at ' + x + 'px ' + y + 'px)'] },
+          { duration: 650, easing: 'cubic-bezier(.4,0,.2,1)', pseudoElement: '::view-transition-new(root)' }
+        )).catch(() => {});
+        await t.finished.catch(() => {});
+      } else {
+        raiz.classList.add('gw-transicion');
+        await aplicar();
+        await esperar(650);
+        raiz.classList.remove('gw-transicion');
+      }
+    } catch (e) { ok = false; }
+    w.__gwCambiando = false;
+    if (!ok) { recargar(claro); return; }
+    avisarPython(claro);
+  }
+  d.addEventListener('click', ev => {
+    const b = ev.target && ev.target.closest && ev.target.closest('#gw-tema');
+    if (b) { ev.preventDefault(); cambiar(b); }
+  });
+})();
+"""
+# El código del clic se instala en la página principal (no en este marco invisible, que
+# Streamlit reemplaza al actualizarse); el marco solo marca el tema actual en cada actualización.
+components.html(f"""<script>
+try {{
+  const w = window.parent, d = w.document;
+  d.documentElement.classList.toggle('gw-claro', {str(MODO_CLARO).lower()});
+  if (!w.__gwTemaListo) {{
+    const sc = d.createElement('script');
+    sc.textContent = {json.dumps(_JS_TEMA)};
+    d.head.appendChild(sc);
+  }}
+}} catch (e) {{}}
+</script>""", height=0)
 if turisticos:
     st.markdown('<p class="bajada"><b>Más turísticos</b>: zonas más visitadas del mundo. '
                 'Usa <b>Ver destinos</b> (a la derecha del globo) para mostrar las columnas de turistas. '
@@ -745,7 +872,7 @@ if turisticos:
          "#34d399" if popularidad.en_vivo else "#facc15"),
         (top["ciudad"] if top else "—", "zona más visitada (estimación)", "#ef4444"),
         (nombre_pais, f"país con más turistas (~{turismo.LLEGADAS.get(top_pais, 0):g} M/año)", "#fb923c"),
-        (len(filas), f"destinos en {len({f['iso3'] for f in filas})} países", "#0f172a" if MODO_CLARO else "#e5e9f0"),
+        (len(filas), f"destinos en {len({f['iso3'] for f in filas})} países", "var(--gw-texto)"),
     ]
 elif generales:
     valores = sorted(metrica(f) for f in filas)
@@ -753,7 +880,7 @@ elif generales:
     caro = max(filas, key=metrica) if filas else None
     sufijo = "" if base_general == "total" else " / día"
     indicadores = [
-        (len(filas), f"destinos en {len({f['iso3'] for f in filas})} países", "#0f172a" if MODO_CLARO else "#e5e9f0"),
+        (len(filas), f"destinos en {len({f['iso3'] for f in filas})} países", "var(--gw-texto)"),
         (fmt(metrica(barato)) + sufijo if barato else "—",
          f"más barato: {barato['ciudad']}" if barato else "", "#34d399"),
         (fmt(valores[len(valores) // 2]) + sufijo if valores else "—", "valor típico (mediana)", "#facc15"),
@@ -768,7 +895,7 @@ else:
         (int(conteo.get("fuera", 0)), "fuera de presupuesto", "#ef4444"),
         (fmt(filas[0]["calc"].total) if filas else "—",
          f"opción más barata: {filas[0]['ciudad']}" if filas else "sin destinos",
-         "#0f172a" if MODO_CLARO else "#e5e9f0"),
+         "var(--gw-texto)"),
     ]
 for col, (n, t, c) in zip(cols, indicadores):
     col.markdown(f'<div class="kpi"><div class="n" style="color:{c}">{n}</div>'
@@ -1273,7 +1400,7 @@ with tab_activ:
                         width="stretch", help="Busca tours, excursiones y entradas en GetYourGuide")
         nombre_base = fa["ciudad"].split(" (")[0]
         with st.spinner("Buscando actividades…"):
-            res_act = actividades.buscar([nombre_base, fa.get("wiki") or "", fa["ciudad"]])
+            res_act = actividades.buscar([nombre_base, fa.get("wiki") or "", fa["ciudad"]], fa.get("lat"), fa.get("lon"))
         if res_act.actividades:
             if res_act.idioma == "en":
                 st.caption("Wikivoyage no tiene una guía en español para este destino: los textos están en inglés.")
@@ -1293,12 +1420,18 @@ with tab_activ:
                                        + (a.precio if len(a.precio) <= 110 else a.precio[:110].rsplit(" ", 1)[0] + "…"))
                         enlaces = [f"[Ver en el mapa]({actividades.enlace_mapa(a.nombre, nombre_base)})"]
                         if a.web.startswith("http"):
-                            enlaces.append(f"[Sitio web]({a.web})")
+                            enlaces.append(f"[{'Wikipedia' if 'wikipedia.org' in a.web else 'Sitio web'}]({a.web})")
                         st.caption(" · ".join(enlaces))
-            st.caption(f"Fuente: [Wikivoyage]({res_act.url}) (guía de viajes libre, CC BY-SA). "
-                       "Los precios son los informados en la guía y pueden haber cambiado.")
+            fuentes_act = []
+            if res_act.url:
+                fuentes_act.append(f"[Wikivoyage]({res_act.url}) (guía de viajes libre, CC BY-SA)")
+            if res_act.n_wikidata:
+                fuentes_act.append(f"[Wikidata](https://www.wikidata.org) ({res_act.n_wikidata} lugares "
+                                   "turísticos cercanos, CC0)")
+            st.caption("Fuentes: " + " y ".join(fuentes_act) + ". "
+                       + ("Los precios son los informados en la guía y pueden haber cambiado." if res_act.url else ""))
         else:
-            st.info("No encontramos actividades en Wikivoyage para este destino"
+            st.info("No encontramos actividades en Wikivoyage ni en Wikidata para este destino"
                     + (f" ({res_act.error})." if res_act.error else ".")
                     + " Puedes buscar tours y entradas con el botón de arriba.")
             if fa.get("atractivos"):
