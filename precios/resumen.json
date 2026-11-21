@@ -1,0 +1,90 @@
+{
+ "actualizado": "2026-11-21T09:55+00:00",
+ "origenes": {
+  "ANF": {
+   "ciudades_hoy": 4,
+   "ciudades_guardadas": 4,
+   "ofertas": 13,
+   "errores": []
+  },
+  "BOG": {
+   "ciudades_hoy": 120,
+   "ciudades_guardadas": 127,
+   "ofertas": 587,
+   "errores": []
+  },
+  "BUE": {
+   "ciudades_hoy": 200,
+   "ciudades_guardadas": 230,
+   "ofertas": 1528,
+   "errores": []
+  },
+  "CCP": {
+   "ciudades_hoy": 5,
+   "ciudades_guardadas": 5,
+   "ofertas": 10,
+   "errores": []
+  },
+  "LIM": {
+   "ciudades_hoy": 98,
+   "ciudades_guardadas": 113,
+   "ofertas": 502,
+   "errores": []
+  },
+  "LON": {
+   "ciudades_hoy": 567,
+   "ciudades_guardadas": 619,
+   "ofertas": 4238,
+   "errores": []
+  },
+  "MAD": {
+   "ciudades_hoy": 391,
+   "ciudades_guardadas": 423,
+   "ofertas": 2887,
+   "errores": []
+  },
+  "MEX": {
+   "ciudades_hoy": 187,
+   "ciudades_guardadas": 204,
+   "ofertas": 1058,
+   "errores": []
+  },
+  "MIA": {
+   "ciudades_hoy": 245,
+   "ciudades_guardadas": 272,
+   "ofertas": 1511,
+   "errores": []
+  },
+  "NYC": {
+   "ciudades_hoy": 445,
+   "ciudades_guardadas": 478,
+   "ofertas": 3235,
+   "errores": []
+  },
+  "PMC": {
+   "ciudades_hoy": 2,
+   "ciudades_guardadas": 3,
+   "ofertas": 5,
+   "errores": []
+  },
+  "PUQ": {
+   "ciudades_hoy": 9,
+   "ciudades_guardadas": 12,
+   "ofertas": 32,
+   "errores": []
+  },
+  "SAO": {
+   "ciudades_hoy": 247,
+   "ciudades_guardadas": 260,
+   "ofertas": 1909,
+   "errores": []
+  },
+  "SCL": {
+   "ciudades_hoy": 97,
+   "ciudades_guardadas": 115,
+   "ofertas": 569,
+   "errores": []
+  }
+ },
+ "consultas": 350
+}
