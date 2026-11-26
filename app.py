@@ -697,7 +697,7 @@ datos_globo = {
     "origen": {"codigo": origen, **{k: vuelos.ORIGENES[origen][k] for k in ("lat", "lon")}},
     "destinos": [{
         "id": f["id"], "ciudad": f["ciudad"], "pais": f["pais"], "iso3": f["iso3"],
-        "continente": f["continente"], "lat": f["lat"], "lon": f["lon"],
+        "continente": f["continente"], "lat": f["lat"], "lon": f["lon"], "wiki": f.get("wiki") or "",
         "atractivos": f["atractivos"], "riesgo": bool(f.get("riesgo")),
         "estado": f["estado"], "estado_txt": textos[f["estado"]],
         "total_usd": f["calc"].total,
@@ -956,8 +956,74 @@ if sorpresa:
         st.toast("No hay destinos que te alcancen con este presupuesto. Prueba subiéndolo "
                  "o cambiando la duración del viaje.")
 
+# ---- Palitos extra: ciudades y pueblos del país elegido en el globo ----
+# Al tocar un país (o un destino), el globo muestra además sus ciudades y pueblos de la base
+# mundial (GeoNames), con costos estimados con el promedio del país. Van aparte de los datos
+# del globo para que este no se recargue: solo agrega los palitos.
+MAX_EXTRA_PAIS = 80
+
+
+def _pais_elegido_en_globo() -> str | None:
+    v = st.session_state.get("globo")
+    if isinstance(v, dict) and v.get("t") != st.session_state.get("_ultimo_clic"):
+        if v.get("tipo") == "cerrar":
+            return None
+        if v.get("iso3"):
+            return v["iso3"]
+        d = next((f for f in filas if f["id"] == v.get("id")), None)
+        if d:
+            return d["iso3"]
+    return st.session_state.get("pais_globo")
+
+
+def _puntos_extra(iso: str | None) -> dict | None:
+    if not iso or generales or turisticos or not lugares.cantidad():
+        return None
+    firma = f"{iso}|{origen}|{dias}|{viajeros}|{tipo_aloj}|{round(presupuesto_usd)}|{len(filas)}"
+    guardado = st.session_state.get("_extra_pais")
+    if guardado and guardado.get("firma") == firma:
+        return guardado
+    df = lugares.cargar()
+    if df is None:
+        return None
+    del_pais = df[df["iso3"] == iso].sort_values("poblacion", ascending=False)
+    if del_pais.empty:
+        return None
+    propios = [(d["lat"], d["lon"]) for d in DESTINOS if d["iso3"] == iso]
+    nombres = {lugares.normalizar(d["ciudad"].split(" (")[0]) for d in DESTINOS if d["iso3"] == iso}
+    elegidos: list[tuple[float, float]] = []
+    puntos = []
+    for fila in del_pais.head(1500).itertuples(index=False):
+        if len(puntos) >= MAX_EXTRA_PAIS:
+            break
+        la, lo = float(fila.lat), float(fila.lon)
+        if lugares.normalizar(fila.nombre) in nombres:
+            continue
+        # Ni encima de un destino del globo ni muy pegado a otro pueblo (se verían amontonados)
+        if any(distancia_km(la, lo, a, b) < 12 for a, b in propios) or \
+           any(distancia_km(la, lo, a, b) < 8 for a, b in elegidos):
+            continue
+        d = lugares.como_destino(fila, DESTINOS)
+        if ocultar_riesgo and d["riesgo"]:
+            continue
+        c = calcular(d, origen, dias, viajeros, tipo_aloj, precios_tp)
+        elegidos.append((la, lo))
+        puntos.append({"id": d["id"], "ciudad": d["ciudad"], "lat": la, "lon": lo,
+                       "poblacion": d.get("poblacion"), "total_usd": c.total, "total_fmt": fmt(c.total),
+                       "total_rel": round(c.total / presupuesto_usd, 3) if presupuesto_usd else 1,
+                       "estado": estado_presupuesto(c.total, presupuesto_usd)})
+    extra = {"iso3": iso, "puntos": puntos, "firma": firma}
+    st.session_state["_extra_pais"] = extra
+    return extra
+
+
+try:
+    extra_globo = _puntos_extra(_pais_elegido_en_globo())
+except Exception:   # los palitos extra son un adorno: si algo falla, el globo sigue igual
+    extra_globo = None
+
 clic = mostrar_globo(datos_globo, alto=640, enfoque=enfoque, rendimiento=rendimiento,
-                    claro=MODO_CLARO)
+                    claro=MODO_CLARO, extra=extra_globo)
 
 # ---- El clic en el globo actualiza las pestañas de abajo ----
 # El globo devuelve el último clic con su hora ("t"); se procesa una sola vez.
