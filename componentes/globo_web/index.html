@@ -1291,17 +1291,18 @@ async function mostrarSlide(primera) {
   carFotos.classList.add('cambiando');
   const [fotos] = await Promise.all([fotosDestino(d.wiki), new Promise(r => setTimeout(r, primera ? 0 : 300))]);
   if (pedido !== carIdx) return;   // la persona ya pasó a otro
+  // Espera a que la foto grande esté descargada (máx. 6 s) para no mostrar un cuadro vacío
+  if (fotos[0]) await new Promise(r => { const i = new Image(); i.onload = i.onerror = r; i.src = fotos[0]; setTimeout(r, 6000); });
+  if (pedido !== carIdx) return;
   carFotos.classList.toggle('una', fotos.length < 3);
   carFotos.innerHTML = fotos.length
-    ? `<img class="g" src="${escaparHtml(fotos[0])}" alt="${escaparHtml(d.ciudad)}">` + (fotos.length >= 3 ? fotos.slice(1, 3).map(u => `<img src="${escaparHtml(u)}" alt="" loading="lazy">`).join('') : '')
+    ? `<img class="g" src="${escaparHtml(fotos[0])}" alt="">` + (fotos.length >= 3 ? fotos.slice(1, 3).map(u => `<img src="${escaparHtml(u)}" alt="" loading="lazy">`).join('') : '')
     : `<div class="vacio">${escaparHtml(d.ciudad)}</div>`;
   carEl.querySelector('.nom').textContent = d.ciudad;
   carEl.querySelector('.pai').textContent = d.pais;
   const pre = carEl.querySelector('.pre'); pre.textContent = d.total_fmt; pre.style.color = colorPunto(d);
   carEl.querySelector('.ir').onclick = () => { cerrarBuscador(); seleccionarPais(d.iso3); mostrarDestino(d); volarA(d.lat, d.lon, 1.2); };
-  const listo = () => carFotos.classList.remove('cambiando');
-  const img = carFotos.querySelector('img');
-  if (img && !img.complete) { img.onload = listo; img.onerror = listo; setTimeout(listo, 1500); } else listo();
+  carFotos.classList.remove('cambiando');
   // Precarga las fotos del siguiente
   const sig = carLista[(carIdx + 1) % carLista.length];
   if (sig) fotosDestino(sig.wiki).then(f => f.forEach(u => { const i = new Image(); i.src = u; }));
