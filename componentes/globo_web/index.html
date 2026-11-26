@@ -105,6 +105,70 @@
   body.sin-vidrio .panel { backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
     background: rgba(13,18,32,.95) !important; }
   #ficha .asa { display: none; }
+
+  /* ---- Buscador de destinos (lupa) con sugerencias y carrusel de inspiración ---- */
+  #lupa { left: 50%; top: 14px; transform: translateX(-50%); display: flex; align-items: center; gap: 9px;
+    padding: 8px 16px 8px 13px; min-width: 230px; border-radius: 999px; cursor: pointer;
+    font: 500 13px "Inter", system-ui, sans-serif; color: var(--suave); }
+  #lupa:hover { border-color: rgba(56,189,248,.55); color: var(--texto); }
+  #lupa svg { width: 16px; height: 16px; color: var(--texto); }
+  body.ficha-abierta #lupa { left: calc(50% - 168px); }
+  #buscador { left: 50%; top: 12px; transform: translateX(-50%) translateY(-8px); width: min(460px, calc(100% - 24px));
+    max-height: calc(100% - 24px); overflow: auto; padding: 10px; border-radius: 16px; opacity: 0;
+    pointer-events: none; transition: opacity .18s ease, transform .18s ease; z-index: 30; }
+  #buscador.abierto { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+  #buscador .caja { display: flex; align-items: center; gap: 8px; padding: 4px 6px 4px 10px;
+    border: 1px solid var(--borde); border-radius: 12px; background: rgba(255,255,255,.04); }
+  #buscador .caja svg { width: 17px; height: 17px; color: var(--suave); flex: none; }
+  #buscarTxt { flex: 1; min-width: 0; background: none; border: 0; outline: none; color: var(--texto);
+    font: 500 15px "Inter", system-ui, sans-serif; padding: 9px 2px; }
+  #buscarTxt::placeholder { color: var(--suave); }
+  #buscarTxt::-webkit-search-cancel-button { display: none; }
+  #buscador .cerrarB { background: none; border: 0; color: var(--suave); font-size: 22px; line-height: 1;
+    cursor: pointer; padding: 4px 8px; border-radius: 8px; }
+  #buscador .cerrarB:hover { color: var(--texto); }
+  #sugerencias { margin-top: 6px; }
+  .sug { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 10px; cursor: pointer; }
+  .sug:hover, .sug.activa { background: rgba(56,189,248,.1); }
+  body.claro .sug:hover, body.claro .sug.activa { background: rgba(3,105,161,.08); }
+  .sug .pt { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .sug .txt { flex: 1; min-width: 0; }
+  .sug .ciu { font-size: 14px; color: var(--texto); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sug .ciu mark { background: none; color: var(--acento); font-weight: 700; }
+  .sug .pai { font-size: 12px; color: var(--suave); }
+  .sug .pre { font: 600 12.5px "Inter", system-ui, sans-serif; white-space: nowrap; }
+  .sinres { padding: 12px 10px; color: var(--suave); font-size: 13px; line-height: 1.45; }
+  #inspiracion .titulo { margin: 12px 4px 8px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--suave); font-weight: 600; }
+  .carrusel { position: relative; }
+  .carrusel .fotos { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 5px;
+    height: 210px; border-radius: 12px; overflow: hidden; background: rgba(148,163,184,.12); transition: opacity .35s ease; }
+  .carrusel .fotos.cambiando { opacity: 0; }
+  .carrusel .fotos img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .carrusel .fotos .g { grid-row: 1 / span 2; }
+  .carrusel .fotos.una .g { grid-column: 1 / span 2; }
+  .carrusel .fotos .vacio { grid-column: 1 / span 2; grid-row: 1 / span 2; display: flex; align-items: center;
+    justify-content: center; color: var(--suave); font-size: 13px;
+    background: linear-gradient(135deg, rgba(56,189,248,.18), rgba(245,165,36,.18)); }
+  .carrusel .flecha { position: absolute; top: 105px; transform: translateY(-50%); width: 34px; height: 34px;
+    border-radius: 50%; border: 0; background: rgba(5,7,13,.62); color: #fff; font-size: 20px; line-height: 1;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .carrusel .flecha:hover { background: rgba(5,7,13,.85); }
+  .carrusel .izq { left: 8px; } .carrusel .der { right: 8px; }
+  .carrusel .info { display: flex; align-items: center; gap: 10px; margin-top: 9px; padding: 0 2px; }
+  .carrusel .info .tx { flex: 1; min-width: 0; }
+  .carrusel .info .nom { font-weight: 650; font-size: 15px; color: var(--texto); }
+  .carrusel .info .pai { font-size: 12px; color: var(--suave); }
+  .carrusel .info .pre { font-weight: 700; font-size: 13px; }
+  .carrusel .ir { border: 0; border-radius: 10px; padding: 8px 12px; background: #F5A524; color: #0B1E3F;
+    font: 600 12.5px "Inter", system-ui, sans-serif; cursor: pointer; white-space: nowrap; }
+  .carrusel .barra { height: 3px; border-radius: 2px; background: rgba(148,163,184,.2); margin-top: 9px; overflow: hidden; }
+  .carrusel .barra i { display: block; height: 100%; width: 0; background: var(--acento); }
+  .carrusel .barra i.corre { width: 100%; transition: width 5s linear; }
+  #verPanel { display: none; width: 100%; margin-top: 10px; padding: 10px; border-radius: 10px;
+    border: 1px solid var(--borde); background: none; color: var(--texto); font: 600 13px "Inter", system-ui, sans-serif; cursor: pointer; }
+  #leyenda .escala { height: 7px; border-radius: 4px; margin: 2px 0 2px 18px; width: 150px;
+    background: linear-gradient(90deg, rgb(34,197,94), rgb(163,230,53), rgb(245,165,36), rgb(249,115,22), rgb(239,68,68)); }
   #temaMovil { display: none; }
   @media (max-width: 700px) {
     /* Ficha: hoja que sube desde abajo, a todo el ancho */
@@ -126,7 +190,8 @@
     #leyenda { left: 8px; bottom: 8px; padding: 8px 10px; max-width: 170px; font-size: 11px; cursor: pointer; }
     #leyenda h4 { margin: 0; font-size: 10px; }
     #leyenda .flecha { display: inline; }
-    #leyenda .fila { display: none; }
+    #leyenda .fila, #leyenda .escala { display: none; }
+    #leyenda.abierta .escala { display: block; }
     #leyenda.abierta h4 { margin-bottom: 6px; }
     #leyenda.abierta .fila { display: flex; }
     #leyenda.abierta .flecha { display: inline-block; transform: rotate(180deg); }
@@ -143,6 +208,11 @@
       padding: 0 16px; border-radius: 999px; color: var(--suave); font: 500 15px "Inter", system-ui, sans-serif;
       cursor: pointer; text-align: left; }
     #buscarMovil .lupa { font-size: 20px; color: var(--texto); line-height: 1; }
+    /* Buscador en el celular: ocupa el ancho de la pantalla, bajo la barra */
+    #lupa { display: none; }
+    #buscador { top: 56px; width: calc(100% - 16px); max-height: calc(100% - 70px); }
+    .carrusel .fotos { height: 180px; } .carrusel .flecha { top: 90px; }
+    #verPanel { display: block; }
     /* Sol / luna al lado de la barra: cambia entre modo oscuro y claro */
     #buscarMovil { right: 68px; }
     #temaMovil { display: flex; align-items: center; justify-content: center; right: 12px; top: 62px;
@@ -163,8 +233,24 @@
 <div id="leyenda" class="panel"></div>
 <div id="ficha" class="panel"><div class="asa" onclick="this.parentElement.classList.toggle('expandida')" title="Ver más / ver menos"></div><button class="cerrar" onclick="cerrarFicha()" aria-label="Cerrar">×</button><div id="contenido"></div></div>
 <div id="zoom" class="panel"><button type="button" onclick="acercar(0.65)" aria-label="Acercar" title="Acercar">+</button><button type="button" onclick="acercar(1.5)" aria-label="Alejar" title="Alejar">−</button></div>
+<button id="lupa" class="panel" type="button" onclick="abrirBuscador()" aria-label="Buscar destino"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.6-4.6"/></svg><span>Buscar destino</span></button>
+<div id="buscador" class="panel" role="dialog" aria-label="Buscar destino">
+  <div class="caja"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.6-4.6"/></svg><input id="buscarTxt" type="search" placeholder="Escribe una ciudad o un país" autocomplete="off" spellcheck="false" aria-controls="sugerencias"><button class="cerrarB" type="button" onclick="cerrarBuscador()" aria-label="Cerrar buscador">×</button></div>
+  <div id="sugerencias" role="listbox"></div>
+  <div id="inspiracion">
+    <div class="titulo">Destinos para inspirarte</div>
+    <div class="carrusel">
+      <div class="fotos"></div>
+      <button class="flecha izq" type="button" aria-label="Destino anterior" onclick="moverCarrusel(-1)">‹</button>
+      <button class="flecha der" type="button" aria-label="Destino siguiente" onclick="moverCarrusel(1)">›</button>
+      <div class="info"><div class="tx"><div class="nom"></div><div class="pai"></div></div><span class="pre"></span><button class="ir" type="button">Ver destino</button></div>
+      <div class="barra"><i></i></div>
+    </div>
+  </div>
+  <button id="verPanel" type="button" onclick="cerrarBuscador(); abrirPanel()">Ver la lista completa, filtros y pestañas</button>
+</div>
 <button id="temaMovil" class="panel" type="button" aria-label="Cambiar entre modo claro y modo oscuro" onclick="try { parent.gwCambiarTema(this); } catch (e) {}"><svg class="sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></svg><svg class="luna" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
-<button id="buscarMovil" class="panel" type="button" onclick="abrirPanel()"><span class="lupa"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.6-4.6"/></svg></span>Buscar destinos</button>
+<button id="buscarMovil" class="panel" type="button" onclick="abrirBuscador()"><span class="lupa"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.6-4.6"/></svg></span>Buscar destinos</button>
 
 <script src="https://unpkg.com/globe.gl@2/dist/globe.gl.min.js"></script>
 <script>
@@ -367,6 +453,7 @@ function arrancar(args) {
   iniciar(args.datos);
   if (window.aplicarTema) window.aplicarTema(args.claro);
   if (window.aplicarRendimiento) window.aplicarRendimiento(args.rendimiento);
+  if (window.aplicarExtra) window.aplicarExtra(args.extra);
   revisarEnfoque(args);
 }
 // "Sorpréndeme": Python pide volar a un destino (sin volver a avisar a Python)
@@ -383,7 +470,10 @@ window.addEventListener('message', ev => {
   clearTimeout(window.__gwRecarga);
   if (window.aplicarTema) window.aplicarTema(m.args.claro);
   if (window.aplicarRendimiento) window.aplicarRendimiento(m.args.rendimiento);
-  if (JSON.stringify(m.args.datos) === textoDatos) { revisarEnfoque(m.args); return; }
+  if (JSON.stringify(m.args.datos) === textoDatos) {
+    if (window.aplicarExtra) window.aplicarExtra(m.args.extra);   // palitos extra del país (sin recargar)
+    revisarEnfoque(m.args); return;
+  }
   // Si la persona cambia algo varias veces seguidas (por ejemplo, aprieta "+" muchas
   // veces), se espera a que termine y se recarga UNA sola vez con lo último.
   window.__gwRecarga = setTimeout(() => {
@@ -420,7 +510,9 @@ leyendaEl.onclick = () => leyendaEl.classList.toggle('abierta');
 leyendaEl.innerHTML =
   `<h4>${DATOS.titulo_leyenda}<span class="flecha"> ▾</span></h4>` +
   DATOS.leyenda.map(l => `<div class="fila"><span class="punto" style="background:${l.color};color:${l.color}"></span>${l.etiqueta}</div>`).join('') +
-  `<div class="fila" style="margin-top:8px;color:var(--suave)"><span class="punto" style="background:#334155;color:transparent"></span>Sin datos / filtrado</div>`;
+  `<div class="fila" style="margin-top:8px;color:var(--suave)"><span class="punto" style="background:#334155;color:transparent"></span>Sin datos / filtrado</div>` +
+  (DATOS.modo === 'presupuesto' ? `<div class="fila" style="margin-top:10px;color:var(--suave)">Palitos: precio frente a tu presupuesto</div>
+    <div class="escala"></div><div class="fila" style="justify-content:space-between;width:150px;margin:2px 0 0 18px;color:var(--suave);font-size:10.5px"><span>barato</span><span>caro</span></div>` : '');
 
 // ---------- Color de cada país ----------
 // Modo presupuesto: el país toma el color de su destino MÁS accesible.
@@ -457,11 +549,36 @@ let verTodos = false;
 try { verTodos = sessionStorage.getItem('gt_ver_todos') === '1'; } catch (e) {}
 
 // Destinos visibles: todos (botón activo) o solo los del país seleccionado
+// Palitos extra: al elegir un país, Python manda sus ciudades y pueblos (GeoNames) con costos
+// estimados con el promedio del país. Solo se muestran en el país seleccionado.
+let extraPais = null, textoExtra = null;
 function destinosVisibles() {
-  if (verTodos) return destinos;
-  return paisSel && porPais[paisSel] ? porPais[paisSel] : [];
+  const base = verTodos ? destinos : (paisSel && porPais[paisSel] ? porPais[paisSel] : []);
+  return extraPais && paisSel === extraPais.iso3 ? base.concat(extraPais.puntos) : base;
 }
-const conAnillo = d => DATOS.modo === 'presupuesto' && ['economico', 'intermedio', 'costoso'].includes(d.estado);
+window.aplicarExtra = ex => {
+  const nuevo = ex && ex.iso3 && Array.isArray(ex.puntos) && ex.puntos.length ? ex : null;
+  const txt = nuevo ? nuevo.iso3 + ':' + nuevo.puntos.length + ':' + (nuevo.firma || '') : '';
+  if (txt === textoExtra) return;
+  textoExtra = txt;
+  extraPais = nuevo ? { iso3: nuevo.iso3, puntos: nuevo.puntos.map(p => Object.assign({ extra: true, iso3: nuevo.iso3 }, p)) } : null;
+  actualizarPuntos();
+};
+const conAnillo = d => !d.extra && DATOS.modo === 'presupuesto' && ['economico', 'intermedio', 'costoso'].includes(d.estado);
+// Color del palito según lo barato o caro que es el viaje frente a tu presupuesto
+const ESCALA_PRECIO = [[0.45, [34, 197, 94]], [0.8, [163, 230, 53]], [1.0, [245, 165, 36]], [1.2, [249, 115, 22]], [1.6, [239, 68, 68]]];
+function colorPrecio(rel) {
+  const e = ESCALA_PRECIO;
+  if (!(rel > e[0][0])) return `rgb(${e[0][1]})`;
+  for (let i = 1; i < e.length; i++) {
+    if (rel <= e[i][0]) {
+      const t = (rel - e[i - 1][0]) / (e[i][0] - e[i - 1][0]);
+      return `rgb(${e[i - 1][1].map((c, k) => Math.round(c + (e[i][1][k] - c) * t)).join(',')})`;
+    }
+  }
+  return `rgb(${e[e.length - 1][1]})`;
+}
+const colorPunto = d => DATOS.modo === 'presupuesto' && d.total_rel != null ? colorPrecio(d.total_rel) : colorEstado(d.estado);
 function actualizarPuntos() {
   if (window.despertarGlobo) window.despertarGlobo(1600);   // los palos crecen o se encogen
   const vis = destinosVisibles();
@@ -530,18 +647,19 @@ const globo = Globe({ rendererConfig: { antialias: true, alpha: true, logarithmi
   // Destinos como puntos luminosos
   .pointsData([])
   .pointLat('lat').pointLng('lon')
-  .pointColor(d => colorEstado(d.estado))
-  .pointAltitude(d => encogiendo.has(d) ? 0 : 0.03 + (TURISMO ? 0.012 : 0.02 + Math.min(d.total_rel, 2) * 0.05))
+  .pointColor(colorPunto)
+  .pointAltitude(d => encogiendo.has(d) ? 0 : d.extra ? 0.015 + Math.min(d.total_rel || 1, 2) * 0.03
+                      : 0.03 + (TURISMO ? 0.012 : 0.02 + Math.min(d.total_rel, 2) * 0.05))
   .pointsTransitionDuration(DURACION_PALOS)
-  .pointRadius(TURISMO ? 0.2 : 0.3)
+  .pointRadius(d => d.extra ? 0.15 : (TURISMO ? 0.2 : 0.3))
   .pointsMerge(false)
-  .pointLabel(d => `<div style="background:rgba(10,14,24,.92);border:1px solid rgba(148,163,184,.25);padding:8px 10px;border-radius:8px;font:12px Inter,system-ui">
+  .pointLabel(d => d.extra ? etiquetaExtra(d) : `<div style="background:rgba(10,14,24,.92);border:1px solid rgba(148,163,184,.25);padding:8px 10px;border-radius:8px;font:12px Inter,system-ui">
       <b>${d.ciudad}</b><br><span style="color:#94a3b8">${d.pais}</span><br>
       <span style="color:#e2e8f0">#${d.rank} más turístico del país</span>${d.visitas ? ` · ${fmtNum(d.visitas)} visitas/30 días` : ''}<br>
-      <span style="color:${colorEstado(d.estado)};font-weight:700">${d.total_fmt}</span> viaje total<br>
+      <span style="color:${colorPunto(d)};font-weight:700">${d.total_fmt}</span> viaje total<br>
       ${d.vuelo_real ? `<span style="color:#F5A524">${ICO.avion}Vuelo ${d.vuelo_pp_fmt} p/p · precio real de búsquedas recientes</span><br>` : `<span style="color:#94a3b8">Vuelo ${d.vuelo_pp_fmt} p/p (estimado)</span><br>`}
       <span style="color:#94a3b8">${d.ruta_txt}</span>${d.riesgo ? '<br><span style="color:#fbbf24">' + ICO.alerta + 'Advertencias de seguridad</span>' : ''}</div>`)
-  .onPointClick(d => { mostrarDestino(d); volarA(d.lat, d.lon, 1.2); })
+  .onPointClick(d => { if (d.extra) mostrarExtra(d); else mostrarDestino(d); volarA(d.lat, d.lon, 1.2); })
   // Anillos pulsantes en destinos dentro del presupuesto
   .ringsData([])
   .ringLat('lat').ringLng('lon')
@@ -617,23 +735,46 @@ if (TURISMO) {
     });
 }
 
-// Países (GeoJSON de Natural Earth)
-fetch('https://raw.githubusercontent.com/vasturiano/globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson')
+// Países (GeoJSON de Natural Earth). Primero el mapa liviano (carga rápido); en el computador,
+// después se cambia por el detallado (bordes más finos, sin el aspecto "recortado" al acercarse).
+// En el celular se queda el liviano para que el globo no se ponga lento.
+const MAPA_LIVIANO = 'https://raw.githubusercontent.com/vasturiano/globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson';
+const MAPA_DETALLADO = 'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@v5.1.2/geojson/ne_50m_admin_0_countries.geojson';
+// Los países quedan casi pegados al globo (antes se veían "flotando" al acercarse)
+function alturaPais(f) {
+  if (f === seleccionado) return esMovil() ? 0.02 : 0.012;
+  return esMovil() ? 0.011 : 0.0035;
+}
+const nombrePais = f => f.properties.NAME_ES || f.properties.NAME;
+let polsListos = false;
+function cargarPaises(geo) {
+  const paises = separarTerritorios(geo.features.filter(f => f.properties.ISO_A2 !== 'AQ' && f.properties.ADM0_A3 !== 'ATA'));
+  paisesGeo = paises;
+  if (paisSel) seleccionado = paises.find(f => codigoPais(f) === paisSel) || null;
+  globo.polygonsData(paises);
+  if (!polsListos) { polsListos = true; configurarPaises(); }
+  else if (globo.polygonCapMaterial) globo.polygonCapMaterial(globo.polygonCapMaterial());
+}
+fetch(MAPA_LIVIANO)
   .then(r => r.json())
   .then(geo => {
-    const paises = separarTerritorios(geo.features.filter(f => f.properties.ISO_A2 !== 'AQ'));
-    paisesGeo = paises;
-    if (paisSel && !seleccionado) seleccionado = paises.find(f => codigoPais(f) === paisSel) || null;
+    cargarPaises(geo);
+    if (!esMovil()) {
+      setTimeout(() => fetch(MAPA_DETALLADO).then(r => r.json()).then(cargarPaises).catch(() => {}), 1500);
+    }
+  })
+  .catch(() => { /* Sin conexión al GeoJSON: el globo sigue funcionando con los puntos */ });
+function configurarPaises() {
     globo
-      .polygonsData(paises)
-      .polygonAltitude(f => f === seleccionado ? 0.03 : (esMovil() ? 0.014 : 0.008))
+      .polygonAltitude(alturaPais)
+      .polygonCapCurvatureResolution(esMovil() ? 5 : 2.5)
       .polygonCapColor(colorCap)
       .polygonCapMaterial(f => calorVivo ? materialCalor(f) : null)
       .polygonSideColor(colorCostado)
       .polygonStrokeColor(colorBorde)
       .polygonLabel(f => {
         const iso = codigoPais(f), lista = porPais[iso];
-        const nombre = lista ? lista[0].pais : f.properties.NAME;
+        const nombre = lista ? lista[0].pais : nombrePais(f);
         let extra = lista ? `${lista.length} destino${lista.length > 1 ? 's' : ''} · desde ${lista.map(d => d.total_fmt)[indiceMin(lista)]}` : 'Sin destinos turísticos en la base de datos';
         if (lista && TURISMO && DATOS.llegadas[iso]) extra = `~${DATOS.llegadas[iso]} M turistas internacionales/año · ${lista.length} destinos`;
         if (lista) extra += `<br>Más turístico: <b style="color:#e2e8f0">${[...lista].sort((a, b) => a.rank - b.rank)[0].ciudad}</b>`;
@@ -643,13 +784,31 @@ fetch('https://raw.githubusercontent.com/vasturiano/globe.gl/master/example/data
       .onPolygonClick(f => {
         seleccionarPais(codigoPais(f), f);
         const lista = porPais[paisSel];
-        mostrarPais(f.properties.NAME, lista);
+        mostrarPais(nombrePais(f), lista);
         if (lista) volarA(lista[0].lat, lista[0].lon, 1.6);
       })
       .polygonsTransitionDuration(400);
     aplicarCalor();
-  })
-  .catch(() => { /* Sin conexión al GeoJSON: el globo sigue funcionando con los puntos */ });
+}
+
+// Pueblos y ciudades extra del país elegido (costos estimados con el promedio del país)
+const nombreDelPais = iso => (porPais[iso] && porPais[iso][0].pais) || '';
+function etiquetaExtra(d) {
+  return `<div style="background:rgba(10,14,24,.92);border:1px solid rgba(148,163,184,.25);padding:8px 10px;border-radius:8px;font:12px Inter,system-ui">
+    <b>${d.ciudad}</b><br><span style="color:#94a3b8">${nombreDelPais(d.iso3)}${d.poblacion ? ' · ' + fmtNum(d.poblacion) + ' habitantes' : ''}</span><br>
+    <span style="color:${colorPunto(d)};font-weight:700">${d.total_fmt}</span> viaje total (estimado)<br>
+    <span style="color:#94a3b8">Costos con el promedio del país</span></div>`;
+}
+function mostrarExtra(d) {
+  contenido.innerHTML = `<h2>${d.ciudad}</h2>
+    <div class="sub">${nombreDelPais(d.iso3)}${d.poblacion ? ' · ' + fmtNum(d.poblacion) + ' habitantes' : ''}<br>${DATOS.resumen}</div>
+    <div style="font-size:26px;font-weight:700;color:${colorPunto(d)}">${d.total_fmt}</div>
+    <div class="nota">Viaje total estimado. Este lugar no está en la lista de destinos turísticos: sus costos se
+      calculan con el promedio de ${nombreDelPais(d.iso3) || 'su país'}. Para ver el detalle, búscalo en la pestaña «Destinos».</div>`;
+  globo.arcsData([]); globo.labelsData([]);
+  ficha.classList.add('visible');
+  document.body.classList.add('ficha-abierta');
+}
 
 // El mapa de Natural Earth dibuja la Guayana Francesa como parte de Francia (un solo
 // país). Aquí se separa en un polígono propio, para que tenga color, destinos y ficha
@@ -670,7 +829,7 @@ function separarTerritorios(features) {
       if (propios.length) {
         salida.push({ ...f, geometry: { type: 'MultiPolygon', coordinates: g.coordinates.filter(pol => !esDelTerritorio(pol)) } });
         salida.push({ type: 'Feature',
-          properties: { ...p, ADM0_A3: t.iso, ISO_A3: t.iso, ISO_A3_EH: t.iso, GU_A3: t.iso, NAME: t.nombre, SOBERANO: t.soberano },
+          properties: { ...p, ADM0_A3: t.iso, ISO_A3: t.iso, ISO_A3_EH: t.iso, GU_A3: t.iso, NAME: t.nombre, NAME_ES: t.nombre, SOBERANO: t.soberano },
           geometry: { type: 'MultiPolygon', coordinates: propios } });
         continue;
       }
@@ -682,21 +841,21 @@ function separarTerritorios(features) {
 
 function colorCap(f) {
   const e = estadoPais(codigoPais(f));
-  if (!e) return temaClaro ? 'rgba(226,232,240,0.9)' : 'rgba(51,65,85,0.25)';
+  if (!e) return temaClaro ? 'rgba(226,232,240,0.95)' : 'rgba(30,41,59,0.88)';
   // País seleccionado: terreno azul noche, para que los palos de colores resalten encima.
   // Su color de estado se mantiene en el borde y en los costados.
   if (f === seleccionado) return 'rgba(11,30,63,0.94)';
-  return hexA(colorEstado(e), TURISMO ? (temaClaro ? 0.45 : 0.28) : (temaClaro ? 0.82 : 0.55));
+  return hexA(colorEstado(e), TURISMO ? (temaClaro ? 0.7 : 0.62) : 0.93);   // casi opaco: no se transparenta
 }
 function colorBorde(f) {
   const e = estadoPais(codigoPais(f));
   if (f === seleccionado && e) return colorEstado(e);
-  return temaClaro ? 'rgba(255,255,255,0.55)' : 'rgba(148,163,184,0.25)';
+  return temaClaro ? 'rgba(255,255,255,0.6)' : 'rgba(8,12,22,0.55)';   // borde fino entre países
 }
 function colorCostado(f) {
   const e = estadoPais(codigoPais(f));
   if (f === seleccionado && e) return hexA(colorEstado(e), 0.75);
-  return temaClaro ? 'rgba(15,23,42,0.18)' : 'rgba(15,23,42,0.4)';
+  return temaClaro ? 'rgba(15,23,42,0.12)' : 'rgba(2,6,23,0.5)';
 }
 
 // ---------- "Calor vivo" (efecto de cámara térmica) ----------
@@ -989,6 +1148,182 @@ window.enfocar = id => {
   volarA(d.lat, d.lon, 1.2);
 };
 window.seleccionarPorId = id => { const d = destinos.find(x => x.id === id); mostrarDestino(d); volarA(d.lat, d.lon, 1.2); };
+
+// ==========================================================================
+// Buscador de destinos (lupa): sugerencias mientras se escribe y, con la caja
+// vacía, un carrusel de destinos para inspirarse (cambia solo cada 5 segundos).
+// ==========================================================================
+const buscadorEl = document.getElementById('buscador');
+const buscarTxt = document.getElementById('buscarTxt');
+const sugEl = document.getElementById('sugerencias');
+const inspEl = document.getElementById('inspiracion');
+const normalizar = t => (t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const escaparHtml = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const claves = destinos.map(d => ({ d, c: normalizar(d.ciudad), p: normalizar(d.pais) }));
+let sugActiva = -1, sugLista = [];
+
+function resaltar(texto, q) {
+  const i = normalizar(texto).indexOf(q);
+  if (i < 0 || !q) return escaparHtml(texto);
+  return escaparHtml(texto.slice(0, i)) + '<mark>' + escaparHtml(texto.slice(i, i + q.length)) + '</mark>' + escaparHtml(texto.slice(i + q.length));
+}
+function puntaje(k, q) {
+  if (k.c.startsWith(q)) return 0;
+  if (k.c.split(/[\s\-(,]+/).some(w => w.startsWith(q))) return 1;
+  if (k.p.startsWith(q)) return 2;
+  if (k.c.includes(q)) return 3;
+  if (k.p.includes(q)) return 4;
+  return -1;
+}
+function mostrarSugerencias() {
+  const q = normalizar(buscarTxt.value.trim());
+  if (!q) { sugEl.innerHTML = ''; sugLista = []; inspEl.style.display = ''; reanudarCarrusel(); return; }
+  inspEl.style.display = 'none'; pausarCarrusel();
+  sugLista = claves.map(k => ({ k, s: puntaje(k, q) })).filter(x => x.s >= 0)
+    .sort((a, b) => a.s - b.s || (a.k.d.rank || 99) - (b.k.d.rank || 99) || a.k.d.total_usd - b.k.d.total_usd)
+    .slice(0, 8).map(x => x.k.d);
+  sugActiva = sugLista.length ? 0 : -1;
+  if (!sugLista.length) {
+    sugEl.innerHTML = `<div class="sinres">No hay destinos con «${escaparHtml(buscarTxt.value.trim())}» en el globo.
+      En la pestaña «Destinos» puedes buscar entre todas las ciudades y pueblos del mundo.</div>`;
+    return;
+  }
+  sugEl.innerHTML = sugLista.map((d, i) => `<div class="sug${i === sugActiva ? ' activa' : ''}" role="option" data-i="${i}">
+      <span class="pt" style="background:${colorPunto(d)}"></span>
+      <div class="txt"><div class="ciu">${resaltar(d.ciudad, q)}</div><div class="pai">${resaltar(d.pais, q)}</div></div>
+      <span class="pre" style="color:${colorPunto(d)}">${d.total_fmt}</span></div>`).join('');
+}
+function elegirSugerencia(i) {
+  const d = sugLista[i];
+  if (!d) return;
+  cerrarBuscador();
+  seleccionarPais(d.iso3);
+  mostrarDestino(d);
+  volarA(d.lat, d.lon, 1.2);
+}
+sugEl.addEventListener('click', ev => { const it = ev.target.closest('.sug'); if (it) elegirSugerencia(+it.dataset.i); });
+buscarTxt.addEventListener('input', mostrarSugerencias);
+buscarTxt.addEventListener('keydown', ev => {
+  if (ev.key === 'Escape') { cerrarBuscador(); return; }
+  if (!sugLista.length) return;
+  if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+    ev.preventDefault();
+    sugActiva = (sugActiva + (ev.key === 'ArrowDown' ? 1 : -1) + sugLista.length) % sugLista.length;
+    sugEl.querySelectorAll('.sug').forEach((x, i) => x.classList.toggle('activa', i === sugActiva));
+  } else if (ev.key === 'Enter') { ev.preventDefault(); elegirSugerencia(Math.max(0, sugActiva)); }
+});
+window.abrirBuscador = () => {
+  buscadorEl.classList.add('abierto');
+  buscarTxt.value = ''; mostrarSugerencias();
+  setTimeout(() => buscarTxt.focus(), 60);
+  iniciarCarrusel();
+};
+window.cerrarBuscador = () => { buscadorEl.classList.remove('abierto'); pausarCarrusel(); buscarTxt.blur(); };
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && buscadorEl.classList.contains('abierto')) cerrarBuscador(); });
+contenedor.addEventListener('pointerdown', () => { if (buscadorEl.classList.contains('abierto')) cerrarBuscador(); });
+
+// ---------- Fotos de Wikipedia para el carrusel ----------
+const cacheFotos = {};
+const EXCLUIR_FOTO = /(^|[\s_(,.-])(map|mapa|plano|arms|seal|icon|coin|firma|sello|clima)([\s_(),.-]|$)|flag|bandera|escudo|coat_of|emblem|logo|locator|location|localiza|situaci|chart|grafic|gráfic|diagram|climate|nasa|commons-|wiki|signature|portrait|retrato|stamp|poster|banknote|billete|blason|wappen/i;
+function sirveFoto(n) {
+  if (!/\.(jpe?g|webp)$/i.test(n) || EXCLUIR_FOTO.test(n)) return false;
+  return !(/(^|\D)(1[5-8]\d\d|19[0-5]\d)(\D|$)/.test(n) && !/^(IMG|DSC|DSCN|DSCF|PICT|CIMG|SAM|GOPR|P\d{3})/i.test(n));
+}
+function archivoDe(u) {
+  const p = (u || '').split('/');
+  return decodeURIComponent(p.includes('thumb') ? p[p.length - 2] : p[p.length - 1]).toLowerCase();
+}
+function fotosDestino(titulo) {
+  if (!titulo) return Promise.resolve([]);
+  if (cacheFotos[titulo]) return cacheFotos[titulo];
+  const API = 'https://es.wikipedia.org/w/api.php?origin=*&format=json&';
+  return (cacheFotos[titulo] = (async () => {
+    const fotos = [];
+    try {
+      const s = await fetch('https://es.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(titulo.replace(/ /g, '_'))).then(r => r.json());
+      const o = s.originalimage, t = s.thumbnail;
+      if (o && o.width <= 1100) fotos.push(o.source);
+      else if (t) fotos.push(t.source.replace(/\/\d+px-/, '/800px-'));
+    } catch (e) {}
+    try {
+      const p = await fetch(API + 'action=parse&prop=images&redirects=1&page=' + encodeURIComponent(titulo)).then(r => r.json());
+      const nombres = ((p.parse || {}).images || []).filter(sirveFoto).slice(0, 12);
+      if (nombres.length) {
+        const q = await fetch(API + 'action=query&prop=imageinfo&iiprop=url|size&iiurlwidth=480&titles='
+          + encodeURIComponent(nombres.map(n => 'Archivo:' + n).join('|'))).then(r => r.json());
+        const qq = q.query || {}, norm = {}, porTit = {};
+        (qq.normalized || []).forEach(n => { norm[n.from] = n.to; });
+        Object.values(qq.pages || {}).forEach(pg => { porTit[pg.title] = pg; });
+        const principal = archivoDe(fotos[0]);
+        for (const n of nombres) {
+          const pg = porTit[norm['Archivo:' + n] || 'Archivo:' + n];
+          const ii = pg && pg.imageinfo && pg.imageinfo[0];
+          if (!ii || !ii.thumburl || ii.width < 640 || ii.height < 400) continue;
+          const r = ii.width / ii.height;
+          if (r < 0.6 || r > 2.2 || archivoDe(ii.url) === principal) continue;
+          fotos.push(ii.thumburl);
+          if (fotos.length >= 3) break;
+        }
+      }
+    } catch (e) {}
+    return fotos;
+  })());
+}
+
+// ---------- Carrusel ----------
+// Se eligen al azar entre los destinos más turísticos de cada país; cada vez que se abre
+// la lupa el orden cambia, así nunca son siempre los mismos.
+const carEl = buscadorEl.querySelector('.carrusel');
+const carFotos = carEl.querySelector('.fotos'), carBarra = carEl.querySelector('.barra i');
+let carLista = [], carIdx = 0, carTimer = null, carPausado = false;
+function barajar(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function iniciarCarrusel() {
+  const top = destinos.filter(d => d.wiki && (d.rank || 99) <= 3);
+  carLista = barajar((top.length >= 6 ? top : destinos.filter(d => d.wiki)).slice());
+  carIdx = 0;
+  if (!carLista.length) { inspEl.style.display = 'none'; return; }
+  mostrarSlide(true);
+}
+async function mostrarSlide(primera) {
+  const d = carLista[carIdx];
+  if (!d) return;
+  const pedido = carIdx;
+  carFotos.classList.add('cambiando');
+  const [fotos] = await Promise.all([fotosDestino(d.wiki), new Promise(r => setTimeout(r, primera ? 0 : 300))]);
+  if (pedido !== carIdx) return;   // la persona ya pasó a otro
+  carFotos.classList.toggle('una', fotos.length < 3);
+  carFotos.innerHTML = fotos.length
+    ? `<img class="g" src="${escaparHtml(fotos[0])}" alt="${escaparHtml(d.ciudad)}">` + (fotos.length >= 3 ? fotos.slice(1, 3).map(u => `<img src="${escaparHtml(u)}" alt="" loading="lazy">`).join('') : '')
+    : `<div class="vacio">${escaparHtml(d.ciudad)}</div>`;
+  carEl.querySelector('.nom').textContent = d.ciudad;
+  carEl.querySelector('.pai').textContent = d.pais;
+  const pre = carEl.querySelector('.pre'); pre.textContent = d.total_fmt; pre.style.color = colorPunto(d);
+  carEl.querySelector('.ir').onclick = () => { cerrarBuscador(); seleccionarPais(d.iso3); mostrarDestino(d); volarA(d.lat, d.lon, 1.2); };
+  const listo = () => carFotos.classList.remove('cambiando');
+  const img = carFotos.querySelector('img');
+  if (img && !img.complete) { img.onload = listo; img.onerror = listo; setTimeout(listo, 1500); } else listo();
+  // Precarga las fotos del siguiente
+  const sig = carLista[(carIdx + 1) % carLista.length];
+  if (sig) fotosDestino(sig.wiki).then(f => f.forEach(u => { const i = new Image(); i.src = u; }));
+  programarCarrusel();
+}
+function programarCarrusel() {
+  clearTimeout(carTimer);
+  carBarra.classList.remove('corre'); void carBarra.offsetWidth;
+  if (carPausado || !buscadorEl.classList.contains('abierto')) return;
+  carBarra.classList.add('corre');
+  carTimer = setTimeout(() => moverCarrusel(1), 5000);
+}
+window.moverCarrusel = paso => {
+  if (!carLista.length) return;
+  carIdx = (carIdx + paso + carLista.length) % carLista.length;
+  if (carIdx === 0 && paso > 0) barajar(carLista);   // dio la vuelta completa: nuevo orden
+  mostrarSlide(false);
+};
+function pausarCarrusel() { carPausado = true; clearTimeout(carTimer); carBarra.classList.remove('corre'); }
+function reanudarCarrusel() { if (!carPausado) return; carPausado = false; programarCarrusel(); }
+carEl.addEventListener('mouseenter', pausarCarrusel);
+carEl.addEventListener('mouseleave', () => { if (!buscarTxt.value.trim()) reanudarCarrusel(); });
 
 function mostrarPais(nombre, lista) {
   enviarAStreamlit({ tipo: 'pais', iso3: lista ? lista[0].iso3 : null, nombre });
