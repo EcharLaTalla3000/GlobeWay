@@ -1243,13 +1243,13 @@ function fotosDestino(titulo) {
       const s = await fetch('https://es.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(titulo.replace(/ /g, '_'))).then(r => r.json());
       const o = s.originalimage, t = s.thumbnail;
       if (o && o.width <= 1100) fotos.push(o.source);
-      else if (t) fotos.push(t.source.replace(/\/\d+px-/, '/800px-'));
+      else if (t) fotos.push(t.source.replace(/\/\d+px-/, '/960px-'));   // Wikimedia solo sirve tamaños fijos (500, 960…)
     } catch (e) {}
     try {
       const p = await fetch(API + 'action=parse&prop=images&redirects=1&page=' + encodeURIComponent(titulo)).then(r => r.json());
       const nombres = ((p.parse || {}).images || []).filter(sirveFoto).slice(0, 12);
       if (nombres.length) {
-        const q = await fetch(API + 'action=query&prop=imageinfo&iiprop=url|size&iiurlwidth=480&titles='
+        const q = await fetch(API + 'action=query&prop=imageinfo&iiprop=url|size&iiurlwidth=500&titles='
           + encodeURIComponent(nombres.map(n => 'Archivo:' + n).join('|'))).then(r => r.json());
         const qq = q.query || {}, norm = {}, porTit = {};
         (qq.normalized || []).forEach(n => { norm[n.from] = n.to; });
